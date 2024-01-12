@@ -1,0 +1,300 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model OfficalUser {
+  id        String   @id @map("_id")
+  name      String   @map("name")
+  avatar    String   @map("avatar")
+  desc      String   @map("desc") //应用描述
+  status    Int      @default(1) @map("status") //应用状态 1-正常 2-禁用
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@map("offical_users")
+}
+
+// 用户表 
+model User {
+  id        String   @id @map("_id") //用户ID，现在是用户的地址作为唯一id
+  unionId   String   @map("union_id") //用户对外展示ID 为空默认生成
+  avatar    String   @map("avatar") //头像 为空默认生成
+  name      String   @map("name") //昵称 为空默认生成
+  nameIdx   String   @map("name_idx") // 首字母或拼音
+  gender    Int      @default(0) @map("gender") // 性别 0-未知 1-男 2-女
+  sign      String?  @map("sign") // 个性签名
+  pubKey    String   @unique @map("pub_key") // 公钥
+  status    Int      @default(1) @map("status") // 状态 1-正常 2-被禁用 默认1
+  dbIdx     Int      @map("db_idx") // 消息指定存储表
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
+
+  @@index([unionId], name: "union_id")
+  @@map("users")
+}
+
+//拉黑表
+model Blacklist {
+  id        String   @id @map("_id") //主键ID md5_16(uid+obj_uid)
+  uid       String   @map("uid") //用户ID
+  objUid    String   @map("obj_uid") //被拉黑的用户ID
+  createdAt DateTime @default(now()) @map("create_time") //创建时间
+  updatedAt DateTime @updatedAt @map("update_time") //更新时间
+
+  @@map("black_list")
+}
+
+// 好友表
+model Friend {
+  id          String    @id @map("_id") //主键ID
+  uid         String    @map("uid") //用户ID
+  objUid      String    @map("obj_uid") //好友的ID
+  agreeAt     DateTime? @map("agree_at") //同意时间
+  remark      String?   @map("remark") //好友备注
+  remarkIndex String?   @map("remark_index") //首字母或拼音
+  createdAt   DateTime  @default(now()) @map("created_at") //创建时间
+  updatedAt   DateTime  @updatedAt @map("updated_at") //更新时间
+
+  @@index([uid], name: "uid")
+  @@index([objUid], name: "obj_uid")
+  @@map("friends")
+}
+
+// 好友申请表
+model FriendApply {
+  id        String   @id @map("_id") //主键ID
+  uid       String   @map("uid") //申请的用户ID
+  objUid    String   @map("obj_uid") //被申请的用户ID
+  status    Int      @default(0) @map("status") // 状态 0-待验证 1-验证通过
+  isRead    Int      @default(0) @map("is_read") // 是否已读 0-未读 1-已读
+  remark    String?  @map("remark") //申请说明、备注
+  createdAt DateTime @default(now()) @map("created_at") //申请时间
+  expiredAt DateTime @map("expired_at") //过期时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@index([uid], name: "uid")
+  @@index([objUid], name: "obj_uid")
+  @@map("friend_applies")
+}
+
+// 群详情表
+model Group {
+  id          String   @id @map("_id") //主键ID，也为群ID
+  creatorId   String   @map("creator_id") //创建者
+  ownerId     String   @map("owner_id") //群主
+  name        String   @map("name") //群名称 为空默认生成
+  pubKey      String   @map("pub_key") //群公钥
+  notice      String?  @map("notice") //群公告
+  noticeMd5   String?  @map("notice_md5") //公告字符串md5加密 判定是否有更新
+  desc        String?  @map("desc") //群描述
+  descMd5     String?  @map("desc_md5") //群描述字符串md5加密 判定是否有更新
+  avatar      String   @map("avatar") //群头像 为空默认生成
+  cover       String   @map("cover") //群封面
+  isEnc       Int      @default(0) @map("is_enc") // 是否加密 1-是 0-否 默认0
+  type        Int      @default(1) @map("type") // 群类型 1-普通 2-付费 3-私密
+  banType     Int      @default(1) @map("ban_type") // 禁言类型 1-不禁言 2-全员禁言 3-仅管理员可发言 4-仅群主可发言
+  searchType  Int      @default(1) @map("search_type") // 搜索类型 1-允许被搜索 2-不允许被搜索
+  status      Int      @default(1) @map("status") // 群状态 1-正常 2-禁用
+  total       Int      @default(1) @map("total") // 当前总人数
+  memberLimit Int      @default(100) @map("member_limit") //限制个数 默认100-待定也可根据配置
+  // 搜索权重值
+  weight      Int      @default(0) @map("weight") //搜索权重值
+  createdAt   DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt   DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@map("groups")
+}
+
+// 群统计表
+model GroupStat {
+  id        String   @id @map("_id") //主键ID
+  groupId   String   @map("gid") //群ID
+  total     Int      @default(0) @map("total") //群总人数
+  msgTotal  Int      @default(0) @map("msg_total") //群消息总数
+  msgDay    Int      @default(0) @map("msg_day") //群消息当日总数
+  activeDay Int      @default(0) @map("active_day") //群当日活跃人数
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@index([groupId], name: "gid")
+  @@map("group_stat")
+}
+
+// 群订阅套餐表
+model GroupPackage {
+  id        String   @id @map("_id") //主键ID
+  groupId   String   @map("gid") //群ID
+  name      String   @map("name") //套餐名称
+  desc      String   @map("desc") //套餐描述
+  price     Int      @map("price") //套餐价格 单位为分
+  duration  Int      @map("duration") //套餐时长 单位为天
+  status    Int      @default(1) @map("status") //套餐状态 1-正常 2-禁用
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@index([groupId], name: "gid")
+  @@map("group_packages")
+}
+
+// 群用户表
+model GroupMembers {
+  id               String    @id @map("_id") //主键ID
+  groupId          String    @map("gid") //群ID
+  uid              String    @map("uid") //用户ID
+  encPri           String    @map("enc_pri") //用户在该群的密钥
+  encKey           String    @map("enc_key") //用户在该群的加密key
+  inviteUid        String?   @map("invite_uid") //邀请者ID 没有则为主动加入
+  role             Int       @default(3) @map("role") //角色 1-群主 2-管理员 3-普通用户 默认普通用户
+  joinType         Int       @map("join_type") //加入方式 1-邀请 2-扫码 3-连接 （枚举待定）
+  myAlias          String    @map("my_alias") //在群里的昵称
+  status           Int       @default(1) @map("status") //用户状态 1-正常
+  banType          Int       @default(1) @map("ban_type") // 禁言类型  1-正常 2-禁言
+  adminAt          DateTime? @map("admin_at") //成为管理员的时间
+  packageExpiredAt DateTime? @map("package_expired_at") // 群订阅过期时间
+  createdAt        DateTime  @default(now()) @map("created_at") //创建时间
+  updatedAt        DateTime  @updatedAt @map("updated_at") //更新时间
+
+  @@index([groupId], name: "gid")
+  @@index([uid], name: "uid")
+  @@map("group_members")
+}
+
+// 群应用表 （如果应用是共享的，表需要设计成关联形式）
+model GroupApp {
+  id        String   @id @map("_id") @db.ObjectId
+  groupId   String   @map("gid") //群ID
+  appId     String   @map("app_id") //应用ID
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@index([groupId], name: "gid")
+  @@index([appId], name: "app_id")
+  @@map("group_apps")
+}
+
+//会话表
+model Chat {
+  id               String    @id @map("_id") // 主键ID 及会话ID
+  groupId          String?   @map("gid") // 群ID
+  creatorUId       String    @map("creator_uid") // 创建者 下面几个字段按道理是从群信息里面读取（个人意见）
+  type             Int       @default(1) @map("type") // 1-单聊 2-群聊 3 官方会话
+  status           Int       @map("status") //状态 1-正常 2-禁用
+  isEnc            Int       @default(0) @map("is_enc") // 是否加密 1-是 0-否 默认0
+  lastReadSequence Int       @map("last_read_sequence")
+  lastSequence     Int       @map("last_sequence")
+  lastTime         DateTime? @map("last_time")
+  createdAt        DateTime  @default(now()) @map("created_at") // 创建时间
+  updatedAt        DateTime  @updatedAt @map("updated_at") // 创建时间
+
+  @@map("chats")
+}
+
+// 用户会话表
+model ChatUser {
+  id             String   @id @map("_id") //主键ID
+  uid            String   @map("uid") //用户ID
+  chatId         String   @map("chat_id") //会话ID
+  isTop          Int      @default(0) @map("is_top") //是否置顶 1-是 0-否 默认0
+  isMute         Int      @default(0) @map("is_mute") //是否免打扰 1-是 0-否 默认0
+  isShow         Int      @default(1) @map("is_show") //是否显示 1-是 0-否 默认1
+  isHide         Int      @default(0) @map("is_hide") //是否隐藏 1-是 0-否 默认0
+  maxReadSeq     Int      @default(0) @map("max_read_seq") // 最大读取的消息序号，个人建议用用户的dbIdx表存储
+  lastOnlineTime DateTime @map("last_online_time") // 最后一次在线时间
+  createdAt      DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt      DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@index([uid], name: "uid")
+  @@index([chatId], name: "chat_id")
+  @@map("chat_user")
+}
+
+// 消息详情表
+model MessageDetail {
+  id         String   @id @map("_id") //主键ID 及消息ID
+  chatId     String   @map("chat_id") //会话ID
+  fromUid    String   @map("from_uid") //发送者用户ID
+  content    String   @map("content") //消息内容 加密字符串
+  status     Int      @default(1) @map("status") // 状态 1-正常 0-全员删除 如果物理删除 0状态不需要
+  type       Int      @map("type") // 1-普通消息 2-应用消息 等 （待定）
+  isEnc      Int      @default(0) @map("is_enc") // 是否加密 1-是 0-否 默认0
+  sequence   Int?     @map("sequence") // 消息序号
+  receiveIds String[] @map("receive_ids") // 指定接收的用户Id 
+  extra      Json     @map("extra") //内容外的额外信息
+  action     Json?    @map("action") //消息的操作类型，有些操作可以通过消息做响应的通知操作 我的预留 不需要可删
+  createdAt  DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt  DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@index([chatId], name: "chat_id")
+  @@map("message_detail")
+}
+
+// 用户消息表
+model UserMessage {
+  id       String @id @map("_id") //主键ID
+  uid      String @map("uid") //用户ID
+  msgId    String @map("msg_id") //消息ID
+  isRead   Int    @default(0) @map("is_read") //是否已读 1-是 0-否 默认0
+  sequence Int    @map("sequence") // 消息序号
+
+  @@index([uid], name: "uid")
+  @@index([msgId], name: "msg_id")
+  @@map("user_messages")
+}
+
+// 应用表
+model App {
+  id        String   @id @map("_id") //主键ID
+  name      String   @map("name") //应用名字
+  icon      String   @map("icon") //应用icon
+  desc      String   @map("desc") //应用描述
+  url       String   @map("url") //应用连接
+  sort      Int      @map("sort") //应用排序
+  status    Int      @default(1) @map("status") //应用状态 1-正常 2-禁用
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@map("app")
+}
+
+// 投诉表
+model Complaint {
+  id        String   @id @map("_id") //主键ID
+  uid       String   @map("uid") //投诉人ID
+  type      Int      @map("type") //投诉类型 1-用户 2-群组
+  targetId  String   @map("target_id") //投诉对象ID
+  content   String   @map("content") //投诉内容
+  status    Int      @default(0) @map("status") //投诉状态 0-待处理 1-已处理
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
+  @@map("complaints")
+}
+
+// 钱包
+
+model Wallet {
+  id        String   @id @map("_id") //主键ID
+  uid       String   @map("uid") //用户ID
+  balance   Int      @default(0) @map("balance") //余额 以usdt为单位
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+}
+
+// 账单
+model Bill {
+  id        String   @id @map("_id") // 主键ID
+  uid       String   @map("uid") // 用户ID
+  type      Int      @map("type") // 账单类型 1-充值 2-提现 3-转账 4-红包 5-群收款 6-群退款 7-群提现
+  amount    Int      @map("amount") // 金额
+  status    Int      @default(0) @map("status") //状态 0-待处理 1-已处理
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+}
