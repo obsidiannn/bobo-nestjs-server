@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from '@/app.module'
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify'
+import { HttpExceptionFilter } from '@/controllers/all-exception.filter'
+
 const bootstrap = async (): Promise<void> => {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -11,6 +13,8 @@ const bootstrap = async (): Promise<void> => {
       abortOnError: false
     }
   )
+  // 全局异常处理
+  app.useGlobalFilters(new HttpExceptionFilter())
   await app.listen(3000)
 }
 bootstrap().then(() => {
