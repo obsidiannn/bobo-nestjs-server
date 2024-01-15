@@ -17,7 +17,7 @@ export class AuthService {
   async register (param: RegisterReq): Promise<RegisterResp> {
     const exist: AuthEnumIsRegister = await this.isRegister(param.id)
     if (exist === AuthEnumIsRegister.YES) {
-      console.log('已注333册')
+      console.log('已注册')
       throw new HttpException('已注册', HttpStatus.BAD_REQUEST)
     }
 
