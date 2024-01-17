@@ -6,6 +6,8 @@ import { SystemController } from '@/controllers/system.controller'
 import { UserService } from '@/services/user.service'
 import { PrismaService } from '@/services/prisma.service'
 import { SystemService } from '@/services/system.service'
+import { GroupController } from './controllers/group.controller'
+import { GroupService } from './services/group.service'
 
 @Module({
   imports: [
@@ -13,14 +15,16 @@ import { SystemService } from '@/services/system.service'
   ],
   controllers: [
     AuthController,
-    SystemController
+    SystemController,
+    GroupController
   ],
   providers: [
     AuthService,
     ConfigService,
     UserService,
     PrismaService,
-    SystemService
+    SystemService,
+    GroupService
   ]
 })
 export class AppModule {}

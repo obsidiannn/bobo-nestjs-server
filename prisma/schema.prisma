@@ -99,7 +99,7 @@ model Group {
   avatar      String   @map("avatar") //群头像 为空默认生成
   cover       String   @map("cover") //群封面
   isEnc       Int      @default(0) @map("is_enc") // 是否加密 1-是 0-否 默认0
-  type        Int      @default(1) @map("type") // 群类型 1-普通 2-付费 3-私密
+  type        Int      @default(1) @map("type") // 群类型 1-普通 2-付费（时效） 消息不可发送，但是可以加入 3-私密 只能被邀请，不能被搜索
   banType     Int      @default(1) @map("ban_type") // 禁言类型 1-不禁言 2-全员禁言 3-仅管理员可发言 4-仅群主可发言
   searchType  Int      @default(1) @map("search_type") // 搜索类型 1-允许被搜索 2-不允许被搜索
   status      Int      @default(1) @map("status") // 群状态 1-正常 2-禁用
@@ -113,7 +113,7 @@ model Group {
   @@map("groups")
 }
 
-// 群统计表
+// 群统计表 统计值
 model GroupStat {
   id        String   @id @map("_id") //主键ID
   groupId   String   @map("gid") //群ID
@@ -153,9 +153,9 @@ model GroupMembers {
   encKey           String    @map("enc_key") //用户在该群的加密key
   inviteUid        String?   @map("invite_uid") //邀请者ID 没有则为主动加入
   role             Int       @default(3) @map("role") //角色 1-群主 2-管理员 3-普通用户 默认普通用户
-  joinType         Int       @map("join_type") //加入方式 1-邀请 2-扫码 3-连接 （枚举待定）
+  joinType         Int       @map("join_type") //加入方式 1-邀请 2-扫码 （枚举待定）
   myAlias          String    @map("my_alias") //在群里的昵称
-  status           Int       @default(1) @map("status") //用户状态 1-正常
+  status           Int       @default(1) @map("status") //用户状态 0 pending 1-正常
   banType          Int       @default(1) @map("ban_type") // 禁言类型  1-正常 2-禁言
   adminAt          DateTime? @map("admin_at") //成为管理员的时间
   packageExpiredAt DateTime? @map("package_expired_at") // 群订阅过期时间

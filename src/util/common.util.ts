@@ -1,3 +1,5 @@
+import { BasePageReq } from '@/dto/common'
+
 // 求数组差集
 export const arrayDifference = (arr1: any[], arr2: any[]): any[] => {
   const set1 = new Set(arr1)
@@ -6,6 +8,15 @@ export const arrayDifference = (arr1: any[], arr2: any[]): any[] => {
   return difference
 }
 
+export const virtualCurrentUser = (): string => {
+  return '8e731c2ffde507e755a8b72513d59ca7'
+}
+
+export const pageSkip = (param: BasePageReq): number => {
+  return (param.page - 1) * param.limit
+}
+
 export default {
-  arrayDifference
+  arrayDifference,
+  pageSkip
 }
