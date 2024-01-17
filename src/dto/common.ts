@@ -1,15 +1,8 @@
-import { HttpStatus } from '@nestjs/common'
 
 export class BaseResp<T> {
   code: number
   msg: string = 'success'
   data: T
-}
-export const okResp = <T>(param: T): BaseResp<T> => {
-  const resp: BaseResp<T> = new BaseResp<T>()
-  resp.code = HttpStatus.OK
-  resp.data = param
-  return resp
 }
 
 export const errResp = <T>(code: number, msg: string): BaseResp<T> => {
@@ -19,31 +12,31 @@ export const errResp = <T>(code: number, msg: string): BaseResp<T> => {
   return resp
 }
 
-export interface BasePageReq {
+export class BasePageReq {
   limit: number
   page: number
 }
 
-export interface BasePageResp<T> {
+export class BasePageResp<T> {
   page: number
   limit: number
   items: T[]
   status: number
 }
 
-export interface BaseArrayResp<T> {
+export class BaseArrayResp<T> {
   items: T[]
 }
 
-export interface BaseIdReq {
+export class BaseIdReq {
   id: string
 }
 
-export interface BaseIdsArrayReq {
+export class BaseIdsArrayReq {
   ids: string[]
 }
 
-export interface BaseUIdArrayReq {
+export class BaseUIdArrayReq {
   uids: string[]
 }
 

@@ -3,7 +3,6 @@ import { Body, Controller, Post } from '@nestjs/common'
 import { IAuthController } from './types'
 import { IsNotEmpty, Matches } from 'class-validator'
 import { RegisterReq, RegisterResp } from '@/dto/auth'
-import { okResp, BaseResp } from '@/dto/common'
 
 export class IsRegisterDto {
   @IsNotEmpty({ message: 'uid不能为空' })
@@ -20,8 +19,8 @@ export class AuthController {
   }
 
   @Post('register')
-  async register (@Body() param: RegisterReq): Promise<BaseResp<any>> {
-    return okResp(await this.authService.register(param))
+  async register (@Body() param: RegisterReq): Promise<RegisterResp> {
+    return await this.authService.register(param)
   }
 
   // @Post('login')
