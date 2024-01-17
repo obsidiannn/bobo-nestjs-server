@@ -13,6 +13,12 @@ export class UserService {
     })
   }
 
+  async findByUId (id: string): Promise<User | null> {
+    return await this.prisma.user.findFirst({
+      where: { unionId: id }
+    })
+  }
+
   async create (data: Prisma.UserCreateInput): Promise<User> {
     return await this.prisma.user.create({ data })
   }
@@ -20,6 +26,12 @@ export class UserService {
   async findByIds (ids: string[]): Promise<User[]> {
     return await this.prisma.user.findMany({
       where: { id: { in: ids } }
+    })
+  }
+
+  async findByUIds (ids: string[]): Promise<User[]> {
+    return await this.prisma.user.findMany({
+      where: { unionId: { in: ids } }
     })
   }
 

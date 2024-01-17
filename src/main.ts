@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from '@/app.module'
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify'
 import { HttpExceptionFilter } from '@/controllers/all-exception.filter'
+import { ValidationPipe } from '@nestjs/common'
 
 const bootstrap = async (): Promise<void> => {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -15,6 +16,10 @@ const bootstrap = async (): Promise<void> => {
   )
   // 全局异常处理
   app.useGlobalFilters(new HttpExceptionFilter())
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true
+  }))
   await app.listen(3000)
 }
 bootstrap().then(() => {

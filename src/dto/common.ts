@@ -17,10 +17,6 @@ export class BasePageReq {
   limit: number = 10
   // 当前页
   page: number = 1
-
-  skip (): number {
-    return (this.page - 1) * this.limit
-  }
 }
 
 export class BasePageResp<T> {

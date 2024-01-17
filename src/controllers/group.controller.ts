@@ -40,12 +40,6 @@ export class GroupController {
     return result.transfer(data)
   }
 
-  // 同意加入群聊
-  @Post('agree-join')
-  async memberJoin (@Body() param: GroupApplyJoinReq): Promise<void> {
-    return await this.groupService.memberJoin(param)
-  }
-
   // 邀请加入群聊
   @Post('invite-join')
   async inviteMember (@Body() param: GroupInviteJoinReq): Promise<void> {
@@ -150,15 +144,27 @@ export class GroupController {
     return await this.groupService.removeGroupManager(param)
   }
 
+  // 申请加入群聊
+  @Post('require-join')
+  async requireJoin (@Body() param: BaseIdReq): Promise<void> {
+    return await this.groupService.requireJoin(param)
+  }
+
+  // 同意加入群聊
+  @Post('agree-join')
+  async memberJoin (@Body() param: GroupApplyJoinReq): Promise<void> {
+    return await this.groupService.memberJoin(param)
+  }
+
   // 待审核申请列表
   @Post('apply-list')
-  async applyList (@Body() param: GroupApplyJoinReq): Promise<GroupInfoItem[]> {
+  async applyList (@Body() param: BaseIdsArrayReq): Promise<GroupInfoItem[]> {
     return await this.groupService.applyList(param)
   }
 
   // 我的申请列表
   @Post('my-apply-list')
-  async myPendingApplyList (@Body() param: GroupApplyJoinReq): Promise<MineGroupInfoItem[]> {
+  async myPendingApplyList (@Body() param: BaseIdsArrayReq): Promise<MineGroupInfoItem[]> {
     return await this.groupService.myPendingApplyList(param)
   }
 

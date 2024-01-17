@@ -15,6 +15,10 @@ export class GroupCreateReq {
 };
 
 export class GroupMemberReq extends BasePageReq {
+  constructor () {
+    super()
+  }
+
   @IsNotEmpty({ message: 'not empty' })
     id: string
 }
@@ -64,10 +68,10 @@ export class GroupInviteJoinReq {
 
 // 踢出群聊 req
 export class GroupKickOutReq {
-  @IsNotEmpty({ message: 'not empty' })
+  @IsNotEmpty({ message: 'id not empty' })
     id: string
 
-  @ArrayNotEmpty({ message: 'not empty' })
+  @ArrayNotEmpty({ message: 'uids not empty' })
     uids: string[]
 }
 
