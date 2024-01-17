@@ -1,25 +1,32 @@
 import { IsNotEmpty, ArrayNotEmpty } from 'class-validator'
-import { BasePageResp, CommonEnum, GroupTypeEnum } from './common'
+import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from './common'
 
 export class GroupCreateReq {
-  id: string
-  pub_key: string
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+
+  pubKey: string
   avatar: string
   name: string
-  is_enc: CommonEnum
-  type: number
-  ban_type: number
-  search_type: number
+  isEnc: CommonEnum
+  type: number // 群类型 1-普通 2-付费 3-私密 默认1
+  banType: number // 禁言类型 1-不禁言 2-全员禁言 3-仅管理员可发言 4-仅群主可发言 默认1
+  searchType: number
 };
+
+export class GroupMemberReq extends BasePageReq {
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+}
 
 export class GroupMemberItem {
   id: string
   uid: string
   gid: string
   role: number
-  my_alias: string
-  admin_at: number
-  created_at: number
+  myAlias: string
+  adminAt: Date | null
+  createdAt: Date | null
 };
 
 export class GroupMemberResp extends BasePageResp<GroupMemberItem> {
@@ -27,8 +34,11 @@ export class GroupMemberResp extends BasePageResp<GroupMemberItem> {
 }
 
 export class GroupApplyJoinReq {
-  id: string
-  uids: string[]
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+
+  @ArrayNotEmpty({ message: 'not empty' })
+    uids: string[]
 }
 
 export class GroupIdsReq {
@@ -41,7 +51,7 @@ export class GroupListIdResp {
 
 export class GroupInviteJoinItem {
   uid: string
-  enc_key?: string
+  encKey?: string
 }
 
 export class GroupInviteJoinReq {
@@ -62,49 +72,84 @@ export class GroupKickOutReq {
 }
 
 export class GroupChangeNameReq {
-  id: string
-  name: string
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    name: string
 }
 export class GroupChangeAvatarReq {
-  id: string
-  avatar: string
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    avatar: string
 }
 
 export class GroupChangeAliasReq {
-  id: string
-  alias: string
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    alias: string
 }
 
 export class GroupChangeNoticeReq {
-  id: string
-  notice: string
-  notice_md5: string
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    notice: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    noticeMd5: string
 }
 export class GroupChangeDescReq {
-  id: string
-  desc: string
-  desc_md5: string
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    desc: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    descMd5: string
 }
 
 export class GroupTransferReq {
-  id: string
-  uid: string
+  @IsNotEmpty({ message: 'not empty' })
+    id: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    uid: string
 }
 
 export class GroupInfoItem {
   id: string
   gid: string
   uid: string
-  enc_key: string
+  encKey: string
   role: number
   status: number
-  created_at: number
+  createdAt: number
 }
+
+export class GroupNoticeResp {
+  id: string
+  notice: string | null
+  noticeMd5: string | null
+}
+
+export class GroupDescResp {
+  id: string
+  desc: string | null
+  descMd5: string | null
+}
+
 export class MineGroupInfoItem {
   id: string
   gid: string
   status: number
-  created_at: number
+  createdAt: number
 }
 
 export class GroupDetailItem {
@@ -112,21 +157,21 @@ export class GroupDetailItem {
   gid: string
   name: string
   avatar: string
-  created_at: number
-  member_limit: number
+  createdAt: number
+  memberLimit: number
   total: number
-  pub_key: string
-  owner_id: string
-  creator_id: string
+  pubKey: string
+  ownerId: string
+  creatorId: string
   notice: string
-  notice_md5: string
+  noticeMd5: string
   desc: string
-  desc_md5: string
+  descMd5: string
   cover: string
-  is_enc: CommonEnum
+  isEnc: CommonEnum
   type: GroupTypeEnum
-  ban_type: number
-  search_type: number
+  banType: number
+  searchType: number
   status: number
 };
 
