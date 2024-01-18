@@ -146,7 +146,7 @@ model GroupPackage {
 
 // 群用户表
 model GroupMembers {
-  id               String    @id @map("_id") //主键ID
+  id               String    @id @db.ObjectId @map("_id") //主键ID 
   groupId          String    @map("gid") //群ID
   uid              String    @map("uid") //用户ID
   encPri           String    @map("enc_pri") //用户在该群的密钥
