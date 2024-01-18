@@ -1,4 +1,4 @@
-const crypto = require('crypto')
+import crypto from 'crypto'
 
 export const changeStr2HexNumber = (str: string): number => {
   const bufferData = Buffer.from(str, 'utf8')

@@ -2,7 +2,7 @@ import { AppModule } from '@/app.module'
 import { ValidationPipe } from '@nestjs/common'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
-import { RegisterReq, RegisterResp } from '@/dto/auth'
+import { RegisterReq } from '@/dto/auth'
 import { randomUUID } from 'crypto'
 describe('SystemController', () => {
   let app: NestFastifyApplication

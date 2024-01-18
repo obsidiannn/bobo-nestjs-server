@@ -1,32 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { AuthController } from './auth.controller'
+import { SystemController } from './system.controller'
 import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { AuthEnumIsRegister } from '@/enums'
-import * as request from 'supertest'
 describe('common module SystemController', () => {
-  let app: NestExpressApplication
+  let systemController: SystemController
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
-    app = moduleRef.createNestApplication<NestExpressApplication>()
-    await app.init()
+    const app = moduleRef.createNestApplication<NestExpressApplication>()
+    systemController = app.get<SystemController>(SystemController)
   })
 
   describe('get pub key', () => {
-    it('/GET cats', () => {
-      return request(app.getHttpServer(), {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-        .post('/auth/is-register')
-        .expect(200)
-        .expect({
-          data: catsService.findAll()
-        })
+    it("should return {pubKey: '(string)'}", async () => {
+      expect(await systemController.getPubKey()).toEqual(expect.objectContaining({
+        pubKey: expect.any(String)
+      }))
     })
   })
   describe('get static url', () => {

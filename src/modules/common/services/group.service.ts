@@ -10,10 +10,10 @@ import {
 } from '@/dto/group'
 import { BaseIdReq, BasePageResp, CommonEnum, BaseIdsArrayReq } from '@/dto/common'
 import { GroupMemberStatus } from '@/enums'
-import { UserService } from './user.service'
+import { UserService } from '@/modules/user/services/user.service'
 import { randomUUID } from 'crypto'
 import { Request } from 'express'
-import commonUtil, { pageSkip, virtualCurrentUser } from '@/util/common.util'
+import commonUtil, { virtualCurrentUser } from '@/utils/common.util'
 
 @Injectable()
 export class GroupService {
@@ -34,7 +34,7 @@ export class GroupService {
 
   async create (data: Prisma.GroupCreateInput): Promise<Group> {
     // 创建群组 + 创建群成员
-    const currentUser = await this.userService.findByUId(data.ownerId)
+    const currentUser = await this.userService.findById(data.ownerId)
     if (currentUser === null) {
       throw new HttpException('error', HttpStatus.BAD_REQUEST)
     }
@@ -114,7 +114,7 @@ export class GroupService {
     const existIds = existMembers.map(u => u.uid)
     const saveIds = commonUtil.arrayDifference(uIds, existIds)
     if (saveIds.length > 0) {
-      const users: User[] = await this.userService.findByUIds(saveIds)
+      const users: User[] = await this.userService.findByIds(saveIds)
       const members: Prisma.GroupMembersCreateInput[] = users.map(u => {
         const member: Prisma.GroupMembersCreateInput = {
           id: randomUUID(),
@@ -386,7 +386,7 @@ export class GroupService {
       }
     })
     if (member === null) {
-      const user = await this.userService.findByUId(param.uid)
+      const user = await this.userService.findById(param.uid)
       if (user != null) {
         const input: Prisma.GroupMembersCreateInput = this.userService.user2GroupMemberInput(user, param.id)
         input.role = 2
@@ -434,7 +434,7 @@ export class GroupService {
       }
     }
 
-    const currentUser = await this.userService.findByUId(currentId)
+    const currentUser = await this.userService.findById(currentId)
     if (currentUser === null) {
       throw new HttpException('error', HttpStatus.BAD_REQUEST)
     }

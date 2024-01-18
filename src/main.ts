@@ -1,21 +1,10 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from '@/app.module'
-import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify'
-import { HttpExceptionFilter } from '@/controllers/all-exception.filter'
 import { ValidationPipe } from '@nestjs/common'
+import { NestExpressApplication } from '@nestjs/platform-express'
 
 const bootstrap = async (): Promise<void> => {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter({
-      logger: true
-    }),
-    {
-      abortOnError: false
-    }
-  )
-  // 全局异常处理
-  app.useGlobalFilters(new HttpExceptionFilter())
+  const app = await NestFactory.create<NestExpressApplication>(AppModule)
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true

@@ -1,9 +1,16 @@
 import { AuthEnumIsRegister } from '@/enums'
 import { IModel } from '@/index'
+import { User } from '@prisma/client'
 
 export namespace IAuthController {
   export interface IsRegisterResponse {
-    is_register: AuthEnumIsRegister
+    isRegister: AuthEnumIsRegister
+  }
+  export interface RegisterResponse {
+    user: User
+  }
+  export interface LoginResponse {
+    user: User
   }
 }
 
