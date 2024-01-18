@@ -6,29 +6,28 @@ import { FriendService } from '../services/friend.service'
 import { Prisma, User } from '@prisma/client'
 import { AuthEnumIsRegister, UserGenderEnum } from '@/enums'
 import { Request } from 'express'
-import { BaseIdReq, BaseIdsArrayReq, BaseUIdArrayReq, BaseArrayResp } from '../../common/dto/common.dto';
+import { BaseIdReq, BaseIdsArrayReq, BaseUIdArrayReq, BaseArrayResp } from '../../common/dto/common.dto'
 import {
-FriendRelationItem, FriendInviteApplyReq, FriendInviteApplyItem
+  FriendRelationItem, FriendInviteApplyReq, FriendInviteApplyItem
   , FriendInviteAgreeReq, FriendInviteRejectReq, FriendInfoItem, FriendChangeAliasReq
 } from './friend.dto'
-
+import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
+import { AuthInterceptor } from '@/modules/auth/interceptors/auth.interceptor'
 
 @Controller('friends')
-@UseInterceptors(CryptInterceptor)
+@UseInterceptors(CryptInterceptor, BaseInterceptor, AuthInterceptor)
 export class AuthController {
-  constructor (
+  constructor(
     private readonly userService: UserService,
     private readonly friendService: FriendService
-    ) {}
+  ) { }
 
-    
-// 获取用户关系
+  // 获取用户关系
   @Post('relation-list')
-  async isRegister (@Req() req: Request): Promise<BaseArrayResp<FriendRelationItem>> {
+  async isRegister(@Req() req: Request, param: FriendRelationItem): Promise<BaseArrayResp<FriendRelationItem>> {
+    return { items: await this.friendService.getRelationList(req.uid, param) }
   }
-
 }
-
 
 // 获取用户关系
 const getRelationList = async (param: BaseUIdArrayReq): Promise<BaseArrayResp<FriendRelationItem>> => {
