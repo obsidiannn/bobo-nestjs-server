@@ -1,5 +1,5 @@
 import { IsNotEmpty, ArrayNotEmpty } from 'class-validator'
-import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from './common'
+import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '../../common/dto/common.dto'
 
 export class GroupCreateReq {
   @IsNotEmpty({ message: 'not empty' })

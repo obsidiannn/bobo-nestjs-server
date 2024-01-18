@@ -5,12 +5,6 @@ export class BaseResp<T> {
   data: T
 }
 
-export const errResp = <T>(code: number, msg: string): BaseResp<T> => {
-  const resp: BaseResp<T> = new BaseResp<T>()
-  resp.code = code
-  resp.msg = msg
-  return resp
-}
 
 export class BasePageReq {
   // 限制 最多 100个

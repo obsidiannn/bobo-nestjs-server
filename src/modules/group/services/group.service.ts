@@ -1,5 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common'
-import { PrismaService } from './prisma.service'
+import { PrismaService } from '../../common/services/prisma.service'
 import { Prisma, Group, GroupMembers, User } from '@prisma/client'
 import {
   GroupMemberReq,
@@ -7,8 +7,8 @@ import {
   GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq,
   GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupInfoItem,
   MineGroupInfoItem, GroupDetailItem
-} from '@/dto/group'
-import { BaseIdReq, BasePageResp, CommonEnum, BaseIdsArrayReq } from '@/dto/common'
+} from '@/modules/group/controllers/group.dto'
+import { BaseIdReq, BasePageResp, CommonEnum, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'
 import { GroupMemberStatus } from '@/enums'
 import { UserService } from '@/modules/user/services/user.service'
 import { randomUUID } from 'crypto'

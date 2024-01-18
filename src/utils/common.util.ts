@@ -1,4 +1,4 @@
-import { BasePageReq } from '@/dto/common'
+import { BasePageReq } from '@/modules/common/dto/common.dto'
 
 // 求数组差集
 export const arrayDifference = (arr1: any[], arr2: any[]): any[] => {

@@ -5,11 +5,11 @@ import {
   GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq, GroupNoticeResp,
   GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupInfoItem,
   MineGroupInfoItem, GroupDetailItem
-} from '@/dto/group'
-import { BaseIdReq, CommonEnum, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/dto/common'
-import { GroupService } from '@/services/group.service'
+} from '@/modules/group/controllers/group.dto'
+import { BaseIdReq, CommonEnum, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/modules/common/dto/common.dto'
+import { GroupService } from '../services/group.service'
 import { Request } from 'express'
-import { virtualCurrentUser } from '@/util/common.util'
+import { virtualCurrentUser } from '@/utils/common.util'
 import { Prisma } from '@prisma/client'
 @Controller('groups')
 export class GroupController {

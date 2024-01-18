@@ -2,16 +2,16 @@ import { AppModule } from '@/app.module'
 import { ValidationPipe } from '@nestjs/common'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
-import { BaseIdReq, CommonEnum, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/dto/common'
+import { BaseIdReq, CommonEnum, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/modules/common/dto/common.dto'
 import {
   GroupCreateReq, GroupMemberReq, GroupDescResp,
   GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq, GroupMemberItem,
   GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq, GroupNoticeResp,
   GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupInfoItem,
   MineGroupInfoItem, GroupDetailItem
-} from '@/dto/group'
+} from '@/modules/group/controllers/group.dto'
 import { randomUUID, randomInt } from 'crypto'
-import { strMd5 } from '@/util/bufferUtil'
+import { strMd5 } from '@/utils/bufferUtil'
 describe('GroupController', () => {
   let app: NestFastifyApplication
   const _groupId: string = '4bcfdb52-dd1e-4010-8c0f-2ca2c4f9b688'
