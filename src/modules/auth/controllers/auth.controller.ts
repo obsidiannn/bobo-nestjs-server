@@ -6,7 +6,8 @@ import { Prisma, User } from '@prisma/client'
 import { AuthEnumIsRegister, UserGenderEnum } from '@/enums'
 import { Request } from 'express'
 import { BaseInterceptor } from '../interceptors/base.interceptor'
-import { UpdateNameParams } from './auth.dto'
+import { UpdateGenderParams, UpdateNameParams } from './auth.dto'
+import { AuthInterceptor } from '../interceptors/auth.interceptor'
 @Controller('auth')
 @UseInterceptors(CryptInterceptor, BaseInterceptor)
 export class AuthController {
@@ -48,15 +49,19 @@ export class AuthController {
   }
 
   @Post('update-name')
+  @UseInterceptors(AuthInterceptor)
   async updateName (@Req() req: Request, @Body() params: UpdateNameParams): Promise<User> {
     return await this.userService.update(req.uid, {
       name: params.username
     })
   }
 
-  // @Post('update-avatar')
-  // async updateAvatar (req: Request, res: Response) {
-  // }
+  @Post('update-gender')
+  async updateAvatar (@Req() req: Request, @Body() params: UpdateGenderParams): Promise<User> {
+    return await this.userService.update(req.uid, {
+      gender: params.gender
+    })
+  }
 
   // @Post('update-avatar')
   // async updateGender (req: Request, res: Response) {

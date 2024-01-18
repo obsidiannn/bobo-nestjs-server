@@ -1,48 +1,38 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { AuthEnumIsRegister } from '@/enums'
+import { AuthEnumIsRegister, UserGenderEnum } from '@/enums'
 import * as request from 'supertest'
-import { builWallet, generatePrivateKey } from '@/utils/web3'
-import * as Crypto from 'crypto'
+import { generatePrivateKey } from '@/utils/web3'
 import { SystemController } from '@/modules/common/controllers/system.controller'
-import aes from '@/utils/aes'
+import testUtil from '@/utils/test-util'
 describe('auth module AuthController', () => {
   let app: NestExpressApplication
-
+  let systemPublicKey: string
+  let privateKey: string
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
     app = moduleRef.createNestApplication<NestExpressApplication>()
     await app.init()
+    const systemController = app.get<SystemController>(SystemController)
+    const sysPubKeyResponse = await systemController.getPubKey()
+    if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
+      throw new Error('pubKey is empty')
+    }
+    systemPublicKey = sysPubKeyResponse.pubKey
+    privateKey = generatePrivateKey()
   })
-  const wallet = builWallet(generatePrivateKey())
   describe('is-register', () => {
     it('/POST is-register', async () => {
-      const content = JSON.stringify({})
-      const time = String(Math.floor(new Date().getTime() / 1000))
-      const dataHash = Crypto.createHash('sha256').update(content).digest('hex')
-      const sign = wallet.signMessageSync(dataHash + ':' + time)
-      const systemController = app.get<SystemController>(SystemController)
-      const sysPubKeyResponse = await systemController.getPubKey()
-      if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
-        throw new Error('pubKey is empty')
-      }
-      const sharedSecret = wallet.signingKey.computeSharedSecret('0x' + sysPubKeyResponse.pubKey)
-      const encData = aes.En(content, sharedSecret)
+      const params = testUtil.buildAuthParams(privateKey, systemPublicKey, {})
       return await request(app.getHttpServer())
         .post('/auth/is-register')
         .send({
-          data: encData
+          data: params.encData
         })
-        .set({
-          'Content-Type': 'application/json',
-          'X-pub-key': wallet.signingKey.compressedPublicKey,
-          'X-Sign': sign,
-          'X-time': time,
-          'X-data-hash': dataHash
-        })
+        .set(params.headers)
         .expect(200)
         .expect({
           isRegister: AuthEnumIsRegister.NO
@@ -51,88 +41,54 @@ describe('auth module AuthController', () => {
   })
   describe('register', () => {
     it('/POST register', async () => {
-      const content = JSON.stringify({})
-      const time = String(Math.floor(new Date().getTime() / 1000))
-      const dataHash = Crypto.createHash('sha256').update(content).digest('hex')
-      const sign = wallet.signMessageSync(dataHash + ':' + time)
-      const systemController = app.get<SystemController>(SystemController)
-      const sysPubKeyResponse = await systemController.getPubKey()
-      if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
-        throw new Error('pubKey is empty')
-      }
-      const sharedSecret = wallet.signingKey.computeSharedSecret('0x' + sysPubKeyResponse.pubKey)
-      const encData = aes.En(content, sharedSecret)
+      const params = testUtil.buildAuthParams(privateKey, systemPublicKey, {})
       return await request(app.getHttpServer())
         .post('/auth/register')
         .send({
-          data: encData
+          data: params.encData
         })
-        .set({
-          'Content-Type': 'application/json',
-          'X-pub-key': wallet.signingKey.compressedPublicKey,
-          'X-Sign': sign,
-          'X-time': time,
-          'X-data-hash': dataHash
-        })
+        .set(params.headers)
         .expect(200)
     })
   })
   describe('login', () => {
     it('/POST login', async () => {
-      const content = JSON.stringify({})
-      const time = String(Math.floor(new Date().getTime() / 1000))
-      const dataHash = Crypto.createHash('sha256').update(content).digest('hex')
-      const sign = wallet.signMessageSync(dataHash + ':' + time)
-      const systemController = app.get<SystemController>(SystemController)
-      const sysPubKeyResponse = await systemController.getPubKey()
-      if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
-        throw new Error('pubKey is empty')
-      }
-      const sharedSecret = wallet.signingKey.computeSharedSecret('0x' + sysPubKeyResponse.pubKey)
-      const encData = aes.En(content, sharedSecret)
+      const params = testUtil.buildAuthParams(privateKey, systemPublicKey, {})
       return await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          data: encData
+          data: params.encData
         })
-        .set({
-          'Content-Type': 'application/json',
-          'X-pub-key': wallet.signingKey.compressedPublicKey,
-          'X-Sign': sign,
-          'X-time': time,
-          'X-data-hash': dataHash
-        })
+        .set(params.headers)
         .expect(200)
     })
   })
 
   describe('update username', () => {
     it('/POST update username', async () => {
-      const content = JSON.stringify({
+      const params = testUtil.buildAuthParams(privateKey, systemPublicKey, {
         username: 'test'
       })
-      const time = String(Math.floor(new Date().getTime() / 1000))
-      const dataHash = Crypto.createHash('sha256').update(content).digest('hex')
-      const sign = wallet.signMessageSync(dataHash + ':' + time)
-      const systemController = app.get<SystemController>(SystemController)
-      const sysPubKeyResponse = await systemController.getPubKey()
-      if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
-        throw new Error('pubKey is empty')
-      }
-      const sharedSecret = wallet.signingKey.computeSharedSecret('0x' + sysPubKeyResponse.pubKey)
-      const encData = aes.En(content, sharedSecret)
       return await request(app.getHttpServer())
         .post('/auth/update-name')
         .send({
-          data: encData
+          data: params.encData
         })
-        .set({
-          'Content-Type': 'application/json',
-          'X-pub-key': wallet.signingKey.compressedPublicKey,
-          'X-Sign': sign,
-          'X-time': time,
-          'X-data-hash': dataHash
+        .set(params.headers)
+        .expect(200)
+    })
+  })
+  describe('update gender', () => {
+    it('/POST update gender', async () => {
+      const params = testUtil.buildAuthParams(privateKey, systemPublicKey, {
+        gender: UserGenderEnum.MAN
+      })
+      return await request(app.getHttpServer())
+        .post('/auth/update-gender')
+        .send({
+          data: params.encData
         })
+        .set(params.headers)
         .expect(200)
     })
   })
