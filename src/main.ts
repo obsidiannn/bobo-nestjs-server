@@ -9,7 +9,7 @@ const bootstrap = async (): Promise<void> => {
     whitelist: true,
     transform: true
   }))
-  await app.listen(3000)
+  await app.listen(4000)
 }
 bootstrap().then(() => {
   console.log('NestJS server started')

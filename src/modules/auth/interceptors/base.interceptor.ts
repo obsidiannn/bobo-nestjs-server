@@ -23,6 +23,9 @@ export class BaseInterceptor implements NestInterceptor {
       throw new HttpException('x-data-hash is empty', HttpStatus.BAD_REQUEST)
     }
     const uid = this.authService.recoverUid(hashMessage(dataHash + ':' + time), sign)
+    console.log('====================================')
+    console.log('uid=' + uid)
+    console.log('====================================')
     req.uid = uid
     return next.handle().pipe()
   }

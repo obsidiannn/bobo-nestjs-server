@@ -54,7 +54,7 @@ model Blacklist {
 
 // 好友表
 model Friend {
-  id          String    @id @map("_id") //主键ID
+  id          String    @id @db.ObjectId @default(auto()) @map("_id") //主键ID
   uid         String    @map("uid") //用户ID
   objUid      String    @map("obj_uid") //好友的ID
   agreeAt     DateTime? @map("agree_at") //同意时间
@@ -70,12 +70,13 @@ model Friend {
 
 // 好友申请表
 model FriendApply {
-  id        String   @id @map("_id") //主键ID
+  id        String   @id @db.ObjectId @default(auto())  @map("_id") //主键ID
   uid       String   @map("uid") //申请的用户ID
   objUid    String   @map("obj_uid") //被申请的用户ID
-  status    Int      @default(0) @map("status") // 状态 0-待验证 1-验证通过
+  status    Int      @default(0) @map("status") // 状态 0-待验证 1-验证通过 
   isRead    Int      @default(0) @map("is_read") // 是否已读 0-未读 1-已读
   remark    String?  @map("remark") //申请说明、备注
+  rejectReason String? @map("reject_reason")
   createdAt DateTime @default(now()) @map("created_at") //申请时间
   expiredAt DateTime @map("expired_at") //过期时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
@@ -87,7 +88,7 @@ model FriendApply {
 
 // 群详情表
 model Group {
-  id          String   @id @map("_id") //主键ID，也为群ID
+  id          String   @id @db.ObjectId @map("_id") @default(auto()) //主键ID，也为群ID
   creatorId   String   @map("creator_id") //创建者
   ownerId     String   @map("owner_id") //群主
   name        String   @map("name") //群名称 为空默认生成
@@ -146,7 +147,7 @@ model GroupPackage {
 
 // 群用户表
 model GroupMembers {
-  id               String    @id @db.ObjectId @map("_id") //主键ID 
+  id               String    @id @default(auto()) @db.ObjectId @map("_id") //主键ID 
   groupId          String    @map("gid") //群ID
   uid              String    @map("uid") //用户ID
   encPri           String    @map("enc_pri") //用户在该群的密钥
@@ -169,7 +170,7 @@ model GroupMembers {
 
 // 群应用表 （如果应用是共享的，表需要设计成关联形式）
 model GroupApp {
-  id        String   @id @map("_id") @db.ObjectId
+  id        String   @id @map("_id") @db.ObjectId @default(auto()) 
   groupId   String   @map("gid") //群ID
   appId     String   @map("app_id") //应用ID
   createdAt DateTime @default(now()) @map("created_at") //创建时间
