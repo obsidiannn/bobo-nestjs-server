@@ -6,6 +6,7 @@ import * as request from 'supertest'
 import { generatePrivateKey } from '@/utils/web3'
 import { SystemController } from '@/modules/common/controllers/system.controller'
 import testUtil from '@/utils/test-util'
+import { ConfigService } from '@nestjs/config'
 describe('auth module AuthController', () => {
   let app: NestExpressApplication
   let systemPublicKey: string
@@ -21,34 +22,32 @@ describe('auth module AuthController', () => {
     if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
       throw new Error('pubKey is empty')
     }
+    const configService = app.get<ConfigService>(ConfigService)
     systemPublicKey = sysPubKeyResponse.pubKey
-    privateKey = generatePrivateKey()
-  })
-  describe('is-register', () => {
-    it('/POST is-register', async () => {
-      const params = testUtil.buildAuthParams(privateKey, systemPublicKey, {})
-      return await request(app.getHttpServer())
-        .post('/auth/is-register')
-        .send({
-          data: params.encData
-        })
-        .set(params.headers)
-        .expect(200)
-        .expect({
-          isRegister: AuthEnumIsRegister.NO
-        })
-    })
+    privateKey = configService.get<string>('TEST_USER_ID') ?? ''
   })
   describe('register', () => {
     it('/POST register', async () => {
-      const params = testUtil.buildAuthParams(privateKey, systemPublicKey, {})
-      return await request(app.getHttpServer())
-        .post('/auth/register')
+      // 获取用户是否注册
+      const isRegisterParams = testUtil.buildAuthParams(privateKey, systemPublicKey, {})
+      const isRegisterResponse = await request(app.getHttpServer())
+        .post('/auth/is-register')
         .send({
-          data: params.encData
+          data: isRegisterParams.encData
         })
-        .set(params.headers)
+        .set(isRegisterParams.headers)
         .expect(200)
+      // 如果没有注册，则注册
+      if (isRegisterResponse.body.isRegister === AuthEnumIsRegister.NO) {
+        const registerParams = testUtil.buildAuthParams(privateKey, systemPublicKey, {})
+        return await request(app.getHttpServer())
+          .post('/auth/register')
+          .send({
+            data: registerParams.encData
+          })
+          .set(registerParams.headers)
+          .expect(200)
+      }
     })
   })
   describe('login', () => {
@@ -85,6 +84,20 @@ describe('auth module AuthController', () => {
       })
       return await request(app.getHttpServer())
         .post('/auth/update-gender')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+    })
+  })
+  describe('update avatar', () => {
+    it('/POST update avatar', async () => {
+      const params = testUtil.buildAuthParams(privateKey, systemPublicKey, {
+        avatar: 'https://api.multiavatar.com/1.webp'
+      })
+      return await request(app.getHttpServer())
+        .post('/auth/update-avatar')
         .send({
           data: params.encData
         })

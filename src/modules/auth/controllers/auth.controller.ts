@@ -6,7 +6,7 @@ import { Prisma, User } from '@prisma/client'
 import { AuthEnumIsRegister, UserGenderEnum } from '@/enums'
 import { Request } from 'express'
 import { BaseInterceptor } from '../interceptors/base.interceptor'
-import { UpdateGenderParams, UpdateNameParams } from './auth.dto'
+import { UpdateAvatarParams, UpdateGenderParams, UpdateNameParams } from './auth.dto'
 import { AuthInterceptor } from '../interceptors/auth.interceptor'
 @Controller('auth')
 @UseInterceptors(CryptInterceptor, BaseInterceptor)
@@ -40,8 +40,10 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseInterceptors(AuthInterceptor)
   async login (@Req() req: Request): Promise<IAuthController.LoginResponse> {
     const user = await this.userService.findById(req.uid)
+
     if (user == null) {
       throw new HttpException('user not found', HttpStatus.NOT_FOUND)
     }
@@ -57,15 +59,20 @@ export class AuthController {
   }
 
   @Post('update-gender')
+  @UseInterceptors(AuthInterceptor)
   async updateAvatar (@Req() req: Request, @Body() params: UpdateGenderParams): Promise<User> {
     return await this.userService.update(req.uid, {
       gender: params.gender
     })
   }
 
-  // @Post('update-avatar')
-  // async updateGender (req: Request, res: Response) {
-  // }
+  @Post('update-avatar')
+  @UseInterceptors(AuthInterceptor)
+  async updateGender (@Req() req: Request, @Body() params: UpdateAvatarParams): Promise<User> {
+    return await this.userService.update(req.uid, {
+      avatar: params.avatar
+    })
+  }
 
   // @Post('destroy')
   // async destroy (req: Request, res: Response) {
