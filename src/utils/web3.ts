@@ -29,5 +29,5 @@ export const generatePrivateKey = (): string => {
 }
 
 export const recoverAddress = (data: string, sign: string): string => {
-  return ethers.recoverAddress(data, sign).toLowerCase()
+  return ethers.recoverAddress(data, sign)
 }

@@ -10,7 +10,7 @@ import { UserModule } from '../user/user.module'
     GroupController
   ],
   providers: [
-    GroupService,
+    GroupService
   ]
 })
 export class GroupModule {

@@ -11,7 +11,7 @@ import {
   MineGroupInfoItem, GroupDetailItem
 } from '@/modules/group/controllers/group.dto'
 import { randomUUID, randomInt } from 'crypto'
-import { strMd5 } from '@/utils/bufferUtil'
+import { strMd5 } from '@/utils/buffer.util'
 describe('GroupController', () => {
   let app: NestFastifyApplication
   const _groupId: string = '4bcfdb52-dd1e-4010-8c0f-2ca2c4f9b688'

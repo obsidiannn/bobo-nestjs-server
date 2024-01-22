@@ -20,6 +20,12 @@ export class UserService {
     })
   }
 
+  async createBatch (data: Prisma.UserCreateInput[]): Promise<Prisma.BatchPayload> {
+    return await this.prismaService.user.createMany({
+      data
+    })
+  }
+
   async update (id: string, data: Prisma.UserUpdateInput): Promise<User> {
     return await this.prismaService.user.update({
       where: {

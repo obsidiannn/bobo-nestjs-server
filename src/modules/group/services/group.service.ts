@@ -40,7 +40,6 @@ export class GroupService {
     }
     const group = await this.prisma.group.create({ data })
     const member: Prisma.GroupMembersCreateInput = {
-      id: randomUUID(),
       groupId: group.id,
       uid: data.ownerId,
       encPri: '',
@@ -119,7 +118,7 @@ export class GroupService {
         const member: Prisma.GroupMembersCreateInput = {
           id: randomUUID(),
           groupId: param.id,
-          uid: u.unionId,
+          uid: u.id,
           encPri: '',
           encKey: '',
           inviteUid: currentId,
@@ -388,7 +387,7 @@ export class GroupService {
     if (member === null) {
       const user = await this.userService.findById(param.uid)
       if (user != null) {
-        const input: Prisma.GroupMembersCreateInput = this.userService.user2GroupMemberInput(user, param.id)
+        const input: Prisma.GroupMembersCreateInput = this.user2GroupMemberInput(user, param.id)
         input.role = 2
         return await this.prisma.groupMembers.create({ data: input })
       }
@@ -564,5 +563,22 @@ export class GroupService {
       throw new HttpException('不在群组内', HttpStatus.BAD_REQUEST)
     }
     return member.role
+  }
+
+  user2GroupMemberInput (user: User, groupId: string): Prisma.GroupMembersCreateInput {
+    const member: Prisma.GroupMembersCreateInput = {
+      id: randomUUID(),
+      groupId,
+      uid: user.id,
+      encPri: '',
+      encKey: '',
+      inviteUid: 'todo',
+      role: 3,
+      joinType: 1,
+      myAlias: user.name,
+      status: CommonEnum.ON,
+      banType: CommonEnum.ON
+    }
+    return member
   }
 }

@@ -15,10 +15,6 @@ export class GroupCreateReq {
 };
 
 export class GroupMemberReq extends BasePageReq {
-  constructor () {
-    super()
-  }
-
   @IsNotEmpty({ message: 'not empty' })
     id: string
 }
