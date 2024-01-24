@@ -4,6 +4,7 @@ import { UserModule } from './modules/user/user.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { GroupModule } from './modules/group/group.module'
 import { FriendModule } from './modules/friend/friend.module'
+import { MessageModule } from './modules/message/message.module'
 
 @Module({
   imports: [
@@ -11,7 +12,8 @@ import { FriendModule } from './modules/friend/friend.module'
     AuthModule,
     UserModule,
     GroupModule,
-    FriendModule
+    FriendModule,
+    MessageModule
   ]
 })
 export class AppModule {}

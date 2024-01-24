@@ -8,11 +8,17 @@ import {
 import { Prisma, User, Group, GroupMembers, FriendApply } from '@prisma/client'
 import { BaseUIdArrayReq, BaseIdsArrayReq, CommonEnum, BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import commonUtil from '@/utils/common.util'
+import { ChatService } from '@/modules/message/services/chat.service'
+import { FriendApplyStatusEnum } from '@/enums'
+import { ChatStatusEnum, ChatTypeEnum } from '@/modules/message/controllers/chat.dto'
+import { MessageService } from '@/modules/message/services/message.service'
 
 @Injectable()
 export class FriendService {
   constructor (
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly chatService: ChatService,
+    private readonly messageService: MessageService
   ) { }
 
   // 获取用户关系
@@ -93,7 +99,7 @@ export class FriendService {
     const input: Prisma.FriendApplyCreateInput = {
       uid: currentUserId,
       objUid: param.uid,
-      status: 0,
+      status: FriendApplyStatusEnum.PENDING,
       isRead: CommonEnum.OFF,
       remark: param.remark,
       createdAt: new Date(),
@@ -172,15 +178,14 @@ export class FriendService {
       where: {
         id: param.id,
         objUid: currentUserId,
-        status: 0
+        status: FriendApplyStatusEnum.PENDING
       },
       data: {
-        status: 1,
-        isRead: 1,
+        status: FriendApplyStatusEnum.PASSED,
+        isRead: CommonEnum.ON,
         updatedAt: new Date()
       }
     })
-
     const inputs: Prisma.FriendCreateInput[] = [
       {
         uid: currentUserId,
@@ -201,6 +206,13 @@ export class FriendService {
     ]
 
     await this.prisma.friend.createMany({ data: inputs })
+    await this.chatService.addSimpleChat(currentUserId, {
+      groupId: null,
+      type: ChatTypeEnum.NORMAL,
+      status: ChatStatusEnum.ENABLE,
+      isEnc: CommonEnum.ON,
+      receiver: apply.uid
+    })
   }
 
   // 申请拒绝
@@ -209,11 +221,11 @@ export class FriendService {
       where: {
         id: param.id,
         objUid: currentUserId,
-        status: 0
+        status: FriendApplyStatusEnum.PENDING
       },
       data: {
-        status: 2,
-        isRead: 1,
+        status: FriendApplyStatusEnum.REFUSED,
+        isRead: CommonEnum.ON,
         updatedAt: new Date(),
         rejectReason: param.reason
       }
@@ -281,7 +293,11 @@ export class FriendService {
     })
   }
 
-  // 删除好友（单向）
+  /**
+   *  删除好友（单向）
+   * @param currentUserId
+   * @param param
+   */
   async dropRelationSingle (currentUserId: string, param: BaseUIdArrayReq): Promise<any> {
     await this.prisma.friendApply.deleteMany({
       where: {
@@ -295,9 +311,17 @@ export class FriendService {
         objUid: { in: param.uids }
       }
     })
+    // 删除会话
+    const chatIds = await this.chatService.deleteSimpleChat(currentUserId, param.uids, true, ChatTypeEnum.NORMAL)
+    // 删除消息
+    await this.messageService.clearMessageByChatIds(currentUserId, chatIds)
   }
 
-  // 删除所有好友（双向）
+  /**
+   * 删除所有好友（双向）
+   * @param currentUserId
+   * @param param
+   */
   async dropRelationMulti (currentUserId: string, param: BaseUIdArrayReq): Promise<any> {
     // a
     await this.prisma.friendApply.deleteMany({
@@ -325,8 +349,14 @@ export class FriendService {
         objUid: currentUserId
       }
     })
+
+    // 删除会话
+    const chatIds = await this.chatService.deleteSimpleChat(currentUserId, param.uids, false, ChatTypeEnum.NORMAL)
+    // 删除消息
+    await this.messageService.clearAllMessageByChatIds(currentUserId, chatIds)
   }
 
+  // 是否拉黑
   async isDenied (currentUserId: string, uids: string[]): Promise<boolean> {
     return await this.prisma.blacklist.count({
       where: {
@@ -336,6 +366,7 @@ export class FriendService {
     }) > 0
   }
 
+  // 是否为好友
   async isFriend (currentUserId: string, uids: string[]): Promise<boolean> {
     return await this.prisma.friend.count({
       where: {

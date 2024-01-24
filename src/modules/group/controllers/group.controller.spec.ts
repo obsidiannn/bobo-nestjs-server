@@ -1,7 +1,7 @@
 import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { Test } from '@nestjs/testing'
-import { BaseIdReq, CommonEnum, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/modules/common/dto/common.dto'
+import { Test, TestingModule } from '@nestjs/testing'
+import { BaseIdReq, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/modules/common/dto/common.dto'
 import {
   GroupCreateReq, GroupMemberReq, GroupDescResp,
   GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq, GroupMemberItem,
@@ -11,12 +11,15 @@ import {
 } from '@/modules/group/controllers/group.dto'
 import { randomUUID, randomInt } from 'crypto'
 import { builWallet, generatePrivateKey } from '@/utils/web3'
-import bufferUtil, { strMd5 } from '@/utils/buffer.util'
+import { strMd5 } from '@/utils/buffer.util'
 import testUtil from '@/utils/test-util'
 import { UserService } from '@/modules/user/services/user.service'
 import { SystemController } from '@/modules/common/controllers/system.controller'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import * as request from 'supertest'
+import * as Crypto from 'crypto'
+import eccUtil from '@/utils/ecc.util'
+
 describe('GroupController', () => {
   let app: NestExpressApplication
   const _groupId: string = '4bcfdb52-dd1e-4010-8c0f-2ca2c4f9b688'
@@ -48,11 +51,20 @@ describe('GroupController', () => {
 
   describe('群组管理', () => {
     it('创建群聊', async () => {
+      const ecdh = eccUtil.getECDH()
+      ecdh.generateKeys()
+      const memberEcdh = eccUtil.getECDH()
+      memberEcdh.generateKeys()
+
+      const key = eccUtil.generateSharedSecret(memberEcdh.getPrivateKey('hex'), ecdh.getPublicKey('hex'))
+
       const req: GroupCreateReq = {
         id: randomUUID(),
-        pubKey: '',
+        pubKey: ecdh.getPublicKey('hex'),
         avatar: 'https://pica.zhimg.com/v2-9dc70be4b533afc8bcd07e51dff72616_l.jpg',
         name: '测试群组_' + randomInt(10000).toString(),
+        encKey: key,
+        encPri: memberEcdh.getPrivateKey('hex'),
         isEnc: 0,
         type: 1,
         banType: 1,
@@ -77,7 +89,9 @@ describe('GroupController', () => {
         id: _groupId,
         items: [
           {
-            uid: '488177b2f2c0af1fdf02012e31673ff6'
+            uid: '488177b2f2c0af1fdf02012e31673ff6',
+            encKey: '',
+            encPri: ''
           }
         ]
       }
