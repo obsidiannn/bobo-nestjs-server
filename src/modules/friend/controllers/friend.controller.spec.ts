@@ -13,11 +13,9 @@ import {
   , FriendInviteAgreeReq, FriendInviteRejectReq, FriendInfoItem, FriendChangeAliasReq, FriendListPageReq
 } from './friend.dto'
 import { UserService } from '@/modules/user/services/user.service'
-import bufferUtil from '@/utils/buffer.util'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Wallet } from 'ethers'
 import commonUtil from '@/utils/common.util'
-import { log } from 'console'
 import { randomInt } from 'crypto'
 
 describe('friend module FriendController', () => {

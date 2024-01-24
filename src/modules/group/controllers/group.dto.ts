@@ -1,5 +1,5 @@
 import { IsNotEmpty, ArrayNotEmpty } from 'class-validator'
-import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '../../common/dto/common.dto'
+import { BaseIdReq, BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '../../common/dto/common.dto'
 
 export class GroupCreateReq {
   @IsNotEmpty({ message: 'not empty' })
@@ -12,6 +12,8 @@ export class GroupCreateReq {
   type: number // 群类型 1-普通 2-付费 3-私密 默认1
   banType: number // 禁言类型 1-不禁言 2-全员禁言 3-仅管理员可发言 4-仅群主可发言 默认1
   searchType: number
+  encPri: string
+  encKey: string
 };
 
 export class GroupMemberReq extends BasePageReq {
@@ -33,6 +35,14 @@ export class GroupMemberResp extends BasePageResp<GroupMemberItem> {
 
 }
 
+export class GroupRequireJoinReq extends BaseIdReq {
+  @IsNotEmpty({ message: 'not empty' })
+    encKey: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    encPri: string
+}
+
 export class GroupApplyJoinReq {
   @IsNotEmpty({ message: 'not empty' })
     id: string
@@ -51,7 +61,8 @@ export class GroupListIdResp {
 
 export class GroupInviteJoinItem {
   uid: string
-  encKey?: string
+  encKey: string
+  encPri: string
 }
 
 export class GroupInviteJoinReq {
