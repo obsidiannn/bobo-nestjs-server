@@ -246,7 +246,7 @@ model UserMessage {
   isRead   Int    @default(0) @map("is_read") //是否已读 1-是 0-否 默认0
   sequence Int    @map("sequence") // 消息序号
   chatId   String @map("chat_id") // chat id
-  
+  createdAt  DateTime @default(now()) @map("created_at") //创建时间
   @@index([uid], name: "uid")
   @@index([msgId], name: "msg_id")
   @@map("user_messages")

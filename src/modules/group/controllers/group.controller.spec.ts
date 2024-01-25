@@ -9,7 +9,7 @@ import {
   GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupInfoItem,
   MineGroupInfoItem, GroupDetailItem
 } from '@/modules/group/controllers/group.dto'
-import { randomUUID, randomInt } from 'crypto'
+import { randomBytes, randomInt } from 'crypto'
 import { builWallet, generatePrivateKey } from '@/utils/web3'
 import { strMd5 } from '@/utils/buffer.util'
 import testUtil from '@/utils/test-util'
@@ -19,6 +19,7 @@ import { PrismaService } from '@/modules/common/services/prisma.service'
 import * as request from 'supertest'
 import * as Crypto from 'crypto'
 import eccUtil from '@/utils/ecc.util'
+import { Wallet } from 'ethers'
 
 describe('GroupController', () => {
   let app: NestExpressApplication
@@ -59,7 +60,7 @@ describe('GroupController', () => {
       const key = eccUtil.generateSharedSecret(memberEcdh.getPrivateKey('hex'), ecdh.getPublicKey('hex'))
 
       const req: GroupCreateReq = {
-        id: randomUUID(),
+        id: randomBytes(12).toString('hex'),
         pubKey: ecdh.getPublicKey('hex'),
         avatar: 'https://pica.zhimg.com/v2-9dc70be4b533afc8bcd07e51dff72616_l.jpg',
         name: '测试群组_' + randomInt(10000).toString(),

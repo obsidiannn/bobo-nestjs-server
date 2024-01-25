@@ -1,11 +1,13 @@
 import { Body, Controller, Post, Req, UseInterceptors } from '@nestjs/common'
-import { BaseIdsArrayReq, CommonEnum, BaseArrayResp } from '@/modules/common/dto/common.dto'
+import { BaseIdsArrayReq, BaseArrayResp } from '@/modules/common/dto/common.dto'
 import {
   MessageSendReq,
   MessageListItem,
   MessageDetailItem,
   MessageDeleteByIdReq,
-  MessageDeleteByMsgIdReq
+  MessageDeleteByMsgIdReq,
+  MessageListReq,
+  MessageDetailListReq
 } from '../controllers/message.dto'
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
@@ -27,13 +29,13 @@ export class MessageController {
 
   // 消息列表
   @Post('list')
-  async mineMessageList (@Req() req: Request): Promise<BaseArrayResp<MessageListItem>> {
-    return { items: await this.messageService.mineMessageList(req.uid) }
+  async mineMessageList (@Req() req: Request, @Body() param: MessageListReq): Promise<BaseArrayResp<MessageListItem>> {
+    return { items: await this.messageService.mineMessageList(req.uid, param) }
   }
 
   // 消息详情列表
   @Post('detail')
-  async getMessageDetail (@Req() req: Request, @Body() param: BaseIdsArrayReq): Promise<BaseArrayResp<MessageDetailItem>> {
+  async getMessageDetail (@Req() req: Request, @Body() param: MessageDetailListReq): Promise<BaseArrayResp<MessageDetailItem>> {
     return { items: await this.messageService.getMessageDetail(req.uid, param) }
   }
 
@@ -67,7 +69,7 @@ export class MessageController {
     await this.messageService.pullBackByChatIds(req.uid, param)
   }
 
-  // 清空所有端消息 物理删除 (不可恢复,只有拥有管理员权限的用户才能调用)
+  // 清空群消息
   @Post('clear-chat-ids')
   async clearChatByChatIds (@Req() req: Request, @Body()param: MessageDeleteByIdReq): Promise<any> {
     await this.messageService.clearChatByChatIds(req.uid, param)

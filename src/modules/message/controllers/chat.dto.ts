@@ -5,7 +5,7 @@ export class AddChatDto {
   type: ChatTypeEnum
   status: ChatStatusEnum
   isEnc: CommonEnum
-  receiver: string | null
+  receiver?: string | null
 }
 export class ChatListItem {
   id: string
@@ -28,6 +28,12 @@ export class ChatDetailItem {
   lastSequence: number
   lastTime: Date | null
   createdAt: Date
+}
+
+// chat: 删掉的chat id，chatUser: 删掉的chatUser的chatId
+export class DropSimpleChatResult {
+  chat: string[]
+  chatUser: string[]
 }
 
 // 1-单聊 2-群聊 3 官方会话

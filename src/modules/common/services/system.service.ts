@@ -18,4 +18,12 @@ export class SystemService {
     }
     return nodesStr.split(',')
   }
+
+  getTestUserId (): string {
+    const userId = this.configService.get<string>('TEST_USER_ID')
+    if (userId === undefined) {
+      return ''
+    }
+    return userId
+  }
 }

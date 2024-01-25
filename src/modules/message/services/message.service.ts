@@ -7,35 +7,41 @@ import {
   MessageDeleteByIdReq,
   MessageExtra,
   MessageAction,
-  MessageDeleteByMsgIdReq
+  MessageDeleteByMsgIdReq,
+  MessageListReq,
+  MessageDetailListReq
 } from '../controllers/message.dto'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { UserService } from '@/modules/user/services/user.service'
 import { Prisma, MessageDetail } from '@prisma/client'
 import { MessageStatus } from './message.enums'
 import { isNumber } from 'class-validator'
-import { GroupMemberRole } from '@/enums'
-import commonUtil from '@/utils/common.util'
+import { GroupMemberRoleEnum } from '@/enums'
+import { DropSimpleChatResult } from '../controllers/chat.dto'
+import { ChatService } from './chat.service'
 
 @Injectable()
 export class MessageService {
   constructor (
     private readonly prisma: PrismaService,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly chatService: ChatService
   ) {}
 
   // 发送消息
   async sendMessage (currentUserId: string, param: MessageSendReq): Promise<any> {
     const messageInput: Prisma.MessageDetailCreateInput = {
-      ...param,
+      chatId: param.chatId,
+      content: param.content,
+      type: param.type,
+      isEnc: param.isEnc,
       fromUid: currentUserId,
       extra: JSON.stringify(param.extra),
       action: JSON.stringify(param.action),
       createdAt: new Date(),
       status: MessageStatus.NORMAL
     }
-    await this.prisma.messageDetail.create({ data: messageInput })
-    let sequence = 0
+    let sequence = 1
     await this.prisma.messageDetail.findFirst({
       where: {
         chatId: param.chatId
@@ -48,11 +54,13 @@ export class MessageService {
       }
     })
 
+    messageInput.sequence = sequence
+    const message = await this.prisma.messageDetail.create({ data: messageInput })
     // sequence 这里应该是 消息最大序号 + 1
-    const userMsgs = param.receiveIds.map(u => {
+    const userMsgs = [...param.receiveIds, currentUserId].map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
         uid: u,
-        msgId: param.id,
+        msgId: message.id,
         isRead: CommonEnum.OFF,
         sequence,
         chatId: param.chatId
@@ -60,56 +68,59 @@ export class MessageService {
       return userMsg
     })
     await this.prisma.userMessage.createMany({ data: userMsgs })
+    await this.chatService.userChatHide(currentUserId, { ids: [param.chatId] }, false)
   }
 
   // 消息列表
-  async mineMessageList (currentUserId: string): Promise<MessageListItem[]> {
-    const userMessages = await this.prisma.userMessage.findMany({
-      where: {
-        uid: currentUserId
-      }
-    })
-    if (userMessages.length <= 0) {
-      return []
+  async mineMessageList (currentUserId: string, param: MessageListReq): Promise<MessageListItem[]> {
+    const up: boolean = param.direction === 'up'
+    const sequence: any = {}
+    if (up) {
+      sequence.lte = param.sequence
+    } else {
+      sequence.gte = param.sequence
     }
-    const messages = await this.prisma.messageDetail.findMany({
-      where: {
-        id: { in: userMessages.map(u => u.msgId) }
-      },
-      select: {
-        id: true,
-        chatId: true,
-        createdAt: true
-      }
-    })
-    if (messages.length > 0) {
-      const messageHash = new Map()
-      messages.forEach(m => {
-        messageHash.set(m.id, m)
-      })
-      return userMessages.map(u => {
-        const msg: MessageDetail = messageHash.get(u.msgId)
-        const item: MessageListItem = {
-          id: u.id,
-          isRead: u.isRead,
-          sequence: u.sequence,
-          createdAt: msg === null ? new Date() : msg.createdAt
-        }
-        return item
-      })
-    }
-    return []
-  }
-
-  // 消息列表
-  async getMessageDetail (currentUserId: string, param: BaseIdsArrayReq): Promise<MessageDetailItem[]> {
     const userMessages = await this.prisma.userMessage.findMany({
       where: {
         uid: currentUserId,
-        msgId: { in: param.ids }
+        chatId: param.chatId,
+        sequence
+      },
+      take: 100,
+      orderBy: {
+        sequence: 'asc'
+      }
+    })
+    if (userMessages.length <= 0) {
+      return []
+    }
+
+    return userMessages.map(u => {
+      const item: MessageListItem = {
+        id: u.id,
+        isRead: u.isRead,
+        sequence: u.sequence,
+        createdAt: u.createdAt
+      }
+      return item
+    })
+  }
+
+  // 消息详情列表
+  async getMessageDetail (currentUserId: string, param: MessageDetailListReq): Promise<MessageDetailItem[]> {
+    const userMessages = await this.prisma.userMessage.findMany({
+      where: {
+        uid: currentUserId,
+        msgId: { in: param.ids },
+        chatId: param.chatId
       },
       select: {
-        msgId: true
+        id: true,
+        msgId: true,
+        sequence: true
+      },
+      orderBy: {
+        sequence: 'asc'
       }
     })
     if (userMessages.length <= 0) {
@@ -125,6 +136,19 @@ export class MessageService {
       messages.forEach(m => {
         messageHash.set(m.id, m)
       })
+
+      // 已读 + 更新最大read sequence
+      const max = userMessages[userMessages.length - 1]
+      await this.prisma.userMessage.updateMany({
+        where: {
+          id: { in: userMessages.map(u => u.id) },
+          isRead: CommonEnum.OFF
+        },
+        data: {
+          isRead: CommonEnum.ON
+        }
+      })
+      await this.chatService.refreshSequence(currentUserId, param.chatId, max.sequence)
       return userMessages.map(u => {
         const msg: MessageDetail = messageHash.get(u.msgId)
         if (msg === null) {
@@ -139,7 +163,6 @@ export class MessageService {
         if (item.status === 2) {
           item.content = ''
         }
-
         return item
       }).filter(i => i.id !== null)
     }
@@ -273,7 +296,7 @@ export class MessageService {
         where: {
           groupId: { in: groupIds },
           uid: currentUserId,
-          role: { in: [GroupMemberRole.MANAGER, GroupMemberRole.OWNER] }
+          role: { in: [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER] }
         }
       })
       if (groups.length > 0) {
@@ -297,30 +320,48 @@ export class MessageService {
 
   /**
    * 根据chatId 清除消息
+   *  会删除 messageDetail 与 userMessage
    * @param currentUserId
    * @param chatIds
    */
-  async clearMessageByChatIds (currentUserId: string, chatIds: string[]): Promise<void> {
+  async clearMessageByChatIds (currentUserId: string, chatDeleteResult: DropSimpleChatResult): Promise<void> {
     await this.prisma.userMessage.deleteMany({
       where: {
         uid: currentUserId,
-        chatId: { in: chatIds }
+        chatId: { in: chatDeleteResult.chatUser }
       }
     })
     //
-    const aliveMessages = await this.prisma.userMessage.findMany({
+    // const aliveMessages = await this.prisma.userMessage.findMany({
+    //   where: {
+    //     chatId: { in: chatDeleteResult.chat }
+    //   },
+    //   select: {
+    //     chatId: true
+    //   }
+    // })
+    // // 判断两边都被删除，取得差集，删掉所得差集的chatIds的message
+    // const dropChatIds = commonUtil.arrayDifference(chatIds, aliveMessages.map(a => a.chatId))
+    if (chatDeleteResult.chat.length > 0) {
+      await this.prisma.messageDetail.deleteMany({
+        where: {
+          chatId: { in: chatDeleteResult.chat }
+        }
+      })
+    }
+  }
+
+  /**
+   * 根据chatId & memberId 清除部分消息
+   * @param currentUserId
+   * @param chatIds
+   */
+  async clearMemberMessageByChatIds (memberIds: string[], chatIds: string[]): Promise<void> {
+    if (chatIds.length <= 0 || memberIds.length <= 0) { return }
+    await this.prisma.userMessage.deleteMany({
       where: {
-        chatId: { in: chatIds }
-      },
-      select: {
-        chatId: true
-      }
-    })
-    // 判断两边都被删除，取得差集，删掉所得差集的chatIds的message
-    const dropChatIds = commonUtil.arrayDifference(chatIds, aliveMessages.map(a => a.chatId))
-    await this.prisma.messageDetail.deleteMany({
-      where: {
-        chatId: { in: dropChatIds }
+        chatId: { in: chatIds },
+        uid: { in: memberIds }
       }
     })
   }

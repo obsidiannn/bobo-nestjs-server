@@ -312,9 +312,9 @@ export class FriendService {
       }
     })
     // 删除会话
-    const chatIds = await this.chatService.deleteSimpleChat(currentUserId, param.uids, true, ChatTypeEnum.NORMAL)
+    const result = await this.chatService.deleteSimpleChat(currentUserId, param.uids, true, ChatTypeEnum.NORMAL)
     // 删除消息
-    await this.messageService.clearMessageByChatIds(currentUserId, chatIds)
+    await this.messageService.clearMessageByChatIds(currentUserId, result)
   }
 
   /**
@@ -351,9 +351,9 @@ export class FriendService {
     })
 
     // 删除会话
-    const chatIds = await this.chatService.deleteSimpleChat(currentUserId, param.uids, false, ChatTypeEnum.NORMAL)
+    const result = await this.chatService.deleteSimpleChat(currentUserId, param.uids, false, ChatTypeEnum.NORMAL)
     // 删除消息
-    await this.messageService.clearAllMessageByChatIds(currentUserId, chatIds)
+    await this.messageService.clearMessageByChatIds(currentUserId, result)
   }
 
   // 是否拉黑

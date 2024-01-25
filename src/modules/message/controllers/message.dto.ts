@@ -1,9 +1,8 @@
 import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '@/modules/common/dto/common.dto'
-import { IsNotEmpty, ArrayNotEmpty } from 'class-validator'
+import { IsNotEmpty, ArrayNotEmpty, Matches } from 'class-validator'
 
 export class MessageSendReq {
-  @IsNotEmpty({ message: 'not empty' })
-    id: string
+  id?: string
 
   @IsNotEmpty({ message: 'not empty' })
     chatId: string
@@ -22,6 +21,30 @@ export class MessageSendReq {
 
   extra: MessageExtra
   action?: MessageAction
+}
+
+export class MessageListReq {
+  @IsNotEmpty({ message: 'not empty' })
+    chatId: string
+
+  @IsNotEmpty({ message: 'not empty' })
+    sequence: number
+
+  @IsNotEmpty({ message: 'not empty' })
+    direction: string
+}
+
+export class MessageDetailListReq {
+  @IsNotEmpty({ message: 'not empty' })
+    chatId: string
+
+  @ArrayNotEmpty({ message: 'not empty' })
+    ids: string[]
+
+  // sequence start
+  start: number
+  // sequence end
+  end: number
 }
 
 export class MessageListItem {

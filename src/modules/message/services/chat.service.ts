@@ -1,10 +1,11 @@
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { AddChatDto, ChatDetailItem, ChatListItem, ChatTypeEnum } from '../controllers/chat.dto'
+import { AddChatDto, ChatDetailItem, ChatListItem, ChatStatusEnum, ChatTypeEnum, DropSimpleChatResult } from '../controllers/chat.dto'
 import { Prisma } from '@prisma/client'
 import { BaseIdsArrayReq, CommonEnum } from '@/modules/common/dto/common.dto'
 import { strMd5 } from '@/utils/buffer.util'
 import commonUtil from '@/utils/common.util'
+import { max } from 'class-validator'
 
 @Injectable()
 export class ChatService {
@@ -88,9 +89,10 @@ export class ChatService {
   }
 
   /**
- *
- * @param groupId 群组移除会话
+ * 群组移除某个人会话
+ * @param groupId
  * @param memberIds
+ * @returns 相关的chatId 用来删除message
  */
   async removeChatGroupMember (groupId: string, memberIds: string[]): Promise<string[]> {
     const chat = await this.prisma.chat.findFirst({
@@ -111,6 +113,12 @@ export class ChatService {
     return []
   }
 
+  /**
+   * 群组移除某些人会话
+   * @param groupIds
+   * @param memberId
+   * @returns 相关的chatId 用来删除message
+   */
   async removeChatGroupsMember (groupIds: string[], memberId: string): Promise<string[]> {
     const chats = await this.prisma.chat.findMany({
       where: {
@@ -171,12 +179,13 @@ export class ChatService {
    * @returns
    */
   async addSimpleChat (currentUserId: string, param: AddChatDto): Promise<string> {
-    if (param.receiver === null) {
+    if (param.receiver === undefined) {
       throw new HttpException('error', HttpStatus.BAD_REQUEST)
     }
     // 判断拉黑
     // this.prisma.blacklist
-    const userArray = [currentUserId, param.receiver]
+    const receiver = param.receiver === null ? '' : param.receiver
+    const userArray: string[] = [currentUserId, receiver]
     const userRef = this.userRefGenerate(userArray)
     const hasChat = await this.prisma.chatUser.findFirst({
       where: {
@@ -188,9 +197,9 @@ export class ChatService {
       return hasChat.chatId
     }
     const input: Prisma.ChatCreateInput = {
-      ...param,
       type: ChatTypeEnum.NORMAL,
-      status: CommonEnum.ON,
+      status: ChatStatusEnum.ENABLE,
+      isEnc: CommonEnum.ON,
       creatorUId: currentUserId,
       lastReadSequence: 0,
       lastSequence: 0
@@ -221,6 +230,9 @@ export class ChatService {
     const chatList = await this.prisma.chatUser.findMany({
       where: {
         uid: currentUserId
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     })
     return chatList.map(c => {
@@ -239,7 +251,17 @@ export class ChatService {
         id: { in: param.ids }
       }
     })
-    return chats.map(c => {
+    const chatArray = await this.prisma.chatUser.findMany({
+      where: {
+        chatId: { in: param.ids },
+        uid: currentUserId
+      },
+      select: {
+        chatId: true
+      }
+    })
+    const chatIds = chatArray.map(c => c.chatId)
+    return chats.filter(c => chatIds.includes(c.id)).map(c => {
       const item: ChatDetailItem = {
         ...c,
         creatorId: c.creatorUId
@@ -248,25 +270,122 @@ export class ChatService {
     })
   }
 
-  // 删除会话
-  async deleteChat (currentUserId: string, param: BaseIdsArrayReq): Promise<any> {
-    await this.prisma.chatUser.deleteMany({
+  /**
+ * 删除会话
+ * @param currentUserId
+ * @param param
+ * @param hide true: 隐藏，false： 展开
+ */
+  async userChatHide (currentUserId: string, param: BaseIdsArrayReq, hide: boolean): Promise<string[]> {
+    const chatArray = await this.prisma.chatUser.findMany({
       where: {
         chatId: { in: param.ids },
         uid: currentUserId
+      },
+      select: {
+        chatId: true
       }
     })
+
+    await this.prisma.chatUser.updateMany({
+      where: {
+        chatId: { in: param.ids },
+        uid: currentUserId
+      },
+      data: {
+        isShow: hide ? CommonEnum.OFF : CommonEnum.ON,
+        isHide: hide ? CommonEnum.ON : CommonEnum.OFF
+      }
+    })
+    return chatArray.map(c => c.chatId)
   }
 
   /**
-   * 删除的chatIds
-   * @param currentUserId
-   * @param targetUIds
+   * 删除会话关系 （chatUser） 如果双方都不存在，则删除chat
+   * @param currentUserId 当前用户
+   * @param targetUIds 目标用户
    * @param simple 是否为双向删除 true: 单向，false 双向
-   * @returns chatIds
+   * @returns chat: 删掉的chat id，chatUser: 删掉的chatUser的chatId
    */
-  async deleteSimpleChat (currentUserId: string, targetUIds: string [], simple: boolean, chatType: ChatTypeEnum): Promise<string[]> {
-    return []
+  async deleteSimpleChat (currentUserId: string, targetUIds: string [], simple: boolean, chatType: ChatTypeEnum): Promise<DropSimpleChatResult> {
+    const result = {
+      chat: [],
+      chatUser: []
+    }
+    const userRefIndex: string[] = targetUIds.map(uid => {
+      return this.userRefGenerate([currentUserId, uid])
+    })
+
+    const chatUsers = await this.prisma.chatUser.findMany({
+      where: {
+        userRef: { in: userRefIndex }
+      }
+    })
+    if (chatUsers.length <= 0) {
+      return result
+    }
+
+    // 单向删除，要检查对侧数据
+    if (simple) {
+      const existUserChat = new Set<string>()
+      chatUsers.forEach(c => {
+        if (c.uid !== currentUserId) {
+          existUserChat.add(c.chatId)
+        }
+      })
+      await this.prisma.chatUser.deleteMany({
+        where: {
+          uid: currentUserId,
+          userRef: { in: userRefIndex }
+        }
+      })
+      const chatIds = chatUsers.map(c => c.chatId)
+      const deleteChats = commonUtil.arrayDifference(chatIds, Array.from(existUserChat))
+      if (deleteChats.length > 0) {
+        await this.prisma.chat.deleteMany({
+          where: { id: { in: deleteChats } }
+        })
+      }
+      return {
+        chat: deleteChats,
+        chatUser: chatIds
+      }
+    } else {
+      const chatIds = chatUsers.map(c => c.chatId)
+      await this.prisma.chat.deleteMany({
+        where: { id: { in: chatIds } }
+      })
+      await this.prisma.chatUser.deleteMany({
+        where: {
+          chatId: { in: chatIds }
+        }
+      })
+      return {
+        chat: chatIds,
+        chatUser: chatIds
+      }
+    }
+  }
+
+  /**
+   * 更新最大sequence
+   * @param currentUserId
+   * @param chatId
+   * @param maxSequence
+   */
+  async refreshSequence (currentUserId: string, chatId: string, maxSequence: number): Promise<void> {
+    await this.prisma.chatUser.updateMany({
+      where: {
+        uid: currentUserId,
+        chatId,
+        maxReadSeq: {
+          lt: maxSequence
+        }
+      },
+      data: {
+        maxReadSeq: maxSequence
+      }
+    })
   }
 
   // 单聊会话索引生成

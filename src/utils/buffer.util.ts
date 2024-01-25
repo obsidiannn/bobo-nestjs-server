@@ -1,5 +1,4 @@
-import crypto from 'crypto'
-
+import * as Crypto from 'crypto'
 export const changeStr2HexNumber = (str: string): number => {
   const bufferData = Buffer.from(str, 'utf8')
   const hexNumbers = Array.from(bufferData, byte => byte)
@@ -7,7 +6,7 @@ export const changeStr2HexNumber = (str: string): number => {
 }
 
 export const strMd5 = (str: string): string => {
-  return crypto.createHash('md5').update(str).digest('hex')
+  return Crypto.createHash('md5').update(str).digest('hex')
 }
 
 export default {

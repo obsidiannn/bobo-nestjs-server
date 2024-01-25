@@ -10,7 +10,7 @@ import {
   MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BasePageResp, CommonEnum, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'
-import { GroupMemberRole, GroupMemberRoleEnum, GroupMemberStatus } from '@/enums'
+import { GroupMemberRoleEnum, GroupMemberStatus } from '@/enums'
 import { UserService } from '@/modules/user/services/user.service'
 import commonUtil from '@/utils/common.util'
 import { ChatService } from '@/modules/message/services/chat.service'
@@ -44,10 +44,16 @@ export class GroupService {
    */
   async create (currentUserId: string, param: GroupCreateReq): Promise<Group> {
     const data: Prisma.GroupCreateInput = {
-      ...param,
+      id: param.id,
+      pubKey: param.pubKey,
+      avatar: param.avatar,
+      name: param.name,
+      isEnc: param.isEnc,
+      type: param.type,
+      banType: param.banType,
+      searchType: param.searchType,
       creatorId: currentUserId,
       ownerId: currentUserId,
-      pubKey: param.pubKey,
       cover: '1'
     }
 
@@ -76,8 +82,7 @@ export class GroupService {
       groupId: group.id,
       type: ChatTypeEnum.GROUP,
       status: ChatStatusEnum.ENABLE,
-      isEnc: group.isEnc,
-      receiver: null
+      isEnc: group.isEnc
     })
     return group
   }
@@ -187,7 +192,7 @@ export class GroupService {
       }
     })
     const chatIds = await this.chatService.removeChatGroupMember(param.id, param.uids)
-    await this.messageService.clearAllMessageByChatIds(currentUserId, chatIds)
+    await this.messageService.clearMemberMessageByChatIds(param.uids, chatIds)
   }
 
   // 我的群聊id
@@ -292,7 +297,7 @@ export class GroupService {
       }
     })
     const chatIds = await this.chatService.removeChatGroupMember(param.id, [currentUserId])
-    await this.messageService.clearAllMessageByChatIds(currentUserId, chatIds)
+    await this.messageService.clearMemberMessageByChatIds([currentUserId], chatIds)
   }
 
   // 退出多个群聊 todo
@@ -316,7 +321,7 @@ export class GroupService {
       }
     })
     const chatIds = await this.chatService.removeChatGroupsMember(param.ids, currentUserId)
-    await this.messageService.clearAllMessageByChatIds(currentUserId, chatIds)
+    await this.messageService.clearMemberMessageByChatIds([currentUserId], chatIds)
   }
 
   // 退出全部群聊
@@ -348,7 +353,7 @@ export class GroupService {
       }
     })
     const chatIds = await this.chatService.removeChatGroupsMember(groups.map(g => g.groupId), currentUserId)
-    await this.messageService.clearAllMessageByChatIds(currentUserId, chatIds)
+    await this.messageService.clearMemberMessageByChatIds([currentUserId], chatIds)
   }
 
   // 解散群组
@@ -437,8 +442,7 @@ export class GroupService {
           groupId: param.id,
           type: ChatTypeEnum.GROUP,
           status: ChatStatusEnum.ENABLE,
-          isEnc: group.isEnc,
-          receiver: null
+          isEnc: group.isEnc
         })
       }
     } else {

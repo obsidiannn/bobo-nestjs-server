@@ -17,6 +17,7 @@ import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Wallet } from 'ethers'
 import commonUtil from '@/utils/common.util'
 import { randomInt } from 'crypto'
+import { SystemService } from '@/modules/common/services/system.service'
 
 describe('friend module FriendController', () => {
   let app: NestExpressApplication
@@ -24,9 +25,11 @@ describe('friend module FriendController', () => {
   // let randomPk: string
   let userService: UserService
   let prismaService: PrismaService
-  const customPk: string = '0x7aa1920049e5be949bfd82465eb08923d36ec6897f69cd3420929769a05e4c58'
+
+  let customPk: string
   let customWallet: Wallet
-  const _avatar: string = 'https://foruda.gitee.com/avatar/1676990804312610894/1821456_sunjx93_1608723571.png'
+  let customId: string
+
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
@@ -34,16 +37,19 @@ describe('friend module FriendController', () => {
     app = moduleRef.createNestApplication<NestExpressApplication>()
     await app.init()
 
-    const systemController = app.get<SystemController>(SystemController)
-    const sysPubKeyResponse = await systemController.getPubKey()
-    if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
+    const systemService = app.get<SystemService>(SystemService)
+    const sysPubKeyResponse = systemService.getPubKey()
+    if (sysPubKeyResponse === '' || sysPubKeyResponse === undefined) {
       throw new Error('pubKey is empty')
     }
     // 初始化要用的
-    systemPublicKey = sysPubKeyResponse.pubKey
+    systemPublicKey = sysPubKeyResponse
     userService = app.get<UserService>(UserService)
     prismaService = app.get<PrismaService>(PrismaService)
+
+    customPk = systemService.getTestUserId()
     customWallet = builWallet(customPk)
+    customId = customWallet.address
   })
   // describe('数据初始化', () => {
   //   it('初始化用户 100个', async () => {
