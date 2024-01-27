@@ -57,7 +57,19 @@ export class MessageService {
     messageInput.sequence = sequence
     const message = await this.prisma.messageDetail.create({ data: messageInput })
     // sequence 这里应该是 消息最大序号 + 1
-    const userMsgs = [...param.receiveIds, currentUserId].map(u => {
+    const receiveIds = new Set<string>()
+    // 如果指定recieveId 则
+    if (param.receiveIds === undefined || param.receiveIds === null) {
+      const chatUsers = await this.prisma.chatUser.findMany({
+        where: { chatId: param.chatId },
+        select: { uid: true }
+      })
+      chatUsers.forEach(c => receiveIds.add(c.uid))
+    } else {
+      param.receiveIds.forEach(u => { receiveIds.add(u) })
+    }
+    receiveIds.add(currentUserId)
+    const userMsgs = Array.from(receiveIds).map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
         uid: u,
         msgId: message.id,

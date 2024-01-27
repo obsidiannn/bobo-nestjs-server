@@ -36,55 +36,27 @@ export class GroupService {
     return group
   }
 
+  async findByIds (groupIds: string[]): Promise<Group[]> {
+    return await this.prisma.group.findMany({
+      where: { id: { in: groupIds } }
+    })
+  }
+
+  async deleteByIds (groupIds: string[]): Promise<Prisma.BatchPayload> {
+    return await this.prisma.group.deleteMany({
+      where: { id: { in: groupIds } }
+    })
+  }
+
   /**
    * 创建群组 + 创建群成员
    * @param currentUserId
    * @param param
    * @returns group entity
    */
-  async create (currentUserId: string, param: GroupCreateReq): Promise<Group> {
-    const data: Prisma.GroupCreateInput = {
-      id: param.id,
-      pubKey: param.pubKey,
-      avatar: param.avatar,
-      name: param.name,
-      isEnc: param.isEnc,
-      type: param.type,
-      banType: param.banType,
-      searchType: param.searchType,
-      creatorId: currentUserId,
-      ownerId: currentUserId,
-      cover: '1'
-    }
-
-    const currentUser = await this.userService.findById(currentUserId)
-    if (currentUser === null) {
-      throw new HttpException('error', HttpStatus.BAD_REQUEST)
-    }
-
-    const group = await this.prisma.group.create({ data })
-    const member: Prisma.GroupMembersCreateInput = {
-      groupId: group.id,
-      uid: data.ownerId,
-      encPri: param.encPri,
-      encKey: param.encKey,
-      role: 1,
-      joinType: 1,
-      myAlias: currentUser.name,
-      status: 1,
-      banType: 1,
-      adminAt: new Date(),
-      packageExpiredAt: new Date(),
-      createdAt: new Date()
-    }
-    await this.prisma.groupMembers.create({ data: member })
-    await this.chatService.addGroupChat(currentUserId, {
-      groupId: group.id,
-      type: ChatTypeEnum.GROUP,
-      status: ChatStatusEnum.ENABLE,
-      isEnc: group.isEnc
-    })
-    return group
+  async create (currentUserId: string, data: Prisma.GroupCreateInput): Promise<Group> {
+    data.ownerId = currentUserId
+    return await this.prisma.group.create({ data })
   }
 
   /**
@@ -140,108 +112,25 @@ export class GroupService {
     }
   }
 
-  // 邀请加入群聊
-  async inviteMember (currentUserId: string, param: GroupInviteJoinReq): Promise<any> {
-    const uIds = param.items.map(i => i.uid)
-    const existMembers = await this.prisma.groupMembers.findMany({
-      where: {
-        groupId: { equals: param.id },
-        uid: { in: uIds }
-      }
-    })
-    const itemHash = new Map()
-    param.items.forEach(i => {
-      itemHash.set(i.uid, i)
-    })
-    const existIds = existMembers.map(u => u.uid)
-    const saveIds = commonUtil.arrayDifference(uIds, existIds)
-    if (saveIds.length > 0) {
-      const users: User[] = await this.userService.findByIds(saveIds)
-      const members: Prisma.GroupMembersCreateInput[] = users
-        .filter(u => itemHash.has(u.id)).map(u => {
-          const item: GroupInviteJoinItem = itemHash.get(u.id)
-          const member: Prisma.GroupMembersCreateInput = {
-            groupId: param.id,
-            uid: u.id,
-            encPri: item.encPri,
-            encKey: item.encKey,
-            inviteUid: currentUserId,
-            role: 3,
-            joinType: 1,
-            myAlias: u.name,
-            status: CommonEnum.ON,
-            banType: CommonEnum.ON
-          }
-          return member
-        })
-      await this.prisma.groupMembers.createMany({ data: members })
-      await this.chatService.addChatGroupMember(param.id, members.map(u => u.uid))
-    }
-  }
-
-  // 踢出群聊
-  async memberKickOut (currentUserId: string, param: GroupKickOutReq): Promise<any> {
-    if (param.uids.includes(currentUserId)) {
-      throw new HttpException('不可踢出自己', HttpStatus.BAD_REQUEST)
-    }
-    await this.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
-    await this.prisma.groupMembers.deleteMany({
-      where: {
-        groupId: param.id,
-        uid: { in: param.uids }
-      }
-    })
-    const chatIds = await this.chatService.removeChatGroupMember(param.id, param.uids)
-    await this.messageService.clearMemberMessageByChatIds(param.uids, chatIds)
-  }
-
-  // 我的群聊id
-  async mineGroup (currentUserId: string): Promise<string[]> {
-    const mineGroups = await this.prisma.groupMembers.findMany({
-      where: {
-        uid: { equals: currentUserId }
-      }
-    })
-    return mineGroups.map(g => g.groupId)
-  }
-
   // 修改群名称
-  async changeName (currentUserId: string, param: GroupChangeNameReq): Promise<any> {
-    // const isAdmin = await this.isAdmin(param.id, '')
-    // if (!isAdmin) {
-    //   throw new HttpException('不是群组管理', HttpStatus.BAD_REQUEST)
-    // }
-    await this.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
-    // const group: Group = this.findOne(param.id)
-    const result = await this.prisma.group.update({
-      where: { id: param.id },
-      data: { name: param.name, updatedAt: new Date() }
+  async changeName (groupId: string, name: string): Promise<Group> {
+    return await this.prisma.group.update({
+      where: { id: groupId },
+      data: { name, updatedAt: new Date() }
     })
-    if (result === null) {
-      throw new HttpException('error', HttpStatus.INTERNAL_SERVER_ERROR)
-    }
-    return result
   }
 
   // 修改群头像
-  async changeAvatar (currentUserId: string, param: GroupChangeAvatarReq): Promise<any> {
-    await this.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
-    // const group: Group = this.findOne(param.id)
-    const result = await this.prisma.group.update({
-      where: { id: param.id },
-      data: { avatar: param.avatar, updatedAt: new Date() }
+  async changeAvatar (groupId: string, avatar: string): Promise<Group> {
+    return await this.prisma.group.update({
+      where: { id: groupId },
+      data: { avatar, updatedAt: new Date() }
     })
-    if (result === null) {
-      throw new HttpException('error', HttpStatus.INTERNAL_SERVER_ERROR)
-    }
-    return result
   }
 
   // 修改群通告
-  async changeNotice (currentUserId: string, param: GroupChangeNoticeReq): Promise<any> {
-    await this.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
-    // const group: Group = this.findOne(param.id)
-    const result = await this.prisma.group.update({
+  async changeNotice (currentUserId: string, param: GroupChangeNoticeReq): Promise<Group> {
+    return await this.prisma.group.update({
       where: { id: param.id },
       data: {
         notice: param.notice,
@@ -249,17 +138,11 @@ export class GroupService {
         updatedAt: new Date()
       }
     })
-    if (result === null) {
-      throw new HttpException('error', HttpStatus.INTERNAL_SERVER_ERROR)
-    }
-    return result
   }
 
   // 修改群简介
-  async changeDesc (currentUserId: string, param: GroupChangeDescReq): Promise<any> {
-    await this.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
-    // const group: Group = this.findOne(param.id)
-    const result = await this.prisma.group.update({
+  async changeDesc (currentUserId: string, param: GroupChangeDescReq): Promise<Group> {
+    return await this.prisma.group.update({
       where: { id: param.id },
       data: {
         desc: param.desc,
@@ -267,213 +150,8 @@ export class GroupService {
         updatedAt: new Date()
       }
     })
-    if (result === null) {
-      throw new HttpException('error', HttpStatus.INTERNAL_SERVER_ERROR)
-    }
-    return result
   }
-
-  // 修改我在群里面的昵称
-  async changeAlias (currentUserId: string, param: GroupChangeAliasReq): Promise<any> {
-    return await this.prisma.groupMembers.updateMany({
-      where: {
-        groupId: param.id,
-        uid: currentUserId
-      },
-      data: { myAlias: param.alias }
-    })
-  }
-
-  // 退出群聊
-  async quitGroup (currentUserId: string, param: BaseIdReq): Promise<any> {
-    const groupRole = await this.groupRole(param.id, currentUserId)
-    if (groupRole === GroupMemberRoleEnum.OWNER) {
-      throw new HttpException('群主退群前请先进行转让或直接解散群聊', HttpStatus.BAD_REQUEST)
-    }
-    await this.prisma.groupMembers.deleteMany({
-      where: {
-        groupId: param.id,
-        uid: currentUserId
-      }
-    })
-    const chatIds = await this.chatService.removeChatGroupMember(param.id, [currentUserId])
-    await this.messageService.clearMemberMessageByChatIds([currentUserId], chatIds)
-  }
-
-  // 退出多个群聊 todo
-  async quitGroupBatch (currentUserId: string, param: BaseIdsArrayReq): Promise<any> {
-    const ownerGroups = await this.prisma.groupMembers.findMany({
-      where: {
-        uid: currentUserId,
-        role: 1
-      }
-    })
-    if (ownerGroups.length > 0) {
-      const groups = await this.prisma.group.findMany({
-        where: { id: { in: ownerGroups.map(m => m.groupId) } }
-      })
-      throw new HttpException('群' + groups.join(',') + '是群主，请直接解散群聊', HttpStatus.BAD_REQUEST)
-    }
-    await this.prisma.groupMembers.deleteMany({
-      where: {
-        groupId: { in: param.ids },
-        uid: currentUserId
-      }
-    })
-    const chatIds = await this.chatService.removeChatGroupsMember(param.ids, currentUserId)
-    await this.messageService.clearMemberMessageByChatIds([currentUserId], chatIds)
-  }
-
-  // 退出全部群聊
-  async quitGroupAll (currentUserId: string): Promise<any> {
-    const ownerGroups = await this.prisma.groupMembers.findMany({
-      where: {
-        uid: currentUserId,
-        role: GroupMemberRoleEnum.OWNER
-      }
-    })
-    if (ownerGroups.length > 0) {
-      const groups = await this.prisma.group.findMany({
-        where: { id: { in: ownerGroups.map(m => m.groupId) } }
-      })
-      throw new HttpException('群' + groups.join(',') + '是群主，请直接解散群聊', HttpStatus.BAD_REQUEST)
-    }
-    const groups = await this.prisma.groupMembers.findMany({
-      where: {
-        uid: currentUserId
-      },
-      select: {
-        id: true,
-        groupId: true
-      }
-    })
-    await this.prisma.groupMembers.deleteMany({
-      where: {
-        id: { in: groups.map(g => g.id) }
-      }
-    })
-    const chatIds = await this.chatService.removeChatGroupsMember(groups.map(g => g.groupId), currentUserId)
-    await this.messageService.clearMemberMessageByChatIds([currentUserId], chatIds)
-  }
-
-  // 解散群组
-  async dismissGroup (currentUserId: string, param: BaseIdsArrayReq): Promise<any> {
-    const ownerGroups = await this.prisma.groupMembers.findMany({
-      where: {
-        uid: currentUserId,
-        role: { not: GroupMemberRoleEnum.OWNER }
-      }
-    })
-    if (ownerGroups.length > 0) {
-      const groups = await this.prisma.group.findMany({
-        where: { id: { in: ownerGroups.map(m => m.groupId) } }
-      })
-      throw new HttpException('群' + groups.join(',') + '不是群主，没有权限', HttpStatus.BAD_REQUEST)
-    }
-    const member = await this.prisma.groupMembers.findMany({
-      where: {
-        groupId: { in: param.ids },
-        uid: { equals: currentUserId }
-      }
-    })
-    if (member.length > 0) {
-      const groupIds = member.filter(m => { return m.role === GroupMemberRoleEnum.OWNER }).map(m => m.groupId)
-      if (groupIds.length > 0) {
-        await this.prisma.groupMembers.deleteMany({
-          where: { groupId: { in: groupIds } }
-        })
-        await this.prisma.group.deleteMany({
-          where: { id: { in: groupIds } }
-        })
-        const chatIds = await this.chatService.dropChatGroups(groupIds)
-        await this.messageService.clearAllMessageByChatIds(currentUserId, chatIds)
-      }
-    }
-  }
-
-  // 转移群组
-  async transferGroup (currentUserId: string, param: GroupTransferReq): Promise<any> {
-    await this.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.OWNER])
-    const member = await this.prisma.groupMembers.findFirst({
-      where: {
-        groupId: { equals: param.id },
-        uid: { equals: param.uid }
-      }
-    })
-    if (member === null) {
-      throw new HttpException('必须是群组内成员', HttpStatus.BAD_REQUEST)
-    }
-    await this.prisma.groupMembers.update({
-      where: {
-        id: member.id
-      },
-      data: {
-        role: 1
-      }
-    })
-    return await this.prisma.groupMembers.updateMany({
-      where: {
-        groupId: { equals: param.id },
-        uid: { equals: currentUserId }
-      },
-      data: {
-        role: 2
-      }
-    })
-  }
-
-  // 添加管理员
-  async addGroupManager (currentUserId: string, param: GroupTransferReq): Promise<any> {
-    const group = await this.findOne(param.id)
-    await this.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.OWNER])
-    const member = await this.prisma.groupMembers.findFirst({
-      where: {
-        groupId: { equals: param.id },
-        uid: { equals: param.uid }
-      }
-    })
-    if (member === null) {
-      const user = await this.userService.findById(param.uid)
-      if (user != null) {
-        const input: Prisma.GroupMembersCreateInput = this.user2GroupMemberInput(user, param.id)
-        input.role = GroupMemberRoleEnum.MANAGER
-        await this.prisma.groupMembers.create({ data: input })
-        await this.chatService.addGroupChat(currentUserId, {
-          groupId: param.id,
-          type: ChatTypeEnum.GROUP,
-          status: ChatStatusEnum.ENABLE,
-          isEnc: group.isEnc
-        })
-      }
-    } else {
-      return await this.prisma.groupMembers.update({
-        where: {
-          id: member.id
-        },
-        data: {
-          role: GroupMemberRoleEnum.MANAGER
-        }
-      })
-    }
-  }
-
-  // 移除管理员(转为普通成员)
-  async removeGroupManager (currentUserId: string, param: GroupApplyJoinReq): Promise<any> {
-    if (param.uids.includes(currentUserId)) {
-      throw new HttpException('不可包含自己', HttpStatus.BAD_REQUEST)
-    }
-    await this.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.OWNER])
-    return await this.prisma.groupMembers.updateMany({
-      where: {
-        groupId: param.id,
-        uid: { in: param.uids }
-      },
-      data: {
-        role: GroupMemberRoleEnum.MEMBER
-      }
-    })
-  }
-
+ 
   //  请求加入群组
   async requireJoin (currentUserId: string, param: GroupRequireJoinReq): Promise<void> {
     const groupMember = await this.groupMemberById(param.id, currentUserId)
@@ -588,45 +266,5 @@ export class GroupService {
       return item
     })
   }
-
-  // 群组权限检查
-  async checkGroupRole (groupId: string, uId: string, roles: GroupMemberRoleEnum[]): Promise<any> {
-    const mRole = await this.groupRole(groupId, uId)
-    if (!roles.includes(mRole)) {
-      throw new HttpException('没有群组权限', HttpStatus.BAD_REQUEST)
-    }
-  }
-
-  async groupMemberById (groupId: string, uId: string): Promise<GroupMembers | null> {
-    return await this.prisma.groupMembers.findFirst({
-      where: {
-        groupId: { equals: groupId },
-        uid: { equals: uId }
-      }
-    })
-  }
-
-  async groupRole (groupId: string, uId: string): Promise<number> {
-    const member = await this.groupMemberById(groupId, uId)
-    if (member === null) {
-      throw new HttpException('不在群组内', HttpStatus.BAD_REQUEST)
-    }
-    return member.role
-  }
-
-  user2GroupMemberInput (user: User, groupId: string): Prisma.GroupMembersCreateInput {
-    const member: Prisma.GroupMembersCreateInput = {
-      groupId,
-      uid: user.id,
-      encPri: '',
-      encKey: '',
-      inviteUid: 'todo',
-      role: GroupMemberRoleEnum.MEMBER,
-      joinType: 1,
-      myAlias: user.name,
-      status: CommonEnum.ON,
-      banType: CommonEnum.ON
-    }
-    return member
-  }
+ 
 }

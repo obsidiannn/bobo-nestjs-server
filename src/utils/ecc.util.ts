@@ -7,7 +7,7 @@ const generateSharedSecret = (secret: string, targetPublicKey: string): string =
 }
 
 const getECDH = (): Crypto.ECDH => {
-  return Crypto.createECDH('secp256k1')
+  return Crypto.createECDH('secp521r1')
 }
 
 export default { generateSharedSecret, getECDH }

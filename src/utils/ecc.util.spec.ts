@@ -1,12 +1,21 @@
 import * as Crypto from 'crypto'
 import ecc from './ecc.util'
 import aes from './aes'
-
+import { generatePrivateKey } from '@/utils/web3'
 describe('ecc test', () => {
   const apk = '01ea956740c440295e8d63454e7b1ccdb3d453c138a0c3c6961e6784c0ad9212'
   const bpk = 'd11f186e0e765e16334e35e9534e7cd283a4ea30194a93826feca6b2e8ffa285'
   // const apk = Crypto.randomBytes(32).toString('hex')
   // const bpk = Crypto.randomBytes(32).toString('hex')
+
+  it('支持的算法', () => {
+    console.log(Crypto.getCurves())
+    const pk = generatePrivateKey()
+
+    const a = Crypto.createECDH('secp256k1')
+    a.setPrivateKey(pk, 'hex')
+    console.log(a.getPublicKey)
+  })
 
   it('检查秘钥是否一致', () => {
     const a = Crypto.createECDH('secp256k1')

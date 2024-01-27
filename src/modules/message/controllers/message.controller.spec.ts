@@ -3,7 +3,7 @@ import { AppModule } from '@/app.module'
 import { SystemController } from '@/modules/common/controllers/system.controller'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { UserService } from '@/modules/user/services/user.service'
-import { builWallet } from '@/utils/web3'
+import { buildWallet } from '@/utils/web3'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test, TestingModule } from '@nestjs/testing'
 import { Wallet } from 'ethers'
@@ -11,17 +11,14 @@ import testUtil from '@/utils/test-util'
 
 import {
   MessageSendReq,
-  MessageListItem,
-  MessageDetailItem,
-  MessageDeleteByIdReq,
-  MessageDeleteByMsgIdReq,
   MessageListReq,
   MessageDetailListReq
 } from '../controllers/message.dto'
-import { randomUUID } from 'crypto'
+import { randomInt, randomUUID } from 'crypto'
 import { SystemService } from '@/modules/common/services/system.service'
 import { ChatService } from '../services/chat.service'
 import { CommonEnum } from '@/modules/common/dto/common.dto'
+import { GroupMemberRoleEnum } from '@/enums'
 
 describe('MessageController', () => {
   let app: NestExpressApplication
@@ -47,7 +44,7 @@ describe('MessageController', () => {
     customPk = systemService.getTestUserId()
     prismaService = app.get<PrismaService>(PrismaService)
     chatService = app.get<ChatService>(ChatService)
-    customWallet = builWallet(customPk)
+    customWallet = buildWallet(customPk)
     customId = customWallet.address
   })
 
@@ -103,11 +100,37 @@ describe('MessageController', () => {
         })
     })
     it('发起群消息', async () => {
-
+      const groupMember = await prismaService.groupMembers.findFirst({
+        where: { uid: customId }
+      })
+      if (groupMember === null) { throw new Error() }
+      const chat = await prismaService.chat.findFirst({
+        where: {
+          groupId: groupMember.groupId
+        }
+      })
+      if (chat === null) { throw new Error() }
+      const req: MessageSendReq = {
+        chatId: chat.id,
+        content: '群消息' + randomInt(100).toString(),
+        type: 1,
+        isEnc: chat.isEnc,
+        extra: {}
+      }
+      const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+      return await request(app.getHttpServer())
+        .post('/messages/send')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+        })
     })
 
     it('发起多个好友消息', async () => {
-
     })
   })
 
@@ -179,22 +202,147 @@ describe('MessageController', () => {
 
   describe('消息管理', () => {
     it('撤回消息', async () => {
-
+      const sentMessage = await prismaService.messageDetail.findFirst({
+        where: {
+          fromUid: customId
+        }
+      })
+      if (sentMessage === null) { throw new Error() }
+      const req = {
+        ids: [sentMessage.id]
+      }
+      const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+      return await request(app.getHttpServer())
+        .post('/messages/delete-batch')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+        })
     })
     it('（单向）删除单条消息', async () => {
-
+      const userMessage = await prismaService.userMessage.findFirst({
+        where: {
+          uid: customId
+        }
+      })
+      if (userMessage === null) { throw new Error() }
+      const req = {
+        ids: [userMessage.msgId]
+      }
+      const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+      return await request(app.getHttpServer())
+        .post('/messages/delete-self-all')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+        })
     })
     it('（双向）删除所有消息', async () => {
-
+      const userMessage = await prismaService.userMessage.findFirst({
+        where: {
+          uid: customId
+        }
+      })
+      if (userMessage === null) { throw new Error() }
+      const req = {
+        chatIds: [userMessage.chatId]
+      }
+      const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+      return await request(app.getHttpServer())
+        .post('/messages/delete-chat-ids')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+        })
     })
-    it('（单向）根据会话IDs 解除自己与会话消息的关系', async () => {
-
+    it('(单向)根据会话IDs 解除自己与会话消息的关系', async () => {
+      const userMessage = await prismaService.userMessage.findFirst({
+        where: {
+          uid: customId
+        }
+      })
+      if (userMessage === null) { throw new Error() }
+      const req = {
+        chatIds: [userMessage.chatId]
+      }
+      const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+      return await request(app.getHttpServer())
+        .post('/messages/delete-chat-ids')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+        })
     })
-    it('根据chatId撤回消息', async () => {
-
+    it('根据messageIds撤回消息', async () => {
+      const sentMessage = await prismaService.messageDetail.findFirst({
+        where: {
+          fromUid: customId
+        }
+      })
+      if (sentMessage === null) { throw new Error() }
+      const req = {
+        msgIds: [sentMessage.id]
+      }
+      const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+      return await request(app.getHttpServer())
+        .post('/messages/revoke-chat-ids')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+        })
     })
     it('清空群消息', async () => {
-
+      const managerGroupMember = await prismaService.groupMembers.findFirst({
+        where: {
+          uid: customId,
+          role: { in: [GroupMemberRoleEnum.OWNER,GroupMemberRoleEnum.MANAGER] }
+        }
+      })
+      if (managerGroupMember === null) {
+        throw new Error()
+      }
+      const chat = await prismaService.chat.findFirst({
+        where: {
+          groupId: managerGroupMember.groupId
+        }
+      })
+      if (chat === null) {
+        throw new Error()
+      }
+      const req = {
+        chatIds: [chat.id]
+      }
+      const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+      return await request(app.getHttpServer())
+        .post('/messages/clear-chat-ids')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+        })
     })
   })
 })

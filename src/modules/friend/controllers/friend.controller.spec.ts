@@ -3,7 +3,7 @@ import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { UserGenderEnum } from '@/enums'
 import * as request from 'supertest'
-import { builWallet, generatePrivateKey } from '@/utils/web3'
+import { buildWallet, generatePrivateKey } from '@/utils/web3'
 import { SystemController } from '@/modules/common/controllers/system.controller'
 import testUtil from '@/utils/test-util'
 import { Prisma } from '@prisma/client'
@@ -48,14 +48,14 @@ describe('friend module FriendController', () => {
     prismaService = app.get<PrismaService>(PrismaService)
 
     customPk = systemService.getTestUserId()
-    customWallet = builWallet(customPk)
+    customWallet = buildWallet(customPk)
     customId = customWallet.address
   })
   // describe('数据初始化', () => {
   //   it('初始化用户 100个', async () => {
   //     for (let index = 0; index < 100; index++) {
   //       const pk = generatePrivateKey()
-  //       const wallet = builWallet(pk)
+  //       const wallet = buildWallet(pk)
   //       const input: Prisma.UserCreateInput = {
   //         id: wallet.address,
   //         unionId: pk,
@@ -162,7 +162,7 @@ describe('friend module FriendController', () => {
   describe('申请审核', () => {
     it('申请已读', async () => {
       const testUserPk = '0x861bc89483eaae7c90d90a47c4eb2e5cc2a7c29de2565b7296103e040d0c6ab1'
-      const wallet = builWallet(testUserPk)
+      const wallet = buildWallet(testUserPk)
       const param = { page: 1, limit: 10 }
       // 未读分页
       const data = await prismaService.friendApply.findMany({
@@ -189,7 +189,7 @@ describe('friend module FriendController', () => {
 
     it('同意', async () => {
       const testUserPk = '0x861bc89483eaae7c90d90a47c4eb2e5cc2a7c29de2565b7296103e040d0c6ab1'
-      const wallet = builWallet(testUserPk)
+      const wallet = buildWallet(testUserPk)
       const data = await prismaService.friendApply.findFirst({
         where: {
           objUid: wallet.address,
@@ -257,7 +257,7 @@ describe('friend module FriendController', () => {
 
   describe('好友管理', () => {
     it('变更备注', async () => {
-      const wallet = builWallet(customPk)
+      const wallet = buildWallet(customPk)
 
       const friend = await prismaService.friend.findFirst({
         where: {
@@ -278,7 +278,7 @@ describe('friend module FriendController', () => {
       }
     })
     it('删除好友（单向）', async () => {
-      const wallet = builWallet(customPk)
+      const wallet = buildWallet(customPk)
       const friend = await prismaService.friend.findFirst({
         where: {
           uid: wallet.address
@@ -299,7 +299,7 @@ describe('friend module FriendController', () => {
       }
     })
     it('删除所有好友（双向）', async () => {
-      const wallet = builWallet(customPk)
+      const wallet = buildWallet(customPk)
       const friend = await prismaService.friend.findFirst({
         where: {
           uid: wallet.address

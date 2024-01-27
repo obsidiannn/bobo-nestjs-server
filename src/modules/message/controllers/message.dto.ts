@@ -16,8 +16,7 @@ export class MessageSendReq {
   @IsNotEmpty({ message: 'not empty' })
     isEnc: number
 
-  @ArrayNotEmpty({ message: 'not empty' })
-    receiveIds: string[]
+  receiveIds?: string[]
 
   extra: MessageExtra
   action?: MessageAction

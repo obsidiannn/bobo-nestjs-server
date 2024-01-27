@@ -13,6 +13,28 @@ export class ChatService {
     private readonly prisma: PrismaService
   ) {}
 
+  // 查找某人的好友chat
+  async getChatHashByUserIds (currentUserId: string, uids: string[]): Promise<Map<string, string>> {
+    const refs = uids.map(id => {
+      return this.userRefGenerate([currentUserId, id])
+    })
+    const result = await this.prisma.chatUser.findMany({
+      where: {
+        uid: { not: currentUserId },
+        userRef: { in: refs }
+      },
+      select: {
+        uid: true,
+        chatId: true
+      }
+    })
+    const chatHash = new Map<string, string>()
+    result.forEach(r => {
+      chatHash.set(r.uid, r.chatId)
+    })
+    return chatHash
+  }
+
   // 增加群组chat
   async addGroupChat (currentUserId: string, param: AddChatDto): Promise<void> {
     const groupChat = await this.prisma.chat.count({

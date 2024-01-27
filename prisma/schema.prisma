@@ -224,7 +224,7 @@ model MessageDetail {
   chatId     String   @map("chat_id") //会话ID
   fromUid    String   @map("from_uid") //发送者用户ID
   content    String   @map("content") //消息内容 加密字符串
-  status     Int      @default(1) @map("status") // 状态 1-正常 0-全员删除 如果物理删除 0状态不需要 2 撤回
+  status     Int      @default(1) @map("status") // 状态 1-正常 0-全员删除 如果物理删除 0状态不需要
   type       Int      @map("type") // 1-普通消息 2-应用消息 等 （待定）
   isEnc      Int      @default(0) @map("is_enc") // 是否加密 1-是 0-否 默认0
   sequence   Int?     @map("sequence") // 消息序号

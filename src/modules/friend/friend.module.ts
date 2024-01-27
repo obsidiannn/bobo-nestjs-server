@@ -5,6 +5,7 @@ import { FriendService } from './services/friend.service'
 import { UserModule } from '../user/user.module'
 import { AuthModule } from '../auth/auth.module'
 import { MessageModule } from '../message/message.module'
+import { FriendApplyService } from "@/modules/friend/services/friend-apply.service";
 
 @Module({
   imports: [UserModule, AuthModule, MessageModule],
@@ -12,7 +13,8 @@ import { MessageModule } from '../message/message.module'
     FriendController
   ],
   providers: [
-    FriendService
+    FriendService,
+    FriendApplyService
   ]
 })
 export class FriendModule {

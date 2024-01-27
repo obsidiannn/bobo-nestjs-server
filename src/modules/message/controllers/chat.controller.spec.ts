@@ -2,7 +2,7 @@ import * as request from 'supertest'
 import { AppModule } from '@/app.module'
 import { SystemController } from '@/modules/common/controllers/system.controller'
 import { PrismaService } from '@/modules/common/services/prisma.service'
-import { builWallet } from '@/utils/web3'
+import { buildWallet } from '@/utils/web3'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test, TestingModule } from '@nestjs/testing'
 import { Wallet } from 'ethers'
@@ -31,7 +31,7 @@ describe('ChatController', () => {
     systemPublicKey = sysPubKeyResponse
     customPk = systemService.getTestUserId()
     prismaService = app.get<PrismaService>(PrismaService)
-    customWallet = builWallet(customPk)
+    customWallet = buildWallet(customPk)
     customId = customWallet.address
   })
 

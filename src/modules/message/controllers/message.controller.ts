@@ -63,7 +63,7 @@ export class MessageController {
     await this.messageService.deleteSelfChatByIds(req.uid, param)
   }
 
-  // 撤回消息 根据会话IDs 所有发送者的消息物理删除
+  // 撤回消息 根据messageIds 所有发送者的消息物理删除
   @Post('revoke-chat-ids')
   async pullBackByChatIds (@Req() req: Request, @Body()param: MessageDeleteByMsgIdReq): Promise<any> {
     await this.messageService.pullBackByChatIds(req.uid, param)

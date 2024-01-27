@@ -1,11 +1,11 @@
-import { builWallet } from '@/utils/web3'
+import { buildWallet } from '@/utils/web3'
 import { Wallet } from 'ethers'
 import * as Crypto from 'crypto'
 export class SystemWalletService {
   protected wallet: Wallet
   protected static instance: SystemWalletService | undefined
   constructor (privateKey: string) {
-    this.wallet = builWallet(privateKey)
+    this.wallet = buildWallet(privateKey)
   }
 
   static getInstance (): SystemWalletService {

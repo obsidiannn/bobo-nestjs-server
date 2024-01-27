@@ -1,4 +1,4 @@
-import { builWallet, generatePrivateKey } from '@/utils/web3'
+import { buildWallet, generatePrivateKey } from '@/utils/web3'
 describe('web3 test', () => {
   it('web3 generate key', () => {
     const privateKey = generatePrivateKey()
@@ -6,7 +6,7 @@ describe('web3 test', () => {
   })
   it('web3 build wallet', () => {
     const privateKey = generatePrivateKey()
-    const wallet = builWallet(privateKey)
+    const wallet = buildWallet(privateKey)
     expect(wallet).toEqual(expect.any(Object))
   })
 })
