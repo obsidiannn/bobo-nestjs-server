@@ -45,7 +45,7 @@ export class FriendListPageReq extends BasePageReq {
 
 export class FriendInfoItem {
   uid: string
-  chatId: string
+  chatId?: string
   alias: string | null
 };
 

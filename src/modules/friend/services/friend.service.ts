@@ -5,14 +5,20 @@ import {
   FriendInviteAgreeReq, FriendInviteRejectReq, FriendInfoItem, FriendChangeAliasReq,
   FriendListPageReq
 } from '../controllers/friend.dto'
-import { Prisma, User, Group, GroupMembers, FriendApply } from '@prisma/client'
+import { Prisma, User, Group, GroupMembers, FriendApply, Friend } from '@prisma/client'
 import { BaseUIdArrayReq, BaseIdsArrayReq, CommonEnum, BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import commonUtil from '@/utils/common.util'
+import { ChatService } from '@/modules/message/services/chat.service'
+import { FriendApplyStatusEnum } from '@/enums'
+import { ChatStatusEnum, ChatTypeEnum } from '@/modules/message/controllers/chat.dto'
+import { MessageService } from '@/modules/message/services/message.service'
 
 @Injectable()
 export class FriendService {
   constructor (
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly chatService: ChatService,
+    private readonly messageService: MessageService
   ) { }
 
   // 获取用户关系
@@ -77,187 +83,54 @@ export class FriendService {
     })
   }
 
-  // 申请好友
-  async inviteApply (currentUserId: string, param: FriendInviteApplyReq): Promise<void> {
-    if (currentUserId === param.uid) {
-      return
-    }
-    if (await this.isFriend(currentUserId, [param.uid])) {
-      return
-    }
-    // 是否拉黑
-    if (await this.isDenied(currentUserId, [param.uid])) {
-      return
-    }
+  // // 我的申请列表
+  // async getInviteList (currentUserId: string, param: BasePageReq): Promise<BasePageResp<FriendInviteApplyItem>> {
+  //   const data = await this.prisma.friendApply.findMany({
+  //     where: {
+  //       objUid: currentUserId
+  //     },
+  //     orderBy: {
+  //       createdAt: 'desc'
+  //     },
+  //     skip: commonUtil.pageSkip(param), // 计算需要跳过的数据量
+  //     take: param.limit // 指定每页取多少条数据
+  //   })
+  //   const datas: FriendInviteApplyItem[] = data.map(d => {
+  //     const dto: FriendInviteApplyItem = {
+  //       id: d.id,
+  //       uid: d.uid,
+  //       remark: d.remark,
+  //       status: d.status,
+  //       createdAt: d.createdAt
+  //     }
+  //     return dto
+  //   })
+  //   return new BasePageResp(param, datas, await this.prisma.friendApply.count({
+  //     where: {
+  //       uid: currentUserId
+  //     }
+  //   }))
+  // }
 
-    const input: Prisma.FriendApplyCreateInput = {
-      uid: currentUserId,
-      objUid: param.uid,
-      status: 0,
-      isRead: CommonEnum.OFF,
-      remark: param.remark,
-      createdAt: new Date(),
-      expiredAt: new Date()
-    }
-    await this.prisma.friendApply.create({ data: input })
-  }
-
-  // 我的申请列表
-  async getInviteList (currentUserId: string, param: BasePageReq): Promise<BasePageResp<FriendInviteApplyItem>> {
-    const data = await this.prisma.friendApply.findMany({
-      where: {
-        objUid: currentUserId
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      skip: commonUtil.pageSkip(param), // 计算需要跳过的数据量
-      take: param.limit // 指定每页取多少条数据
-    })
-    const datas: FriendInviteApplyItem[] = data.map(d => {
-      const dto: FriendInviteApplyItem = {
-        id: d.id,
-        uid: d.uid,
-        remark: d.remark,
-        status: d.status,
-        createdAt: d.createdAt
-      }
-      return dto
-    })
-    return new BasePageResp(param, datas, await this.prisma.friendApply.count({
-      where: {
-        uid: currentUserId
-      }
-    }))
-  }
-
-  // 我的审批列表
-  async getApplyList (currentUserId: string, param: BasePageReq): Promise<BasePageResp<FriendInviteApplyItem>> {
-    const data = await this.prisma.friendApply.findMany({
-      where: {
-        objUid: currentUserId
-      },
-      // 优先展示未读
-      orderBy: [
-        {
-          status: 'asc'
-        },
-        {
-          createdAt: 'desc'
-        }
-      ],
-      skip: commonUtil.pageSkip(param), // 计算需要跳过的数据量
-      take: param.limit // 指定每页取多少条数据
-    })
-    const datas: FriendInviteApplyItem[] = data.map(d => {
-      const dto: FriendInviteApplyItem = {
-        id: d.id,
-        uid: d.objUid,
-        remark: d.remark,
-        status: d.status,
-        createdAt: d.createdAt
-      }
-      return dto
-    })
-    return new BasePageResp(param, datas, await this.prisma.friendApply.count({
-      where: {
-        uid: currentUserId
-      }
-    }))
-  }
-
-  // 申请同意
-  async inviteAgree (currentUserId: string, param: FriendInviteAgreeReq): Promise<any> {
-    const apply: FriendApply = await this.prisma.friendApply.update({
-      where: {
-        id: param.id,
-        objUid: currentUserId,
-        status: 0
-      },
-      data: {
-        status: 1,
-        isRead: 1,
-        updatedAt: new Date()
-      }
-    })
-
-    const inputs: Prisma.FriendCreateInput[] = [
-      {
-        uid: currentUserId,
-        objUid: apply.uid,
-        agreeAt: new Date(),
-        remark: '',
-        remarkIndex: '',
-        createdAt: new Date()
-      },
-      {
-        uid: apply.uid,
-        objUid: currentUserId,
-        agreeAt: new Date(),
-        remark: '',
-        remarkIndex: '',
-        createdAt: new Date()
-      }
-    ]
-
-    await this.prisma.friend.createMany({ data: inputs })
-  }
-
-  // 申请拒绝
-  async inviteReject (currentUserId: string, param: FriendInviteRejectReq): Promise<any> {
-    await this.prisma.friendApply.update({
-      where: {
-        id: param.id,
-        objUid: currentUserId,
-        status: 0
-      },
-      data: {
-        status: 2,
-        isRead: 1,
-        updatedAt: new Date(),
-        rejectReason: param.reason
-      }
-    })
-  }
-
-  // 申请已读
-  async inviteRead (currentUserId: string, param: BaseIdsArrayReq): Promise<any> {
-    await this.prisma.friendApply.updateMany({
-      where: {
-        id: { in: param.ids },
-        objUid: currentUserId,
-        isRead: 0
-      },
-      data: {
-        isRead: 1,
-        updatedAt: new Date()
-      }
-    })
+  async createBatch (data: Prisma.FriendCreateInput []): Promise<Prisma.BatchPayload> {
+    return await this.prisma.friend.createMany({ data })
   }
 
   // 好友列表
-  async getFriendList (currentUserId: string, param: FriendListPageReq): Promise<BasePageResp<FriendInfoItem>> {
-    if (param.uids != null && param.uids.length > 0) {
-      param.limit = param.uids.length
-      param.page = 1
+  async getFriendList (currentUserId: string, param: FriendListPageReq): Promise<BasePageResp<Friend>> {
+    const where: any = {
+      uid: currentUserId
     }
-    const friends = await this.prisma.friend.findMany({
-      where: {
-        uid: currentUserId
-      },
+    if (param.uids != null && param.uids.length > 0) {
+      where.objUid = { in: param.uids }
+    }
+    const data = await this.prisma.friend.findMany({
+      where,
       skip: commonUtil.pageSkip(param),
       take: param.limit,
       orderBy: {
         createdAt: 'asc'
       }
-    })
-    const data = friends.map(f => {
-      const dto: FriendInfoItem = {
-        uid: f.objUid,
-        chatId: 'todo',
-        alias: f.remark
-      }
-      return dto
     })
     return new BasePageResp(param, data, await this.prisma.friend.count({
       where: {
@@ -281,52 +154,24 @@ export class FriendService {
     })
   }
 
-  // 删除好友（单向）
-  async dropRelationSingle (currentUserId: string, param: BaseUIdArrayReq): Promise<any> {
-    await this.prisma.friendApply.deleteMany({
+  /**
+   *  删除好友（单向）
+   * @param currentUserId
+   * @param param
+   */
+  async deleteMany (uids: string[], objUids: string[]): Promise<Prisma.BatchPayload> {
+    if (objUids.length <= 0 || uids.length <= 0) {
+      return { count: 0 }
+    }
+    return await this.prisma.friend.deleteMany({
       where: {
-        uid: currentUserId,
-        objUid: { in: param.uids }
-      }
-    })
-    await this.prisma.friend.deleteMany({
-      where: {
-        uid: currentUserId,
-        objUid: { in: param.uids }
-      }
-    })
-  }
-
-  // 删除所有好友（双向）
-  async dropRelationMulti (currentUserId: string, param: BaseUIdArrayReq): Promise<any> {
-    // a
-    await this.prisma.friendApply.deleteMany({
-      where: {
-        uid: currentUserId,
-        objUid: { in: param.uids }
-      }
-    })
-    await this.prisma.friend.deleteMany({
-      where: {
-        uid: currentUserId,
-        objUid: { in: param.uids }
-      }
-    })
-    // b
-    await this.prisma.friendApply.deleteMany({
-      where: {
-        uid: { in: param.uids },
-        objUid: currentUserId
-      }
-    })
-    await this.prisma.friend.deleteMany({
-      where: {
-        uid: { in: param.uids },
-        objUid: currentUserId
+        uid: { in: uids },
+        objUid: { in: objUids }
       }
     })
   }
 
+  // 是否拉黑
   async isDenied (currentUserId: string, uids: string[]): Promise<boolean> {
     return await this.prisma.blacklist.count({
       where: {
@@ -336,6 +181,7 @@ export class FriendService {
     }) > 0
   }
 
+  // 是否为好友
   async isFriend (currentUserId: string, uids: string[]): Promise<boolean> {
     return await this.prisma.friend.count({
       where: {

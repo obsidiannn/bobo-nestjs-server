@@ -21,20 +21,21 @@ export class CommonModule {
       global: true,
       imports: [
         ConfigModule.forRoot({
-          cache: true
-        }),
-        CacheModule.registerAsync<RedisClientOptions>({
-          imports: [ConfigModule],
-          useFactory: (configService: ConfigService) => ({
-            store: redisStore,
-            socket: {
-              host: configService.get<string>('REDIS_HOST'),
-              port: configService.get<number>('REDIS_PORT')
-            },
-            ttl: 5
-          }),
-          inject: [ConfigService]
+          cache: false
         })
+        // CacheModule.registerAsync<RedisClientOptions>({
+        //   imports: [ConfigModule],
+        //   useFactory: (configService: ConfigService) => ({
+        //     store: redisStore,
+        //     socket: {
+        //       host: configService.get<string>('REDIS_HOST'),
+        //       port: configService.get<number>('REDIS_PORT'),
+        //       passphrase: 'redis'
+        //     },
+        //     ttl: 5
+        //   }),
+        //   inject: [ConfigService]
+        // })
       ],
       controllers: [
         SystemController

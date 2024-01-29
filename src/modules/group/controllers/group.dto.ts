@@ -128,6 +128,7 @@ export class GroupChangeDescReq {
 
 export class GroupTransferReq {
   @IsNotEmpty({ message: 'not empty' })
+  // groupId
     id: string
 
   @IsNotEmpty({ message: 'not empty' })

@@ -1,7 +1,7 @@
 import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { Test } from '@nestjs/testing'
-import { BaseIdReq, CommonEnum, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/modules/common/dto/common.dto'
+import { Test, TestingModule } from '@nestjs/testing'
+import { BaseIdReq, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/modules/common/dto/common.dto'
 import {
   GroupCreateReq, GroupMemberReq, GroupDescResp,
   GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq, GroupMemberItem,
@@ -9,14 +9,17 @@ import {
   GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupInfoItem,
   MineGroupInfoItem, GroupDetailItem
 } from '@/modules/group/controllers/group.dto'
-import { randomUUID, randomInt } from 'crypto'
-import { builWallet, generatePrivateKey } from '@/utils/web3'
-import bufferUtil, { strMd5 } from '@/utils/buffer.util'
+import { randomBytes, randomInt } from 'crypto'
+import { buildWallet,generatePrivateKey,computeSharedSecret } from '@/utils/web3'
+import { strMd5 } from '@/utils/buffer.util'
 import testUtil from '@/utils/test-util'
 import { UserService } from '@/modules/user/services/user.service'
-import { SystemController } from '@/modules/common/controllers/system.controller'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import * as request from 'supertest'
+import { Wallet } from 'ethers'
+import { SystemService } from '@/modules/common/services/system.service'
+import { GroupMemberRoleEnum } from '@/enums'
+
 describe('GroupController', () => {
   let app: NestExpressApplication
   const _groupId: string = '4bcfdb52-dd1e-4010-8c0f-2ca2c4f9b688'
@@ -24,8 +27,10 @@ describe('GroupController', () => {
   let prismaService: PrismaService
   let userService: UserService
 
-  const customPk: string = '0x7aa1920049e5be949bfd82465eb08923d36ec6897f69cd3420929769a05e4c58'
+  let customPk: string
   let customWallet: Wallet
+  let customId: string
+  const _inviteUser: string[] = ['0x624b76f03915666e07bA0e4Aa47Aa6f72C2c4bF6']
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -34,25 +39,33 @@ describe('GroupController', () => {
     app = moduleRef.createNestApplication<NestExpressApplication>()
     await app.init()
 
-    const systemController = app.get<SystemController>(SystemController)
-    const sysPubKeyResponse = await systemController.getPubKey()
-    if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
+    const systemService = app.get<SystemService>(SystemService)
+    const sysPubKeyResponse = systemService.getPubKey()
+    if (sysPubKeyResponse === '' || sysPubKeyResponse === undefined) {
       throw new Error('pubKey is empty')
     }
-    // 初始化要用的
-    systemPublicKey = sysPubKeyResponse.pubKey
-    userService = app.get<UserService>(UserService)
+    systemPublicKey = sysPubKeyResponse
+    customPk = systemService.getTestUserId()
     prismaService = app.get<PrismaService>(PrismaService)
-    customWallet = builWallet(customPk)
+    customWallet = buildWallet(customPk)
+    customId = customWallet.address
+    userService = app.get<UserService>(UserService)
   })
 
   describe('群组管理', () => {
     it('创建群聊', async () => {
+      // 群ecc
+      const groupPk = generatePrivateKey()
+      const groupWallet = buildWallet(groupPk)
+      const sharedPk = computeSharedSecret(groupWallet, customWallet.signingKey.publicKey)
+
       const req: GroupCreateReq = {
-        id: randomUUID(),
-        pubKey: '',
+        id: randomBytes(12).toString('hex'),
+        pubKey: groupWallet.signingKey.publicKey,
         avatar: 'https://pica.zhimg.com/v2-9dc70be4b533afc8bcd07e51dff72616_l.jpg',
         name: '测试群组_' + randomInt(10000).toString(),
+        encKey: sharedPk,
+        encPri: groupPk,
         isEnc: 0,
         type: 1,
         banType: 1,
@@ -73,11 +86,31 @@ describe('GroupController', () => {
 
     // 邀请加入群聊
     it('邀请加入群聊', async () => {
+      const groupMember = await prismaService.groupMembers.findFirst({
+        where: {
+          uid: customId,
+          role: { in: [GroupMemberRoleEnum.OWNER, GroupMemberRoleEnum.MANAGER] }
+        }
+      })
+      if (groupMember === null) { throw new Error() }
+      const group = await prismaService.group.findFirst({
+        where: {
+          id: groupMember.groupId
+        }
+      })
+      if (group === null) { throw new Error() }
+
+      const inviteUser = await userService.findById(_inviteUser[0])
+      if (inviteUser === null) { throw new Error() }
+
+      const sharedPk = computeSharedSecret(buildWallet(groupMember.encPri), inviteUser.pubKey)
       const req: GroupInviteJoinReq = {
-        id: _groupId,
+        id: groupMember.groupId,
         items: [
           {
-            uid: '488177b2f2c0af1fdf02012e31673ff6'
+            uid: inviteUser.id,
+            encKey: sharedPk,
+            encPri: ''
           }
         ]
       }

@@ -150,7 +150,7 @@ model GroupMembers {
   id               String    @id @default(auto()) @db.ObjectId @map("_id") //主键ID 
   groupId          String    @map("gid") //群ID
   uid              String    @map("uid") //用户ID
-  encPri           String    @map("enc_pri") //用户在该群的密钥
+  encPri           String    @map("enc_pri") //用户在该群的密钥 只有群主及管理具备
   encKey           String    @map("enc_key") //用户在该群的加密key
   inviteUid        String?   @map("invite_uid") //邀请者ID 没有则为主动加入
   role             Int       @default(3) @map("role") //角色 1-群主 2-管理员 3-普通用户 默认普通用户
@@ -183,7 +183,7 @@ model GroupApp {
 
 //会话表
 model Chat {
-  id               String    @id @map("_id") // 主键ID 及会话ID
+  id               String    @id @map("_id") @db.ObjectId  @default(auto()) // 主键ID 及会话ID
   groupId          String?   @map("gid") // 群ID
   creatorUId       String    @map("creator_uid") // 创建者 下面几个字段按道理是从群信息里面读取（个人意见）
   type             Int       @default(1) @map("type") // 1-单聊 2-群聊 3 官方会话
@@ -200,7 +200,7 @@ model Chat {
 
 // 用户会话表
 model ChatUser {
-  id             String   @id @map("_id") //主键ID
+  id             String   @id @map("_id")  @db.ObjectId  @default(auto())//主键ID
   uid            String   @map("uid") //用户ID
   chatId         String   @map("chat_id") //会话ID
   isTop          Int      @default(0) @map("is_top") //是否置顶 1-是 0-否 默认0
@@ -211,6 +211,7 @@ model ChatUser {
   lastOnlineTime DateTime @map("last_online_time") // 最后一次在线时间
   createdAt      DateTime @default(now()) @map("created_at") //创建时间
   updatedAt      DateTime @updatedAt @map("updated_at") //更新时间
+  userRef        String   @map("user_ref") // 点对点的userId 索引，默认0
 
   @@index([uid], name: "uid")
   @@index([chatId], name: "chat_id")
@@ -219,7 +220,7 @@ model ChatUser {
 
 // 消息详情表
 model MessageDetail {
-  id         String   @id @map("_id") //主键ID 及消息ID
+  id         String   @id @map("_id")  @db.ObjectId  @default(auto()) //主键ID 及消息ID
   chatId     String   @map("chat_id") //会话ID
   fromUid    String   @map("from_uid") //发送者用户ID
   content    String   @map("content") //消息内容 加密字符串
@@ -239,12 +240,13 @@ model MessageDetail {
 
 // 用户消息表
 model UserMessage {
-  id       String @id @map("_id") //主键ID
+  id       String @id @map("_id") @db.ObjectId  @default(auto())  //主键ID
   uid      String @map("uid") //用户ID
   msgId    String @map("msg_id") //消息ID
   isRead   Int    @default(0) @map("is_read") //是否已读 1-是 0-否 默认0
   sequence Int    @map("sequence") // 消息序号
-
+  chatId   String @map("chat_id") // chat id
+  createdAt  DateTime @default(now()) @map("created_at") //创建时间
   @@index([uid], name: "uid")
   @@index([msgId], name: "msg_id")
   @@map("user_messages")

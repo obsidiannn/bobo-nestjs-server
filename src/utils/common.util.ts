@@ -1,4 +1,4 @@
-import { BasePageReq } from '@/modules/common/dto/common.dto'
+import { BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 
 // 求数组差集
 export const arrayDifference = (arr1: any[], arr2: any[]): any[] => {
@@ -14,6 +14,10 @@ export const virtualCurrentUser = (): string => {
 
 export const pageSkip = (param: BasePageReq): number => {
   return (param.page - 1) * param.limit
+}
+
+export const emptyPageResp = <T> (param: BasePageReq): BasePageResp<T> => {
+  return new BasePageResp(param, [], 0)
 }
 
 export default {

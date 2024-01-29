@@ -1,5 +1,5 @@
 import aes from './aes'
-import { builWallet } from './web3'
+import { buildWallet } from './web3'
 import * as Crypto from 'crypto'
 export default {
   buildAuthParams (privateKey: string, systemPublicKey: string, data: any): {
@@ -9,7 +9,7 @@ export default {
     if (!systemPublicKey.startsWith('0x')) {
       systemPublicKey = '0x' + systemPublicKey
     }
-    const wallet = builWallet(privateKey)
+    const wallet = buildWallet(privateKey)
     const content = typeof data === 'string' ? data : JSON.stringify(data)
     const time = String(Math.floor(new Date().getTime() / 1000))
     const dataHash = Crypto.createHash('sha256').update(content).digest('hex')

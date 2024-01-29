@@ -3,7 +3,7 @@ import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { UserGenderEnum } from '@/enums'
 import * as request from 'supertest'
-import { builWallet, generatePrivateKey } from '@/utils/web3'
+import { buildWallet, generatePrivateKey } from '@/utils/web3'
 import { SystemController } from '@/modules/common/controllers/system.controller'
 import testUtil from '@/utils/test-util'
 import { Prisma } from '@prisma/client'
@@ -17,6 +17,7 @@ import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Wallet } from 'ethers'
 import commonUtil from '@/utils/common.util'
 import { randomInt } from 'crypto'
+import { SystemService } from '@/modules/common/services/system.service'
 
 describe('friend module FriendController', () => {
   let app: NestExpressApplication
@@ -24,9 +25,11 @@ describe('friend module FriendController', () => {
   // let randomPk: string
   let userService: UserService
   let prismaService: PrismaService
-  const customPk: string = '0x7aa1920049e5be949bfd82465eb08923d36ec6897f69cd3420929769a05e4c58'
+
+  let customPk: string
   let customWallet: Wallet
-  const _avatar: string = 'https://foruda.gitee.com/avatar/1676990804312610894/1821456_sunjx93_1608723571.png'
+  let customId: string
+
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
@@ -34,22 +37,25 @@ describe('friend module FriendController', () => {
     app = moduleRef.createNestApplication<NestExpressApplication>()
     await app.init()
 
-    const systemController = app.get<SystemController>(SystemController)
-    const sysPubKeyResponse = await systemController.getPubKey()
-    if (sysPubKeyResponse.pubKey === '' || sysPubKeyResponse.pubKey === undefined) {
+    const systemService = app.get<SystemService>(SystemService)
+    const sysPubKeyResponse = systemService.getPubKey()
+    if (sysPubKeyResponse === '' || sysPubKeyResponse === undefined) {
       throw new Error('pubKey is empty')
     }
     // 初始化要用的
-    systemPublicKey = sysPubKeyResponse.pubKey
+    systemPublicKey = sysPubKeyResponse
     userService = app.get<UserService>(UserService)
     prismaService = app.get<PrismaService>(PrismaService)
-    customWallet = builWallet(customPk)
+
+    customPk = systemService.getTestUserId()
+    customWallet = buildWallet(customPk)
+    customId = customWallet.address
   })
   // describe('数据初始化', () => {
   //   it('初始化用户 100个', async () => {
   //     for (let index = 0; index < 100; index++) {
   //       const pk = generatePrivateKey()
-  //       const wallet = builWallet(pk)
+  //       const wallet = buildWallet(pk)
   //       const input: Prisma.UserCreateInput = {
   //         id: wallet.address,
   //         unionId: pk,
@@ -156,7 +162,7 @@ describe('friend module FriendController', () => {
   describe('申请审核', () => {
     it('申请已读', async () => {
       const testUserPk = '0x861bc89483eaae7c90d90a47c4eb2e5cc2a7c29de2565b7296103e040d0c6ab1'
-      const wallet = builWallet(testUserPk)
+      const wallet = buildWallet(testUserPk)
       const param = { page: 1, limit: 10 }
       // 未读分页
       const data = await prismaService.friendApply.findMany({
@@ -183,7 +189,7 @@ describe('friend module FriendController', () => {
 
     it('同意', async () => {
       const testUserPk = '0x861bc89483eaae7c90d90a47c4eb2e5cc2a7c29de2565b7296103e040d0c6ab1'
-      const wallet = builWallet(testUserPk)
+      const wallet = buildWallet(testUserPk)
       const data = await prismaService.friendApply.findFirst({
         where: {
           objUid: wallet.address,
@@ -251,7 +257,7 @@ describe('friend module FriendController', () => {
 
   describe('好友管理', () => {
     it('变更备注', async () => {
-      const wallet = builWallet(customPk)
+      const wallet = buildWallet(customPk)
 
       const friend = await prismaService.friend.findFirst({
         where: {
@@ -272,7 +278,7 @@ describe('friend module FriendController', () => {
       }
     })
     it('删除好友（单向）', async () => {
-      const wallet = builWallet(customPk)
+      const wallet = buildWallet(customPk)
       const friend = await prismaService.friend.findFirst({
         where: {
           uid: wallet.address
@@ -293,7 +299,7 @@ describe('friend module FriendController', () => {
       }
     })
     it('删除所有好友（双向）', async () => {
-      const wallet = builWallet(customPk)
+      const wallet = buildWallet(customPk)
       const friend = await prismaService.friend.findFirst({
         where: {
           uid: wallet.address
