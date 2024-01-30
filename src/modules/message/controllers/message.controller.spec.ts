@@ -1,8 +1,6 @@
 import * as request from 'supertest'
 import { AppModule } from '@/app.module'
-import { SystemController } from '@/modules/common/controllers/system.controller'
 import { PrismaService } from '@/modules/common/services/prisma.service'
-import { UserService } from '@/modules/user/services/user.service'
 import { buildWallet } from '@/utils/web3'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -315,7 +313,7 @@ describe('MessageController', () => {
       const managerGroupMember = await prismaService.groupMembers.findFirst({
         where: {
           uid: customId,
-          role: { in: [GroupMemberRoleEnum.OWNER,GroupMemberRoleEnum.MANAGER] }
+          role: { in: [GroupMemberRoleEnum.OWNER, GroupMemberRoleEnum.MANAGER] }
         }
       })
       if (managerGroupMember === null) {

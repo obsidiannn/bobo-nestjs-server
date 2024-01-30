@@ -1,17 +1,20 @@
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { AddChatDto, ChatDetailItem, ChatListItem, ChatStatusEnum, ChatTypeEnum, DropSimpleChatResult } from '../controllers/chat.dto'
-import { Prisma } from '@prisma/client'
+import { Chat, Prisma } from '@prisma/client'
 import { BaseIdsArrayReq, CommonEnum } from '@/modules/common/dto/common.dto'
 import { strMd5 } from '@/utils/buffer.util'
 import commonUtil from '@/utils/common.util'
-import { max } from 'class-validator'
 
 @Injectable()
 export class ChatService {
   constructor (
     private readonly prisma: PrismaService
   ) {}
+
+  async findMany (param: Prisma.ChatFindManyArgs): Promise<Chat[]> {
+    return await this.prisma.chat.findMany(param)
+  }
 
   // 查找某人的好友chat
   async getChatHashByUserIds (currentUserId: string, uids: string[]): Promise<Map<string, string>> {
@@ -267,23 +270,23 @@ export class ChatService {
   }
 
   // 会话详情
-  async chatDetail (currentUserId: string, param: BaseIdsArrayReq): Promise<ChatDetailItem[]> {
+  async chatDetail (currentUserId: string, chatIds: string[]): Promise<ChatDetailItem[]> {
     const chats = await this.prisma.chat.findMany({
       where: {
-        id: { in: param.ids }
+        id: { in: chatIds }
       }
     })
     const chatArray = await this.prisma.chatUser.findMany({
       where: {
-        chatId: { in: param.ids },
+        chatId: { in: chatIds },
         uid: currentUserId
       },
       select: {
         chatId: true
       }
     })
-    const chatIds = chatArray.map(c => c.chatId)
-    return chats.filter(c => chatIds.includes(c.id)).map(c => {
+    const exitChatIds = chatArray.map(c => c.chatId)
+    return chats.filter(c => exitChatIds.includes(c.id)).map(c => {
       const item: ChatDetailItem = {
         ...c,
         creatorId: c.creatorUId
@@ -292,35 +295,35 @@ export class ChatService {
     })
   }
 
-  /**
- * 删除会话
- * @param currentUserId
- * @param param
- * @param hide true: 隐藏，false： 展开
- */
-  async userChatHide (currentUserId: string, param: BaseIdsArrayReq, hide: boolean): Promise<string[]> {
-    const chatArray = await this.prisma.chatUser.findMany({
-      where: {
-        chatId: { in: param.ids },
-        uid: currentUserId
-      },
-      select: {
-        chatId: true
-      }
-    })
+  //   /**
+  //  * 删除会话
+  //  * @param currentUserId
+  //  * @param param
+  //  * @param hide true: 隐藏，false： 展开
+  //  */
+  //   async userChatHide (currentUserId: string, param: BaseIdsArrayReq, hide: boolean): Promise<string[]> {
+  //     const chatArray = await this.prisma.chatUser.findMany({
+  //       where: {
+  //         chatId: { in: param.ids },
+  //         uid: currentUserId
+  //       },
+  //       select: {
+  //         chatId: true
+  //       }
+  //     })
 
-    await this.prisma.chatUser.updateMany({
-      where: {
-        chatId: { in: param.ids },
-        uid: currentUserId
-      },
-      data: {
-        isShow: hide ? CommonEnum.OFF : CommonEnum.ON,
-        isHide: hide ? CommonEnum.ON : CommonEnum.OFF
-      }
-    })
-    return chatArray.map(c => c.chatId)
-  }
+  //     await this.prisma.chatUser.updateMany({
+  //       where: {
+  //         chatId: { in: param.ids },
+  //         uid: currentUserId
+  //       },
+  //       data: {
+  //         isShow: hide ? CommonEnum.OFF : CommonEnum.ON,
+  //         isHide: hide ? CommonEnum.ON : CommonEnum.OFF
+  //       }
+  //     })
+  //     return chatArray.map(c => c.chatId)
+  //   }
 
   /**
    * 删除会话关系 （chatUser） 如果双方都不存在，则删除chat
@@ -387,27 +390,6 @@ export class ChatService {
         chatUser: chatIds
       }
     }
-  }
-
-  /**
-   * 更新最大sequence
-   * @param currentUserId
-   * @param chatId
-   * @param maxSequence
-   */
-  async refreshSequence (currentUserId: string, chatId: string, maxSequence: number): Promise<void> {
-    await this.prisma.chatUser.updateMany({
-      where: {
-        uid: currentUserId,
-        chatId,
-        maxReadSeq: {
-          lt: maxSequence
-        }
-      },
-      data: {
-        maxReadSeq: maxSequence
-      }
-    })
   }
 
   // 单聊会话索引生成
