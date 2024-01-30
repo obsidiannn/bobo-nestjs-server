@@ -15,12 +15,11 @@ import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { UserService } from '@/modules/user/services/user.service'
 import { ChatService } from '@/modules/message/services/chat.service'
-import { GroupMemberRoleEnum } from '@/enums'
+import { GroupMemberRoleEnum, GroupMemberStatus } from '@/enums'
 import { GroupMemberService } from '../services/group.member.service'
 import { ChatStatusEnum, ChatTypeEnum } from '@/modules/message/controllers/chat.dto'
 import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
-import { computeSharedSecretByPk } from '@/utils/web3'
 
 @Controller('groups')
 @UseInterceptors(CryptInterceptor, BaseInterceptor)
@@ -214,7 +213,7 @@ export class GroupController {
       }
     }
     const groups = await this.groupMemberService.findMany(queryMember)
-    await this.groupMemberService.deleteByIds(groups.map(g=>g.id))
+    await this.groupMemberService.deleteByIds(groups.map(g => g.id))
     const chatIds = await this.chatService.removeChatGroupsMember(groups.map(g => g.groupId), currentUserId)
     await this.messageService.clearMemberMessageByChatIds([currentUserId], chatIds)
   }
@@ -308,21 +307,20 @@ export class GroupController {
   async addGroupManager (@Req() req: Request, @Body() param: GroupTransferReq): Promise<void> {
     const currentUserId = req.uid
     const group = await this.groupService.findOne(param.id)
-    const currentGroupMember = await this.groupMemberService.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.OWNER])
+    await this.groupMemberService.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.OWNER])
     const members = await this.groupMemberService.findByGroupIdAndUidIn(param.id, [param.uid])
     if (members.length <= 0) {
       const newManager = await this.userService.findById(param.uid)
       if (newManager === null) {
         throw new HttpException('找不到此用户', HttpStatus.INTERNAL_SERVER_ERROR)
       }
-      // 组装 shareSecret
-      const encKey = computeSharedSecretByPk(currentGroupMember.encPri, newManager.pubKey)
+      // // 组装 shareSecret
       if (newManager != null) {
         const input: Prisma.GroupMembersCreateInput = {
           groupId: param.id,
           uid: newManager.id,
-          encPri: '',
-          encKey,
+          encPri: param.encPri,
+          encKey: param.encKey,
           inviteUid: currentUserId,
           role: GroupMemberRoleEnum.MANAGER,
           joinType: 1,
@@ -369,30 +367,146 @@ export class GroupController {
   // 申请加入群聊
   @Post('require-join')
   async requireJoin (@Req() req: Request, @Body() param: GroupRequireJoinReq): Promise<void> {
-    return await this.groupService.requireJoin(req.uid, param)
+    const currentUserId = req.uid
+    const groupMember = await this.groupMemberService.groupMemberById(param.id, currentUserId)
+    if (groupMember !== null) {
+      if (groupMember.status > 0) {
+        throw new HttpException('已经加入群组', HttpStatus.BAD_REQUEST)
+      } else {
+        throw new HttpException('请等待管理审核', HttpStatus.BAD_REQUEST)
+      }
+    }
+    const currentUser = await this.userService.findById(currentUserId)
+    if (currentUser === null) {
+      throw new HttpException('error', HttpStatus.BAD_REQUEST)
+    }
+    const member: Prisma.GroupMembersCreateInput = {
+      groupId: param.id,
+      uid: currentUserId,
+      encPri: param.encPri,
+      encKey: param.encKey,
+      inviteUid: currentUserId,
+      role: GroupMemberRoleEnum.MEMBER,
+      joinType: 1,
+      myAlias: currentUser.name,
+      status: CommonEnum.OFF,
+      banType: CommonEnum.ON
+    }
+    await this.groupMemberService.create(member)
   }
 
   // 同意加入群聊
   @Post('agree-join')
   async memberJoin (@Req() req: Request, @Body() param: GroupApplyJoinReq): Promise<void> {
-    return await this.groupService.memberJoin(req.uid, param)
+    const currentUserId = req.uid
+    await this.groupMemberService.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
+    const existMembers = await this.groupMemberService.findMany({
+      where: {
+        groupId: { equals: param.id },
+        uid: { in: param.uids },
+        status: { equals: GroupMemberStatus.PENDING }
+      }
+    })
+    if (existMembers.length > 0) {
+      // 当前存在的申请记录
+      const existIds: string[] = existMembers.map(e => e.id)
+      await this.groupMemberService.updateMany({
+        where: {
+          groupId: { equals: param.id },
+          uid: { in: existIds }
+        },
+        data: {
+          status: GroupMemberStatus.NORMAL
+        }
+      })
+      await this.chatService.addChatGroupMember(param.id, existIds)
+    }
   }
 
-  // 待审核申请列表
+  // 待审核申请列表 只有群主和管理员有权限
   @Post('apply-list')
   async applyList (@Req() req: Request, @Body() param: BaseIdsArrayReq): Promise<GroupInfoItem[]> {
-    return await this.groupService.applyList(req.uid, param)
+    const currentUserId = req.uid
+    const managedGroups = await this.groupMemberService.findMany({
+      where: {
+        uid: currentUserId,
+        role: { in: [GroupMemberRoleEnum.OWNER, GroupMemberRoleEnum.MANAGER] }
+      }
+    })
+    if (managedGroups.length > 0) {
+      const groupIds = managedGroups.map(g => g.groupId)
+      const pendingMembers = await this.groupMemberService.findMany({
+        where: {
+          status: GroupMemberStatus.PENDING,
+          groupId: { in: groupIds }
+        }
+      })
+      return pendingMembers.map(m => {
+        const item: GroupInfoItem = {
+          id: m.id,
+          gid: m.groupId,
+          uid: m.uid,
+          encKey: m.encKey,
+          role: m.role,
+          status: m.status,
+          createdAt: m.createdAt === null ? 0 : m.createdAt.getDate()
+        }
+        return item
+      })
+    }
+    return []
   }
 
   // 我的申请列表
   @Post('my-apply-list')
   async myPendingApplyList (@Req() req: Request, @Body() param: BaseIdsArrayReq): Promise<MineGroupInfoItem[]> {
-    return await this.groupService.myPendingApplyList(req.uid, param)
+    const currentUserId = req.uid
+    const pendingList = await this.groupMemberService.findMany({
+      where: {
+        uid: currentUserId,
+        status: GroupMemberStatus.PENDING
+      }
+    })
+    return pendingList.map(m => {
+      const item: MineGroupInfoItem = {
+        id: m.id,
+        gid: m.groupId,
+        status: m.status,
+        createdAt: m.createdAt
+      }
+      return item
+    })
   }
 
   // 批量获取群详情
   @Post('get-batch-info')
   async groupDetailByIds (@Req() req: Request, @Body() param: BaseIdsArrayReq): Promise<BaseArrayResp<GroupDetailItem>> {
-    return { items: await this.groupService.groupDetailByIds(param) }
+    const groups = await this.groupService.findByIds(param.ids)
+    const data = groups.map(g => {
+      const item: GroupDetailItem = {
+        id: g.id,
+        gid: g.id,
+        name: g.name,
+        avatar: g.avatar,
+        createdAt: g.createdAt === null ? 0 : g.createdAt.getDate(),
+        memberLimit: g.memberLimit,
+        total: g.total,
+        pubKey: g.pubKey,
+        ownerId: g.ownerId,
+        creatorId: g.creatorId,
+        notice: g.notice === null ? '' : g.notice,
+        noticeMd5: g.noticeMd5 === null ? '' : g.noticeMd5,
+        desc: g.desc === null ? '' : g.desc,
+        descMd5: g.descMd5 === null ? '' : g.descMd5,
+        cover: g.cover,
+        isEnc: g.isEnc,
+        type: g.type,
+        banType: g.banType,
+        searchType: g.searchType,
+        status: g.status
+      }
+      return item
+    })
+    return { items: data }
   }
 }

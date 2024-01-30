@@ -133,6 +133,9 @@ export class GroupTransferReq {
 
   @IsNotEmpty({ message: 'not empty' })
     uid: string
+
+  encPri: string
+  encKey: string
 }
 
 export class GroupInfoItem {
@@ -161,7 +164,7 @@ export class MineGroupInfoItem {
   id: string
   gid: string
   status: number
-  createdAt: number
+  createdAt: Date
 }
 
 export class GroupDetailItem {
