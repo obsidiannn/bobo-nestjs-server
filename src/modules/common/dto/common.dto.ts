@@ -5,7 +5,6 @@ export class BaseResp<T> {
   data: T
 }
 
-
 export class BasePageReq {
   // 限制 最多 100个
   limit: number = 10
@@ -42,6 +41,10 @@ export class BaseArrayResp<T> {
 
 export class BaseIdReq {
   id: string
+}
+
+export class BaseUIdReq {
+  uid: string
 }
 
 export class BaseIdsArrayReq {

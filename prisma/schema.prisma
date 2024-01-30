@@ -43,12 +43,14 @@ model User {
 
 //拉黑表
 model Blacklist {
-  id        String   @id @map("_id") //主键ID md5_16(uid+obj_uid)
+  id        String   @id @db.ObjectId @default(auto()) @map("_id") //主键ID md5_16(uid+obj_uid)
   uid       String   @map("uid") //用户ID
   objUid    String   @map("obj_uid") //被拉黑的用户ID
   createdAt DateTime @default(now()) @map("create_time") //创建时间
   updatedAt DateTime @updatedAt @map("update_time") //更新时间
 
+  @@index([uid], name: "uid")
+  @@index([objUid], name: "obj_uid")
   @@map("black_list")
 }
 
