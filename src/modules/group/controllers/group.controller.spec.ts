@@ -10,7 +10,7 @@ import {
   MineGroupInfoItem, GroupDetailItem
 } from '@/modules/group/controllers/group.dto'
 import { randomBytes, randomInt } from 'crypto'
-import { buildWallet,generatePrivateKey,computeSharedSecret } from '@/utils/web3'
+import { buildWallet, generatePrivateKey, computeSharedSecret } from '@/utils/web3'
 import { strMd5 } from '@/utils/buffer.util'
 import testUtil from '@/utils/test-util'
 import { UserService } from '@/modules/user/services/user.service'
@@ -249,7 +249,9 @@ describe('GroupController', () => {
     it('移交群', async () => {
       const req: GroupTransferReq = {
         id: _groupId,
-        uid: '488177b2f2c0af1fdf02012e31673ff6'
+        uid: '488177b2f2c0af1fdf02012e31673ff6',
+        encKey: '',
+        encPri: ''
       }
       const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
       return await request(app.getHttpServer())
@@ -268,7 +270,9 @@ describe('GroupController', () => {
     it('添加管理员', async () => {
       const req: GroupTransferReq = {
         id: _groupId,
-        uid: 'bb464ee5653057b5082d24894ba4533e'
+        uid: 'bb464ee5653057b5082d24894ba4533e',
+        encKey: '',
+        encPri: ''
       }
       const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
       return await request(app.getHttpServer())

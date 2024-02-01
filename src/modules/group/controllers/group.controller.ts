@@ -20,20 +20,25 @@ import { GroupMemberService } from '../services/group.member.service'
 import { ChatStatusEnum, ChatTypeEnum } from '@/modules/message/controllers/chat.dto'
 import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
+import { Transaction } from '@/modules/common/decorator/transactional'
+import { TransactionInterceptor } from '@/modules/common/interceptors/transaction.interceptor'
+import { PrismaService } from '@/modules/common/services/prisma.service'
 
 @Controller('groups')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, BaseInterceptor, TransactionInterceptor)
 export class GroupController {
   constructor (
     private readonly groupService: GroupService,
     private readonly groupMemberService: GroupMemberService,
     private readonly userService: UserService,
     private readonly chatService: ChatService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly prisma: PrismaService
   ) { }
 
   // 创建群聊
   @Post('create')
+  // @Transaction()
   async create (@Req() req: Request, @Body() param: GroupCreateReq): Promise<void> {
     const currentUserId: string = req.uid
     const data: Prisma.GroupCreateInput = {
@@ -49,33 +54,39 @@ export class GroupController {
       ownerId: currentUserId,
       cover: '1'
     }
+    console.log('group')
+    await this.prisma.$transaction(async (tx) => {
+      const currentUser = await this.userService.findById(currentUserId)
+      if (currentUser === null) {
+        throw new HttpException('error', HttpStatus.BAD_REQUEST)
+      }
 
-    const currentUser = await this.userService.findById(currentUserId)
-    if (currentUser === null) {
-      throw new HttpException('error', HttpStatus.BAD_REQUEST)
-    }
-
-    const group = await this.groupService.create(currentUserId, data)
-    const member: Prisma.GroupMembersCreateInput = {
-      groupId: group.id,
-      uid: data.ownerId,
-      encPri: param.encPri,
-      encKey: param.encKey,
-      role: GroupMemberRoleEnum.OWNER,
-      joinType: 1,
-      myAlias: currentUser.name,
-      status: 1,
-      banType: 1,
-      adminAt: new Date(),
-      packageExpiredAt: new Date(),
-      createdAt: new Date()
-    }
-    await this.groupMemberService.createMany([member])
-    await this.chatService.addGroupChat(currentUserId, {
-      groupId: group.id,
-      type: ChatTypeEnum.GROUP,
-      status: ChatStatusEnum.ENABLE,
-      isEnc: group.isEnc
+      const group = await this.groupService.create(currentUserId, data)
+      const a = 1
+      if (a === 1) {
+        throw new HttpException('test', 400)
+      }
+      const member: Prisma.GroupMembersCreateInput = {
+        groupId: group.id,
+        uid: data.ownerId,
+        encPri: param.encPri,
+        encKey: param.encKey,
+        role: GroupMemberRoleEnum.OWNER,
+        joinType: 1,
+        myAlias: currentUser.name,
+        status: 1,
+        banType: 1,
+        adminAt: new Date(),
+        packageExpiredAt: new Date(),
+        createdAt: new Date()
+      }
+      await this.groupMemberService.createMany([member])
+      await this.chatService.addGroupChat(currentUserId, {
+        groupId: group.id,
+        type: ChatTypeEnum.GROUP,
+        status: ChatStatusEnum.ENABLE,
+        isEnc: group.isEnc
+      })
     })
   }
 
