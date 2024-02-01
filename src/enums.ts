@@ -3,6 +3,12 @@ export enum AuthEnumIsRegister {
   YES = 1
 }
 
+export enum GenderEnum {
+  UNKNOWN = 0,
+  MALE = 1,
+  FAMALE = 2
+}
+
 export enum FriendApplyStatusEnum {
   PENDING = 0,
   PASSED = 1,

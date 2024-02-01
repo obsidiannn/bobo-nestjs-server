@@ -56,3 +56,8 @@ export class FriendChangeAliasReq {
   @IsNotEmpty({ message: 'not empty' })
     alias: string
 };
+
+export class BlockInfoItem {
+  uid: string
+  createdAt: Date
+}
