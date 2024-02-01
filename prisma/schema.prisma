@@ -390,3 +390,119 @@ model RedPacketRecord{
   @@index([packetId], name: "packet_id")
   @@map("red_packet_record")
 }
+
+// 探索模块
+//  推文
+model BbsTweet {
+  id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
+  authorId    String          @map("author_id")
+  authorType  Int             @map("author_type")// 1 普通用户 2 系统用户
+  medias      Json[]          @map("medias")     
+  content     String          @map("content")
+  status      Int             @map("status")// 1 正常 1 封禁 2 锁定
+  commentLevel Int            @map("comment_level") // 是否可回复: 1 每个人，2 好友 3 不可回复
+  longitude   Float?          @map("longitude")   // 经度
+  latitude    Float?          @map("latitude")   // 纬度
+  address     String?         @map("address")
+  retweetId   String          @map("retweet_id")  // 转帖id
+  retweetType Int             @map("retweet_type")// 转帖类型 1 推文，2 评论
+  visibleType Int             @map("visible_type")// 1 公开 2 好友 3 自己
+  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
+  //  是否需要省市区
+  @@map("bbs_tweet")
+}
+
+// 推文索引表
+model BbsTweetIndex {
+  bbsId       String          @id  @map("_id") @db.ObjectId 
+  randomSort  Int             @map("random_sort") // 随机数
+  overall     Float           @map("overall")    // 综合分数
+  voteCount   Int             @map("vote_count")   // 喜欢数量
+  commentCount  Int           @map("comment_count")    // 评论数量
+  readCount   Int             @map("read_count")    // 阅读量
+  redditValue Int             @map("reddit_value")    // reddit分值
+  status      Int             @map("status")
+  visibleType Int             @map("visible_type")// 可见性 1 公开 2 好友 3 自己 冗余
+  retweetId   String          @map("retweet_id")  // 转帖id 冗余
+  retweetType Int             @map("retweet_type")// 转帖类型  冗余
+  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
+  @@map("bbs_tweet_index")
+}
+
+// 推文统计表
+model BbsTweetStat {
+  id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
+  bbsId       String          @map("bbs_id") @db.ObjectId 
+  dateBucket  String          @map("date_bucket")// yyyyMMdd
+  overall     Float           @map("overall")    // 综合分数
+  voteCount   Int             @map("vote_count")   // 喜欢数量
+  commentCount  Int           @map("comment_count")    // 评论数量
+  readCount   Int             @map("read_count")    // 阅读量
+  redditValue Int             @map("reddit_value")    // reddit分值
+  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
+  @@index([bbsId,dateBucket])
+  @@map("bbs_tweet_stat")
+}
+// // 每日reddit计算
+// model BbsReddit{
+//     id          String   @id @map("_id") @db.ObjectId @default(auto())// 主键ID
+//     bbsId       String    @map("bbs_id") @db.ObjectId 
+//     redditValue Float
+//     dateBucket  String
+//     @@index([bbsId,dateBucket])
+//     @@map("bbs_reddit")
+// }
+// 计算vote可以采取 定时值 +-自己的方式
+model BbsTweetVote {
+  id          String            @id @map("_id") @db.ObjectId @default(auto()) 
+  bbsId       String            @map("bbs_id") @db.ObjectId 
+  uid         String            @map("uid")        
+  createdAt   DateTime          @default(now()) @map("created_at") //创建时间
+
+  @@index([bbsId,uid])
+  @@map("bbs_tweet_vote")
+}
+
+// 推文评论表
+model bbsComment {
+  id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
+  authorId    String          @map("author_id")
+  authorType  Int             @map("author_type")// 1 普通用户 2 系统用户
+  medias      Json[]          @map("medias")
+  bbsId       String          @map("bbs_id")
+  commentId   String?         @map("comment_id") // 回复评论id
+  commentCode String?         @map("comment_code")  // 0001000200010003 可以到父级别，允许相同
+  content     String          @map("content")
+  status      Int             @map("status")// 1 正常 1 封禁 2 锁定
+  longitude   Float?          @map("longitude")   // 经度
+  latitude    Float?          @map("latitude")   // 纬度
+  address     String?         @map("address")
+  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
+
+  @@map("bbs_comment")
+}
+// 点赞表
+model BbsCommentVote {
+  id            String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
+  commentId     String          @map("comment_id")
+  bbsId         String          @map("bbs_id")    
+  uid           String          @map("uid")   
+  createdAt     DateTime        @default(now()) @map("created_at") //创建时间
+
+  @@index([commentId,uid])
+  @@map("bbs_comment_vote")
+}
+
+// 评论索引
+model BbsCommentIndex {
+  commentId       String      @id @map("_id") @db.ObjectId 
+  randomSort  Int             @map("random_sort") // 随机数
+  overall     Float           @map("overall")   // 综合分数
+  voteCount   Int             @map("voet_count")  // 喜欢数量
+  commentCount  Int           @map("comment_count")   // 评论数量
+  readCount   Int             @map("read_count")   // 阅读量
+  redditValue Int             @map("reddit_value")   // reddit分值
+  parentCommentId   String?         @map("comment_id")
+  commentCode String?         @map("comment_code")
+  @@map("bbs_coment_index")
+}
