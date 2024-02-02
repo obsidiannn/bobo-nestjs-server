@@ -3,6 +3,11 @@ export enum AuthEnumIsRegister {
   YES = 1
 }
 
+export enum ActiveEnum {
+  ACTIVE = 1,
+  INACTIVE = 2
+}
+
 export enum GenderEnum {
   UNKNOWN = 0,
   MALE = 1,
@@ -42,6 +47,18 @@ export enum ChatTypeEnum {
 export enum ChatStatusEnum {
   ENABLE = 1,
   DISABLE = 2
+}
+
+export enum WalletTypeEnum {
+  NORMAL = 1,
+  SYSTEM = 2
+}
+
+export enum BillStatusEnum {
+  SUCCESS = 1,
+  NEED_PAY = 2,
+  PENDING = 3,
+  FAIL = 4
 }
 
 export enum BillInOutEnum {

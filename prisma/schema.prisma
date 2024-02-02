@@ -10,8 +10,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//  系统用户
 model OfficalUser {
-  id        String   @id @map("_id")
+  id        String   @id @db.ObjectId @default(auto()) @map("_id")
   name      String   @map("name")
   avatar    String   @map("avatar")
   desc      String   @map("desc") //应用描述
@@ -361,7 +362,7 @@ model BillDetail {
 }
 
 // 充值码
-model BoboCardDetail {
+model BoboCard {
   id              String    @id @map("_id") @db.ObjectId @default(auto())// 主键ID
   boboCode       String     @map("bobo_code") // 礼包码
   status          Int       @map("status") // 状态： 1 可用，2 已使用
@@ -371,7 +372,7 @@ model BoboCardDetail {
   updatedAt       DateTime  @updatedAt @map("updated_at") //领取时间时间
 
   @@index([boboCode],map: "bobo_code")
-  @@map("bobo_card_detail")
+  @@map("bobo_card")
 }
 
 // 红包

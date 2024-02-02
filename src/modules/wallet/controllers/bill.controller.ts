@@ -8,6 +8,7 @@ import { BillDetailResp, BillRecordItem, BillRecordReq } from './wallet.dto'
 import { Request } from 'express'
 import { BillDetailService } from '../services/bill.detail.service'
 import { BusinessTypeEnum } from '@/enums'
+import { UserService } from '@/modules/user/services/user.service'
 
 @Controller('bill')
 @UseInterceptors(CryptInterceptor, BaseInterceptor)
@@ -15,7 +16,8 @@ export class BillController {
   constructor (
     private readonly walletService: WalletService,
     private readonly billService: BillService,
-    private readonly billDetailService: BillDetailService
+    private readonly billDetailService: BillDetailService,
+    private readonly userService: UserService
   ) {}
 
   @Post('records')
@@ -42,10 +44,14 @@ export class BillController {
       remark: detail.remark
     }
     if (detail.businessType !== null && detail.businessId !== null) {
+      result.businessType = detail.businessType
+      result.businessId = detail.businessId
       if (detail.businessType === BusinessTypeEnum.USER) {
-
-      } else if (detail.businessType === BusinessTypeEnum.GROUP) {
-
+        const user = await this.userService.findById(detail.businessId)
+        if (user !== null) {
+          result.businessIcon = user.avatar
+          result.businessLabel = user.name
+        }
       }
     }
     return result

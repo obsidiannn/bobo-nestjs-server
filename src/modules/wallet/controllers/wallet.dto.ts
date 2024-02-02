@@ -25,11 +25,15 @@ export class BillDetailResp extends BillRecordItem {
   uid: string
   from: string
   to: string
-  businessId?: string
-  businessType?: string
-  businessIcon?: string
-  businessLabel?: string
+  businessId?: string | null
+  businessType?: number | null
+  businessIcon?: string | null
+  businessLabel?: string | null
   remark: string | null
   transactionNo: string | null
   sellerNo: string | null
+}
+
+export class WalletCardFillReq {
+  cardNo: string
 }

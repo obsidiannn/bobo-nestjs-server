@@ -4,7 +4,7 @@ import { BillRecordItem, BillRecordReq } from '../controllers/wallet.dto'
 import { BasePageResp } from '@/modules/common/dto/common.dto'
 import { Bill, Prisma } from '@prisma/client'
 import commonUtil from '@/utils/common.util'
-import { BillTypeEnum } from '@/enums'
+import { BillTypeEnum, BusinessTypeEnum } from '@/enums'
 
 @Injectable()
 export class BillService {
@@ -49,6 +49,11 @@ export class BillService {
 
   async count (param: Prisma.BillCountArgs): Promise<number> {
     return await this.prisma.bill.count(param)
+  }
+
+  async create (uid: string, input: Prisma.BillCreateInput): Promise<Bill> {
+    input.uid = uid
+    return await this.prisma.bill.create({ data: input })
   }
 
   transferDto (e: Bill): BillRecordItem {

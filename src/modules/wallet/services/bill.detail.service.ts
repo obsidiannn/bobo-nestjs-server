@@ -1,6 +1,6 @@
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Injectable } from '@nestjs/common'
-import { BillDetail } from '@prisma/client'
+import { BillDetail, Prisma } from '@prisma/client'
 
 @Injectable()
 export class BillDetailService {
@@ -15,6 +15,12 @@ export class BillDetailService {
         uid,
         billId
       }
+    })
+  }
+
+  async create (input: Prisma.BillDetailCreateInput): Promise<BillDetail> {
+    return await this.prisma.billDetail.create({
+      data: input
     })
   }
 }
