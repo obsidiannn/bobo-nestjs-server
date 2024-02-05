@@ -261,6 +261,15 @@ model UserMessage {
   @@map("user_messages")
 }
 
+model SysTag {
+  id        String    @id @map("_id") @db.ObjectId  @default(auto())//主键ID
+  name      String    @map("name")
+  tagType   Int       @map("tag_type") // 1 app ,2 group ,3 user
+  sort      Int       @map("sort")
+  config    Json?      @map("config")
+  @@map("sys_tag")
+}
+
 // 应用表
 model App {
   id        String   @id @map("_id") @db.ObjectId  @default(auto())//主键ID
@@ -275,14 +284,16 @@ model App {
   // categoryId String  @map("category_id") // 关联分类
   author    String   @map("author") //应用作者
   activeAt  DateTime @map("active_at") // 上架时间
+  avgStar   Float    @map("avg_star") // 应用平分
+  installCount  Int  @map("install_count") // 安装数量
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
-
+  
   @@map("app")
 }
 
 // 应用添加记录
-model AppInstallRecord{
+model AppInstallRecord {
   id        String @id @map("_id") @db.ObjectId @default(auto())
   uid       String @map("uid")
   appId     String @map("app_id")
@@ -292,7 +303,7 @@ model AppInstallRecord{
 }
 
 // 应用评论记录
-model AppComment{
+model AppComment {
   id        String  @id @map("_id") @db.ObjectId @default(auto())
   uid       String  @map("uid")
   appId     String  @map("appId")
@@ -303,6 +314,18 @@ model AppComment{
 
   @@map("app_comment")
 }
+
+
+// 应用评论点赞记录
+model AppCommentVote {
+  id        String  @id @map("_id") @db.ObjectId @default(auto())
+  uid       String  @map("uid")
+  commentId String  @map("comment_id")
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+
+  @@map("app_comment_vote")
+}
+
 
 
 // 投诉表

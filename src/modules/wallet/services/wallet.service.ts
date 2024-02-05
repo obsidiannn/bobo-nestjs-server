@@ -30,7 +30,7 @@ export class WalletService {
         type: WalletTypeEnum.NORMAL
       },
       data: {
-        currency: wallet.currency + amount
+        balance: wallet.balance + amount
       }
     })
   }

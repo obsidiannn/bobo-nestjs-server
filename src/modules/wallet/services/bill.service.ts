@@ -28,13 +28,13 @@ export class BillService {
         createdAt: 'desc'
       }
     }
-    if (param.inOut !== null) {
+    if (param.inOut && param.inOut !== null) {
       pageParam.where = {
         ...pageParam.where,
         inOut: param.inOut
       }
     }
-    if (param.type !== null && param.type in BillTypeEnum) {
+    if (param.type && param.type in BillTypeEnum) {
       pageParam.where = {
         ...pageParam.where,
         type: param.type

@@ -8,8 +8,8 @@ export class WalletDetailResp {
 }
 
 export class BillRecordReq extends BasePageReq {
-  inOut: BillInOutEnum
-  type: BillTypeEnum
+  inOut?: BillInOutEnum
+  type?: BillTypeEnum
 }
 
 export class BillRecordItem {

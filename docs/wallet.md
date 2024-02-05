@@ -46,21 +46,26 @@
 * respBody
 
 ```json
-{
-  "page": 1,
-  "limit": 20,
-  "total": 231,
-  "items": [
-    {
-      "id": "xx",
-      "type": 1,
-      "inOut": 1,
-      "amount": "发生金额",
-      "status": 1,
-      "createdAt": "2023-12-01 11:00:00"
-    }
-  ]
-}
+ {
+    "code": 200,
+    "data": {
+        "page": 1,
+        "limit": 20,
+        "total": 231,
+        "items": [
+          {
+            "id": "xx",
+            "type": 1,
+            "inOut": 1,
+            "amount": "发生金额",
+            "status": 1,
+            "createdAt": "2023-12-01 11:00:00"
+          }
+        ]
+    },
+    "msg": ""
+  }
+
 ```
 
 | key       | desc                                                                         |

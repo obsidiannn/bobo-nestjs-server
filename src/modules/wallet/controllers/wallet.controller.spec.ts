@@ -1,12 +1,15 @@
 import { AppModule } from '@/app.module'
-import { WalletTypeEnum } from '@/enums'
+import { ActiveEnum, WalletTypeEnum } from '@/enums'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { SystemService } from '@/modules/common/services/system.service'
+import testUtil from '@/utils/test-util'
 import { buildWallet } from '@/utils/web3'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test, TestingModule } from '@nestjs/testing'
 import { Prisma } from '@prisma/client'
+import { getRandomValues, randomUUID } from 'crypto'
 import { Wallet } from 'ethers'
+import * as request from 'supertest'
 
 describe('WalletController', () => {
   let app: NestExpressApplication
@@ -35,34 +38,86 @@ describe('WalletController', () => {
     customId = customWallet.address
   })
 
-  it('初始化当前用户的wallet', async () => {
-    const users = await prisma.user.findMany({})
-    const walletInputs = users.map(u => {
-      const wallet: Prisma.WalletCreateInput = {
-        uid: u.id,
-        balance: 0,
-        currency: 1,
-        type: WalletTypeEnum.NORMAL
-      }
-      return wallet
-    })
-    await prisma.wallet.createMany({ data: walletInputs })
+  // it('初始化当前用户的wallet', async () => {
+  //   const users = await prisma.user.findMany({})
+  //   const walletInputs = users.map(u => {
+  //     const wallet: Prisma.WalletCreateInput = {
+  //       uid: u.id,
+  //       balance: 0,
+  //       currency: 1,
+  //       type: WalletTypeEnum.NORMAL
+  //     }
+  //     return wallet
+  //   })
+  //   await prisma.wallet.createMany({ data: walletInputs })
+  // })
+
+  // it('初始化系统用户及wallet', async () => {
+  //   const sysUserInput: Prisma.OfficalUserCreateInput = {
+  //     name: 'admin',
+  //     avatar: 'https://avatars.githubusercontent.com/u/122279700',
+  //     desc: '这是系统用户',
+  //     status: 1
+  //   }
+  //   const sysUser = await prisma.officalUser.create({ data: sysUserInput })
+  //   const walletInput: Prisma.WalletCreateInput = {
+  //     uid: sysUser.id,
+  //     balance: 0,
+  //     currency: 1,
+  // type: WalletTypeEnum.SYSTEM
+  //   }
+  //   await prisma.wallet.createMany({ data: walletInput })
+  // })
+
+  it('我的钱包', async () => {
+    const params = testUtil.buildAuthParams(customPk, systemPublicKey, {})
+    return await request(app.getHttpServer())
+      .post('/wallet/detail')
+      .send({
+        data: params.encData
+      })
+      .set(params.headers)
+      .expect(200)
+      .then(res => {
+        console.log(res.body)
+      })
   })
 
-  it('初始化系统用户及wallet', async () => {
-    const sysUserInput: Prisma.OfficalUserCreateInput = {
-      name: 'admin',
-      avatar: 'https://avatars.githubusercontent.com/u/122279700',
-      desc: '这是系统用户',
-      status: 1
+  it('批量创建礼品卡', async () => {
+    const list: Prisma.BoboCardCreateInput[] = []
+    for (let index = 0; index < 10; index++) {
+      const item: Prisma.BoboCardCreateInput = {
+        boboCode: randomUUID(),
+        status: ActiveEnum.ACTIVE,
+        cardAmount: 100000
+      }
+      list.push(item)
     }
-    const sysUser = await prisma.officalUser.create({ data: sysUserInput })
-    const walletInput: Prisma.WalletCreateInput = {
-      uid: sysUser.id,
-      balance: 0,
-      currency: 1,
-      type: WalletTypeEnum.NORMAL
+    await prisma.boboCard.createMany({ data: list })
+  })
+
+  it('礼品卡充值', async () => {
+    const card = await prisma.boboCard.findFirst({
+      where: {
+        status: ActiveEnum.ACTIVE
+      }
+    })
+    if (card === null) {
+      throw new Error()
     }
-    await prisma.wallet.createMany({ data: walletInput })
+    const req = {
+      cardNo: card.boboCode
+    }
+    const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+    return await request(app.getHttpServer())
+      .post('/wallet/fill/bobo-card')
+      .send({
+        data: params.encData
+      })
+      .set(params.headers)
+      .expect(200)
+      .then(res => {
+        console.log(res.body)
+      })
   })
 })

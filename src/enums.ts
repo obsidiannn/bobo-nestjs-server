@@ -3,6 +3,12 @@ export enum AuthEnumIsRegister {
   YES = 1
 }
 
+export enum SysTagTypeEnum {
+  APP = 1,
+  GROUP = 2,
+  USER = 3
+}
+
 export enum ActiveEnum {
   ACTIVE = 1,
   INACTIVE = 2

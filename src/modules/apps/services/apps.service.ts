@@ -3,11 +3,9 @@ import { UserService } from '@/modules/user/services/user.service'
 import { Injectable } from '@nestjs/common'
 
 @Injectable()
-export class GroupAppService {
+export class AppsService {
   constructor (
     private readonly prisma: PrismaService,
     private readonly userService: UserService
-  ) {
-
-  }
+  ) { }
 }

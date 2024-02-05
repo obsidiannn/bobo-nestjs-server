@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Req, UseInterceptors } from '@nestjs/common'
-import { ChatDetailItem, ChatListItem, ChatTypeEnum } from '../controllers/chat.dto'
-import { BaseArrayResp, BaseIdsArrayReq, CommonEnum } from '@/modules/common/dto/common.dto'
+import { ChatDetailItem, ChatListItem } from '../controllers/chat.dto'
+import { BaseArrayResp, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'
 import { ChatService } from '../services/chat.service'
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'

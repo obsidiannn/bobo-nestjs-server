@@ -1,6 +1,6 @@
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
-import { Controller, HttpException, HttpStatus, Post, Req, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, HttpException, HttpStatus, Post, Req, UseInterceptors } from '@nestjs/common'
 import { Request } from 'express'
 import { WalletCardFillReq, WalletDetailResp } from './wallet.dto'
 import { WalletService } from '../services/wallet.service'
@@ -29,7 +29,7 @@ export class WalletController {
 
   // 礼品卡充值
   @Post('fill/bobo-card')
-  async fillByCard (@Req() req: Request, param: WalletCardFillReq): Promise<void> {
+  async fillByCard (@Req() req: Request, @Body() param: WalletCardFillReq): Promise<void> {
     const card = await this.boboCardService.findActiveByCardNo(param.cardNo)
     if (card === null) {
       throw new HttpException('卡无效', HttpStatus.BAD_REQUEST)
