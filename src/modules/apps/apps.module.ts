@@ -4,6 +4,8 @@ import { UserModule } from '../user/user.module'
 import { AppsController } from './controllers/apps.controller'
 import { AppsService } from './services/apps.service'
 import { AuthModule } from '../auth/auth.module'
+import { AppCommentService } from './services/apps-comment.service'
+import { AppsCommentVoteService } from './services/apps-comment-vote.service'
 
 @Module({
   imports: [UserModule, AuthModule],
@@ -11,7 +13,9 @@ import { AuthModule } from '../auth/auth.module'
     AppsController
   ],
   providers: [
-    AppsService
+    AppsService,
+    AppCommentService,
+    AppsCommentVoteService
   ],
   exports: [
     AppsService

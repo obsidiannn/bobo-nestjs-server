@@ -3,12 +3,12 @@ import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { PrismaService } from '../services/prisma.service'
 import { Prisma } from '@prisma/client'
-import { SysTagTypeEnum } from '@/enums'
+import { SysCategoryTypeEnum } from '@/enums'
 import testUtil from '@/utils/test-util'
 import { SystemService } from '../services/system.service'
 import * as request from 'supertest'
 
-describe('SystemTagController', () => {
+describe('SystemCategoryController', () => {
   let app: NestExpressApplication
   let systemService: SystemService
   let systemPublicKey: string
@@ -29,26 +29,23 @@ describe('SystemTagController', () => {
     prisma = app.get<PrismaService>(PrismaService)
   })
 
-  it('初始化App tags', async () => {
-    const list: Prisma.SysTagCreateInput[] = []
-    const colorName = ['红色', '绿色', '黄色']
-    const colorValue = ['red', 'green', 'yellow']
-    for (let index = 0; index < colorName.length; index++) {
-      const config = { color: colorValue[index] }
-      const e: Prisma.SysTagCreateInput = {
-        name: colorName[index],
-        tagType: SysTagTypeEnum.APP,
-        sort: index,
-        config: JSON.stringify(config)
+  it('初始化App 分类', async () => {
+    const list: Prisma.SysCategoryCreateInput[] = []
+    const cateName = ['分类1', '分类2', '分类3']
+    for (let index = 0; index < cateName.length; index++) {
+      const e: Prisma.SysCategoryCreateInput = {
+        name: cateName[index],
+        type: SysCategoryTypeEnum.APP,
+        sort: index
       }
       list.push(e)
     }
-    await prisma.sysTag.createMany({ data: list })
+    await prisma.sysCategory.createMany({ data: list })
   })
 
   it('app tag列表', async () => {
     const req = {
-      type: SysTagTypeEnum.APP
+      type: SysCategoryTypeEnum.APP
     }
     return await request(app.getHttpServer())
       .post('/system/tags/list')

@@ -9,8 +9,8 @@ import { SystemController } from './controllers/system.controller'
 import { SystemWalletService } from './services/system-wallet.service'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { TransactionInterceptor } from './interceptors/transaction.interceptor'
-import { SystemTagController } from './controllers/system-tag.controller'
-import { SystemTagService } from './services/system-tag.service'
+import { SystemCategoryService } from './services/system-category.service'
+import { SystemCategoryController } from './controllers/system-category.controller'
 @Module({})
 export class CommonModule {
   static register (): DynamicModule {
@@ -43,12 +43,12 @@ export class CommonModule {
       ],
       controllers: [
         SystemController,
-        SystemTagController
+        SystemCategoryController
       ],
       providers: [
         PrismaService,
         SystemService,
-        SystemTagService
+        SystemCategoryService
       ],
       exports: [
         PrismaService

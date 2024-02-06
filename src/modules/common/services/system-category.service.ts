@@ -1,18 +1,17 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from './prisma.service'
-import { SysTagTypeEnum } from '@/enums'
-import { SysTag } from '@prisma/client'
-
+import { SysCategory } from '@prisma/client'
+import { SysCategoryTypeEnum } from '@/enums'
 @Injectable()
-export class SystemTagService {
+export class SystemCategoryService {
   constructor (
     private readonly prisma: PrismaService
   ) {}
 
-  async findByType (tagType: SysTagTypeEnum): Promise<SysTag[]> {
-    const result = await this.prisma.sysTag.findMany({
+  async findByType (type: SysCategoryTypeEnum): Promise<SysCategory[]> {
+    const result = await this.prisma.sysCategory.findMany({
       where: {
-        tagType
+        type
       },
       orderBy: {
         sort: 'asc'

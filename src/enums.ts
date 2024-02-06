@@ -3,7 +3,7 @@ export enum AuthEnumIsRegister {
   YES = 1
 }
 
-export enum SysTagTypeEnum {
+export enum SysCategoryTypeEnum {
   APP = 1,
   GROUP = 2,
   USER = 3

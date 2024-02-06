@@ -18,6 +18,7 @@ import { Wallet } from 'ethers'
 import commonUtil from '@/utils/common.util'
 import { randomInt } from 'crypto'
 import { SystemService } from '@/modules/common/services/system.service'
+import bufferUtil from '@/utils/buffer.util'
 
 describe('friend module FriendController', () => {
   let app: NestExpressApplication
@@ -25,7 +26,7 @@ describe('friend module FriendController', () => {
   // let randomPk: string
   let userService: UserService
   let prismaService: PrismaService
-
+  const _avatar = 'https://blog.csdn.net/weixin_42504658?spm=1001.2101.3001.5343'
   let customPk: string
   let customWallet: Wallet
   let customId: string
@@ -51,28 +52,28 @@ describe('friend module FriendController', () => {
     customWallet = buildWallet(customPk)
     customId = customWallet.address
   })
-  // describe('数据初始化', () => {
-  //   it('初始化用户 100个', async () => {
-  //     for (let index = 0; index < 100; index++) {
-  //       const pk = generatePrivateKey()
-  //       const wallet = buildWallet(pk)
-  //       const input: Prisma.UserCreateInput = {
-  //         id: wallet.address,
-  //         unionId: pk,
-  //         avatar: _avatar,
-  //         name: '测试用户_' + index.toString(),
-  //         nameIdx: 'idx_' + index.toString(),
-  //         gender: 1,
-  //         pubKey: wallet.signingKey.compressedPublicKey,
-  //         status: 1,
-  //         dbIdx: bufferUtil.changeStr2HexNumber(wallet.address) % 500,
-  //         createdAt: new Date()
-  //       }
-  //       await userService.create(input)
-  //     }
-  //     expect(1).toBe(1)
-  //   })
-  // })
+  describe('数据初始化', () => {
+    it('初始化用户 100个', async () => {
+      for (let index = 0; index < 100; index++) {
+        const pk = generatePrivateKey()
+        const wallet = buildWallet(pk)
+        const input: Prisma.UserCreateInput = {
+          id: wallet.address,
+          unionId: pk,
+          avatar: _avatar,
+          name: '测试用户_' + index.toString(),
+          nameIdx: 'idx_' + index.toString(),
+          gender: 1,
+          pubKey: wallet.signingKey.compressedPublicKey,
+          status: 1,
+          dbIdx: bufferUtil.changeStr2HexNumber(wallet.address) % 500,
+          createdAt: new Date()
+        }
+        await userService.create(input)
+      }
+      expect(1).toBe(1)
+    })
+  })
 
   describe('获取用户关系', () => {
     it('获取所有用户的关系', async () => {

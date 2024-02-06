@@ -1,14 +1,13 @@
 import { BasePageReq } from '@/modules/common/dto/common.dto'
+import { IsNotEmpty } from 'class-validator'
 // 获取tag 列表
 export class AppTagItem {
-  id: number
-  name: string
-  sort: number
-  color: string
+  name?: string
+  color?: string
 }
 // 应用列表
 export class AppPageReq extends BasePageReq {
-  tag?: string
+  categoryId?: string
   sort?: string
   groupId?: string
 }
@@ -18,13 +17,13 @@ export class AppItem {
   name: string
   desc: string
   avgStar: number
-  installCount: string
-  groupInstallFlag: string
+  installCount: number
+  groupInstallFlag?: boolean
 }
 // 应用详情
 export class AppDetailReq {
   appId: string
-  groupId: string
+  groupId?: string
 }
 
 export class AppDetailResp {
@@ -34,25 +33,26 @@ export class AppDetailResp {
   desc: string
   tags: AppTagItem[]
   author: string
-  activeAt: string
+  activeAt: Date
   avgStar: number
-  installCount: string
+  installCount: number
   detailImages: string[]
-  groupInstallFlag: string
+  groupInstallFlag: boolean
 }
 // 应用评论列表
 export class AppCommentPageReq extends BasePageReq {
-  appId: string
+  @IsNotEmpty({ message: 'error' })
+    appId: string
 }
 
 export class AppCommentItem {
   id: string
   uid: string
-  username: string
-  avatar: string
-  star: string
-  score: string
-  createdAt: string
+  username?: string
+  avatar?: string
+  star: number
+  score: number
+  createdAt: Date
   content: string
   voteFlag: boolean
 }
@@ -70,7 +70,7 @@ export class AppCommentVoteReq {
 };
 export class AppCommentVoteResp {
   commentId: string
-  voteFlag: string
+  voteFlag: boolean
 };
 
 // 我的群组应用列表

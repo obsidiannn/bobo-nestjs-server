@@ -261,13 +261,13 @@ model UserMessage {
   @@map("user_messages")
 }
 
-model SysTag {
+model SysCategory {
   id        String    @id @map("_id") @db.ObjectId  @default(auto())//主键ID
   name      String    @map("name")
-  tagType   Int       @map("tag_type") // 1 app ,2 group ,3 user
+  type      Int       @map("tag_type") // 1 app ,2 group ,3 user
   sort      Int       @map("sort")
-  config    Json?      @map("config")
-  @@map("sys_tag")
+  config    Json?     @map("config")
+  @@map("sys_category")
 }
 
 // 应用表
@@ -281,7 +281,7 @@ model App {
   sort      Int      @map("sort") //应用排序
   status    Int      @default(1) @map("status") //应用状态 1-正常 2-禁用
   tags      Json[]   @map("tags")
-  // categoryId String  @map("category_id") // 关联分类
+  categoryIds String[]  @map("category_ids") // 关联分类
   author    String   @map("author") //应用作者
   activeAt  DateTime @map("active_at") // 上架时间
   avgStar   Float    @map("avg_star") // 应用平分
@@ -323,6 +323,7 @@ model AppCommentVote {
   commentId String  @map("comment_id")
   createdAt DateTime @default(now()) @map("created_at") //创建时间
 
+  @@unique([uid,commentId], map: "unq_comment_uid")
   @@map("app_comment_vote")
 }
 

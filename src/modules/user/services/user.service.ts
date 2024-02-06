@@ -44,4 +44,21 @@ export class UserService {
       }
     })
   }
+
+  /**
+   * userHash detail
+   * @param userIds
+   */
+  async userHash (userIds: string[]): Promise<Map<string, User>> {
+    const users = await this.prismaService.user.findMany({
+      where: {
+        id: { in: userIds }
+      }
+    })
+    const result = new Map<string, User>()
+    users.forEach(u => {
+      result.set(u.id, u)
+    })
+    return result
+  }
 }
