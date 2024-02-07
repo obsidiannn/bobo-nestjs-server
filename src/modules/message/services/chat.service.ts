@@ -1,11 +1,11 @@
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { AddChatDto, ChatDetailItem, ChatListItem, ChatStatusEnum, ChatTypeEnum, DropSimpleChatResult } from '../controllers/chat.dto'
+import { AddChatDto, ChatDetailItem, ChatListItem, DropSimpleChatResult } from '../controllers/chat.dto'
 import { Chat, Prisma } from '@prisma/client'
 import { BaseIdsArrayReq, CommonEnum } from '@/modules/common/dto/common.dto'
 import { strMd5 } from '@/utils/buffer.util'
 import commonUtil from '@/utils/common.util'
-
+import { ChatStatusEnum, ChatTypeEnum } from '@/enums'
 @Injectable()
 export class ChatService {
   constructor (

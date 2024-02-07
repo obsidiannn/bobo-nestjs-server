@@ -15,12 +15,10 @@ import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { UserService } from '@/modules/user/services/user.service'
 import { ChatService } from '@/modules/message/services/chat.service'
-import { GroupMemberRoleEnum, GroupMemberStatus } from '@/enums'
+import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum } from '@/enums'
 import { GroupMemberService } from '../services/group.member.service'
-import { ChatStatusEnum, ChatTypeEnum } from '@/modules/message/controllers/chat.dto'
 import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
-import { Transaction } from '@/modules/common/decorator/transactional'
 import { TransactionInterceptor } from '@/modules/common/interceptors/transaction.interceptor'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 
@@ -62,10 +60,10 @@ export class GroupController {
       }
 
       const group = await this.groupService.create(currentUserId, data)
-      const a = 1
-      if (a === 1) {
-        throw new HttpException('test', 400)
-      }
+      // const a = 1
+      // if (a === 1) {
+      //   throw new HttpException('test', 400)
+      // }
       const member: Prisma.GroupMembersCreateInput = {
         groupId: group.id,
         uid: data.ownerId,

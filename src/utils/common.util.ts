@@ -8,11 +8,13 @@ export const arrayDifference = (arr1: any[], arr2: any[]): any[] => {
   return difference
 }
 
-export const virtualCurrentUser = (): string => {
-  return '8e731c2ffde507e755a8b72513d59ca7'
-}
-
 export const pageSkip = (param: BasePageReq): number => {
+  if (param.page === null || param.page === undefined) {
+    param.page = 1
+  }
+  if (param.limit === null || param.limit === undefined) {
+    param.limit = 10
+  }
   return (param.page - 1) * param.limit
 }
 

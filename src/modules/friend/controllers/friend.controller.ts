@@ -12,11 +12,8 @@ import {
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { FriendApplyService } from '../services/friend-apply.service'
 import { FriendApply, Prisma } from '@prisma/client'
-import { FriendApplyStatusEnum } from '@/enums'
-import { id } from 'ethers'
+import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum } from '@/enums'
 import { ChatService } from '@/modules/message/services/chat.service'
-import { ChatStatusEnum, ChatTypeEnum } from '@/modules/message/controllers/chat.dto'
-import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
 // import { AuthInterceptor } from '@/modules/auth/interceptors/auth.interceptor'
 

@@ -10,11 +10,10 @@ import {
   MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BasePageResp, CommonEnum, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'
-import { GroupMemberRoleEnum, GroupMemberStatus } from '@/enums'
+import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum } from '@/enums'
 import { UserService } from '@/modules/user/services/user.service'
 import commonUtil from '@/utils/common.util'
 import { ChatService } from '@/modules/message/services/chat.service'
-import { ChatStatusEnum, ChatTypeEnum } from '@/modules/message/controllers/chat.dto'
 import { MessageService } from '@/modules/message/services/message.service'
 
 @Injectable()

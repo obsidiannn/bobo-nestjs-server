@@ -9,8 +9,7 @@ import { Prisma, User, Group, GroupMembers, FriendApply, Friend } from '@prisma/
 import { BaseUIdArrayReq, BaseIdsArrayReq, CommonEnum, BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import commonUtil from '@/utils/common.util'
 import { ChatService } from '@/modules/message/services/chat.service'
-import { FriendApplyStatusEnum } from '@/enums'
-import { ChatStatusEnum, ChatTypeEnum } from '@/modules/message/controllers/chat.dto'
+import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum } from '@/enums'
 import { MessageService } from '@/modules/message/services/message.service'
 
 @Injectable()

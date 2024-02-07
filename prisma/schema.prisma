@@ -10,8 +10,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//  系统用户
 model OfficalUser {
-  id        String   @id @map("_id")
+  id        String   @id @db.ObjectId @default(auto()) @map("_id")
   name      String   @map("name")
   avatar    String   @map("avatar")
   desc      String   @map("desc") //应用描述
@@ -112,6 +113,7 @@ model Group {
   weight      Int      @default(0) @map("weight") //搜索权重值
   createdAt   DateTime @default(now()) @map("created_at") //创建时间
   updatedAt   DateTime @updatedAt @map("updated_at") //更新时间
+  tags        String[] @map("tags")
 
   @@map("groups")
 }
@@ -130,7 +132,6 @@ model GroupStat {
   dateValue String   @map("date_value") // 统计日期，yyyy-mm-dd
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
-
   @@index([groupId], name: "gid")
   @@index([dateValue], name: "date_value")
   @@map("group_stat")
@@ -260,6 +261,15 @@ model UserMessage {
   @@map("user_messages")
 }
 
+model SysCategory {
+  id        String    @id @map("_id") @db.ObjectId  @default(auto())//主键ID
+  name      String    @map("name")
+  type      Int       @map("tag_type") // 1 app ,2 group ,3 user
+  sort      Int       @map("sort")
+  config    Json?     @map("config")
+  @@map("sys_category")
+}
+
 // 应用表
 model App {
   id        String   @id @map("_id") @db.ObjectId  @default(auto())//主键ID
@@ -271,17 +281,19 @@ model App {
   sort      Int      @map("sort") //应用排序
   status    Int      @default(1) @map("status") //应用状态 1-正常 2-禁用
   tags      Json[]   @map("tags")
-  // categoryId String  @map("category_id") // 关联分类
+  categoryIds String[]  @map("category_ids") // 关联分类
   author    String   @map("author") //应用作者
   activeAt  DateTime @map("active_at") // 上架时间
+  avgStar   Float    @map("avg_star") // 应用平分
+  installCount  Int  @map("install_count") // 安装数量
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
-
+  
   @@map("app")
 }
 
 // 应用添加记录
-model AppInstallRecord{
+model AppInstallRecord {
   id        String @id @map("_id") @db.ObjectId @default(auto())
   uid       String @map("uid")
   appId     String @map("app_id")
@@ -291,7 +303,7 @@ model AppInstallRecord{
 }
 
 // 应用评论记录
-model AppComment{
+model AppComment {
   id        String  @id @map("_id") @db.ObjectId @default(auto())
   uid       String  @map("uid")
   appId     String  @map("appId")
@@ -302,6 +314,19 @@ model AppComment{
 
   @@map("app_comment")
 }
+
+
+// 应用评论点赞记录
+model AppCommentVote {
+  id        String  @id @map("_id") @db.ObjectId @default(auto())
+  uid       String  @map("uid")
+  commentId String  @map("comment_id")
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+
+  @@unique([uid,commentId], map: "unq_comment_uid")
+  @@map("app_comment_vote")
+}
+
 
 
 // 投诉表
@@ -324,9 +349,10 @@ model Wallet {
   id        String   @id @map("_id") @db.ObjectId @default(auto()) //主键ID
   uid       String   @map("uid") //用户ID
   balance   Int      @default(0) @map("balance") //余额 以usdt为单位
+  currency  Int      @map("currency") // 币种： utsd
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
-  type      Int      @map("type") // 0 普通 1 系统钱包
+  type      Int      @map("type") // 1 普通 2 系统钱包
   @@map("wallet")
 }
 
@@ -336,26 +362,41 @@ model Bill {
   uid       String   @map("uid") // 用户ID
   type      Int      @map("type") // 账单类型 1-充值 2-提现 3-转账 4-红包 5-群收款 6-群退款 7-群提现 8-申请群付费
   amount    Int      @map("amount") // 金额
+  inOut  Int         @map("in_out") // 1 收入 2 支出
   status    Int      @default(0) @map("status") //状态 0-待处理 1-已处理 （1 success，2 待支付,3 pending，4 失败）
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+  
   @@map("bill")
 }
 
 // 账单详情表
 model BillDetail {
-  id          String     @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  billId      String     @map("bill_id")
-  uid         String     @map("uid")
-  from        String     @map("from") //只存userId
-  to          String     @map("to") // 只存userId
-  businessId    String     @map("business_id") // userId groupId systemUserId
-  businessType  String     @map("business_type") // user group systemUser
-  remark      String     @map("remark") // 备注
-  transforNo  String     @map("transfer_no") // 交易单号
-  sellerNo     String    @map("seller_no") // 商户订单
-  @@index([billId],map: "bill_id")
+  billId        String      @id @map("_id") @db.ObjectId 
+  uid           String      @map("uid")
+  from          String      @map("from") //
+  to            String      @map("to") // 
+  businessId    String?     @map("business_id") // userId groupId systemUserId
+  businessType  Int?        @map("business_type") // user group systemUser
+  remark        String?     @map("remark") // 备注
+  transactionNo String?     @map("transaction_no") // 交易单号
+  sellerNo      String?     @map("seller_no") // 商户订单
+
   @@map("bill_detail")
+}
+
+// 充值码
+model BoboCard {
+  id              String    @id @map("_id") @db.ObjectId @default(auto())// 主键ID
+  boboCode       String     @map("bobo_code") // 礼包码
+  status          Int       @map("status") // 状态： 1 可用，2 已使用
+  cardAmount     Int        @map("card_amount") // 面值（单位分）
+  convertUid      String?   @map("convert_uid") // 兑换人
+  createdAt       DateTime  @default(now()) @map("created_at") //创建时间
+  updatedAt       DateTime  @updatedAt @map("updated_at") //领取时间时间
+
+  @@index([boboCode],map: "bobo_code")
+  @@map("bobo_card")
 }
 
 // 红包
@@ -397,24 +438,24 @@ model BbsTweet {
   id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
   authorId    String          @map("author_id")
   authorType  Int             @map("author_type")// 1 普通用户 2 系统用户
-  medias      Json[]          @map("medias")     
+  medias      Json[]          @map("medias")
   content     String          @map("content")
-  status      Int             @map("status")// 1 正常 1 封禁 2 锁定
-  commentLevel Int            @map("comment_level") // 是否可回复: 1 每个人，2 好友 3 不可回复
+  status      Int             @map("status")// 1 正常 2 封禁 3 锁定
+  commentLevel Int            @map("comment_level") //预留 是否可回复: 1 每个人，2 好友 3 不可回复
+  visibleType Int             @map("visible_type")// 1 公开 2 好友 3 自己
   longitude   Float?          @map("longitude")   // 经度
   latitude    Float?          @map("latitude")   // 纬度
-  address     String?         @map("address")
+  address     String?         @map("address") // 文本
   retweetId   String          @map("retweet_id")  // 转帖id
   retweetType Int             @map("retweet_type")// 转帖类型 1 推文，2 评论
-  visibleType Int             @map("visible_type")// 1 公开 2 好友 3 自己
   createdAt   DateTime        @default(now()) @map("created_at") //创建时间
-  //  是否需要省市区
+
   @@map("bbs_tweet")
 }
 
 // 推文索引表
 model BbsTweetIndex {
-  bbsId       String          @id  @map("_id") @db.ObjectId 
+  bbsId       String          @id  @map("_id") @db.ObjectId
   randomSort  Int             @map("random_sort") // 随机数
   overall     Float           @map("overall")    // 综合分数
   voteCount   Int             @map("vote_count")   // 喜欢数量
@@ -425,6 +466,7 @@ model BbsTweetIndex {
   visibleType Int             @map("visible_type")// 可见性 1 公开 2 好友 3 自己 冗余
   retweetId   String          @map("retweet_id")  // 转帖id 冗余
   retweetType Int             @map("retweet_type")// 转帖类型  冗余
+  parentId    String?         @map("parent_id")
   createdAt   DateTime        @default(now()) @map("created_at") //创建时间
   @@map("bbs_tweet_index")
 }
@@ -432,7 +474,7 @@ model BbsTweetIndex {
 // 推文统计表
 model BbsTweetStat {
   id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  bbsId       String          @map("bbs_id") @db.ObjectId 
+  bbsId       String          @map("bbs_id") @db.ObjectId
   dateBucket  String          @map("date_bucket")// yyyyMMdd
   overall     Float           @map("overall")    // 综合分数
   voteCount   Int             @map("vote_count")   // 喜欢数量
@@ -443,66 +485,14 @@ model BbsTweetStat {
   @@index([bbsId,dateBucket])
   @@map("bbs_tweet_stat")
 }
-// // 每日reddit计算
-// model BbsReddit{
-//     id          String   @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-//     bbsId       String    @map("bbs_id") @db.ObjectId 
-//     redditValue Float
-//     dateBucket  String
-//     @@index([bbsId,dateBucket])
-//     @@map("bbs_reddit")
-// }
+
 // 计算vote可以采取 定时值 +-自己的方式
 model BbsTweetVote {
-  id          String            @id @map("_id") @db.ObjectId @default(auto()) 
-  bbsId       String            @map("bbs_id") @db.ObjectId 
-  uid         String            @map("uid")        
+  id          String            @id @map("_id") @db.ObjectId @default(auto())
+  bbsId       String            @map("bbs_id") @db.ObjectId
+  uid         String            @map("uid")
   createdAt   DateTime          @default(now()) @map("created_at") //创建时间
 
   @@index([bbsId,uid])
   @@map("bbs_tweet_vote")
-}
-
-// 推文评论表
-model bbsComment {
-  id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  authorId    String          @map("author_id")
-  authorType  Int             @map("author_type")// 1 普通用户 2 系统用户
-  medias      Json[]          @map("medias")
-  bbsId       String          @map("bbs_id")
-  commentId   String?         @map("comment_id") // 回复评论id
-  commentCode String?         @map("comment_code")  // 0001000200010003 可以到父级别，允许相同
-  content     String          @map("content")
-  status      Int             @map("status")// 1 正常 1 封禁 2 锁定
-  longitude   Float?          @map("longitude")   // 经度
-  latitude    Float?          @map("latitude")   // 纬度
-  address     String?         @map("address")
-  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
-
-  @@map("bbs_comment")
-}
-// 点赞表
-model BbsCommentVote {
-  id            String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  commentId     String          @map("comment_id")
-  bbsId         String          @map("bbs_id")    
-  uid           String          @map("uid")   
-  createdAt     DateTime        @default(now()) @map("created_at") //创建时间
-
-  @@index([commentId,uid])
-  @@map("bbs_comment_vote")
-}
-
-// 评论索引
-model BbsCommentIndex {
-  commentId       String      @id @map("_id") @db.ObjectId 
-  randomSort  Int             @map("random_sort") // 随机数
-  overall     Float           @map("overall")   // 综合分数
-  voteCount   Int             @map("voet_count")  // 喜欢数量
-  commentCount  Int           @map("comment_count")   // 评论数量
-  readCount   Int             @map("read_count")   // 阅读量
-  redditValue Int             @map("reddit_value")   // reddit分值
-  parentCommentId   String?         @map("comment_id")
-  commentCode String?         @map("comment_code")
-  @@map("bbs_coment_index")
 }
