@@ -16,6 +16,26 @@ export class ChatService {
     return await this.prisma.chat.findMany(param)
   }
 
+  /**
+   * 根据uid查找chatId
+   * @param uid
+   * @param objUid
+   * @returns
+   */
+  async findChatIdByUserId (uid: string, objUid: string): Promise<string> {
+    const userRef = this.userRefGenerate([uid, objUid])
+    const result = await this.prisma.chatUser.findFirstOrThrow({
+      where: {
+        uid,
+        userRef
+      },
+      select: {
+        chatId: true
+      }
+    })
+    return result.chatId
+  }
+
   // 查找某人的好友chat
   async getChatHashByUserIds (currentUserId: string, uids: string[]): Promise<Map<string, string>> {
     const refs = uids.map(id => {
@@ -390,6 +410,29 @@ export class ChatService {
         chatUser: chatIds
       }
     }
+  }
+
+  /**
+   * 根据groupId获取chat
+   * @param uid
+   * @param groupId
+   * @returns
+   */
+  async findChatByGroupId (uid: string, groupId: string): Promise<Chat> {
+    const chat = await this.prisma.chat.findFirstOrThrow({
+      where: {
+        groupId,
+        type: ChatTypeEnum.GROUP
+      }
+    })
+    await this.prisma.chatUser.findFirstOrThrow({
+      where: {
+        uid,
+        chatId: chat.id
+      },
+      select: { id: true }
+    })
+    return chat
   }
 
   // 单聊会话索引生成

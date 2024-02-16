@@ -16,11 +16,10 @@ import { CryptInterceptor } from '@/modules/common/interceptors/crypt.intercepto
 import { MessageService } from '../services/message.service'
 import { Request } from 'express'
 import { MessageDetail, Prisma } from '@prisma/client'
-import { MessageStatus } from '../services/message.enums'
-import { ChatUserService } from '../services/chat.user.service'
-import { UserMessageService } from '../services/user.message.service'
+import { ChatUserService } from '../services/chat-user.service'
+import { UserMessageService } from '../services/user-message.service'
 import { ChatService } from '../services/chat.service'
-import { GroupMemberRoleEnum } from '@/enums'
+import { GroupMemberRoleEnum, MessageStatusEnum } from '@/enums'
 
 @Controller('messages')
 @UseInterceptors(CryptInterceptor, BaseInterceptor)
@@ -46,7 +45,7 @@ export class MessageController {
       extra: JSON.stringify(param.extra),
       action: JSON.stringify(param.action),
       createdAt: new Date(),
-      status: MessageStatus.NORMAL
+      status: MessageStatusEnum.NORMAL
     }
     const sequence = await this.messageService.findMaxSequenceByChatId(param.chatId)
     messageInput.sequence = sequence

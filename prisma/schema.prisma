@@ -261,6 +261,7 @@ model UserMessage {
   @@map("user_messages")
 }
 
+// 系统分类
 model SysCategory {
   id        String    @id @map("_id") @db.ObjectId  @default(auto())//主键ID
   name      String    @map("name")
@@ -402,32 +403,33 @@ model BoboCard {
 // 红包
 model RedPacket {
   id              String      @id @map("_id")  @db.ObjectId @default(auto())// 主键ID
-  type            Int         @map("type")  // 类型 1 普通，2 拼手气 3 专属
-  packetType      Int         @map("packet_type")  // 1 群聊 2 单聊
+  type            Int         @map("type")  // 类型 1 普通，2 拼手气 3 专属 RedPacketTypeEnum
+  sourceType      Int         @map("source_type")  // 1 群聊 2 单聊 RedPacketSourceEnum
   totalAmount     Int         @map("total_amount") // 总金额
-  SingleAmount    Int         @map("single_amount") // 单个金额
+  singleAmount    Int?         @map("single_amount") // 单个金额
   packetCount     Int         @map("packet_count") // 红包个数
   groupId         String?     @map("gid")
   objUids         String[]    @map("obj_uid") // 如果有指定人
   createdUid      String      @map("created_uid")  // 发起人
-  status            Int         @map("status") // 1有效 2过期
-  consumeCount      Int         @map("consume_count") // 领取数量
-  consumeAmount     Int         @map("consume_amount") // 已领取金额
+  status            Int       @map("status") // 1有效 2过期
+  consumeCount      Int       @map("consume_count") // 领取数量
+  consumeAmount     Int       @map("consume_amount") // 已领取金额
+  expireSecond    Int         @map("expire_second") // 过期时间（秒）
   createdAt       DateTime    @default(now()) @map("created_at") //创建时间
 
   @@map("red_packet")
 }
 
 // 红包领取表 提前生成
-model RedPacketRecord{
+model RedPacketRecord {
   id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  uid         String          @map("uid") // 领取人
-  packetId    String          @map("packet_id")
-  amount      Int             @map("amount") // 领取金额 冗余
-  billId      String?          @map("bill_id") // 关联账单id 开始为空
-  status      Int              @map("status") // 1 待领取 2 已领取 3 过期 4 过期已退回
-  createdAt       DateTime @default(now()) @map("created_at") //创建时间
-  @@index([uid], name: "uid")
+  uid         String?         @map("uid") // 领取人
+  packetId    String          @map("packet_id") 
+  amount      Int   ?         @map("amount") // 领取金额 冗余
+  billId      String?         @map("bill_id") // 关联账单id 开始为空
+  status      Int             @map("status") // 1 待领取 2 已领取 3 过期 4 过期已退回
+  recordAt    DateTime?       @map("record_at") // 领取时间
+  createdAt       DateTime    @default(now()) @map("created_at") //创建时间
   @@index([packetId], name: "packet_id")
   @@map("red_packet_record")
 }

@@ -2,7 +2,7 @@ import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { Body, Controller, Post, Req, UseInterceptors } from '@nestjs/common'
 import { Request } from 'express'
-import { AppCommentItem, AppCommentPageReq, AppCommentReq, AppCommentVoteReq, AppCommentVoteResp, AppDetailReq, AppDetailResp, AppItem, AppPageReq } from './apps.dto'
+import { AppCommentItem, AppCommentPageReq, AppCommentReq, AppCommentVoteReq, AppCommentVoteResp, AppDetailReq, AppDetailResp, AppItem, AppPageReq, AppTagItem } from './apps.dto'
 import { BasePageResp } from '@/modules/common/dto/common.dto'
 import { AppsService } from '../services/apps.service'
 import { AppCommentService } from '../services/apps-comment.service'
@@ -66,7 +66,12 @@ export class AppsController {
       groupInstallFlag: false
     }
     if (app.tags !== null && app.tags.length > 0) {
-      // result.tag = JSON.parse(app.tags.config as string) as SysCategoryConfig
+      result.tags = app.tags
+        .filter(i => { return i !== undefined })
+        .map(i => {
+          const item: AppTagItem = JSON.parse(JSON.stringify(i))
+          return item
+        })
     }
     if (param.groupId !== undefined && param.groupId !== null) {
       result.groupInstallFlag = await this.appService.hasInstalled(param.groupId, param.appId)

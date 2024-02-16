@@ -54,7 +54,12 @@ export class MessageListItem {
 }
 
 export interface MessageExtra {
-
+  // 备注
+  remark?: string
+  // 红包id
+  id?: string
+  // 过期时间
+  expireSecond?: number
 }
 
 export interface MessageAction {

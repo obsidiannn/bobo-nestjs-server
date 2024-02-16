@@ -1,5 +1,6 @@
 import { BillInOutEnum, BillTypeEnum } from '@/enums'
 import { BasePageReq } from '@/modules/common/dto/common.dto'
+import { IsNotEmpty } from 'class-validator'
 
 export class WalletDetailResp {
   balance: number
@@ -36,4 +37,17 @@ export class BillDetailResp extends BillRecordItem {
 
 export class WalletCardFillReq {
   cardNo: string
+}
+
+export class WalletRemitReq {
+  @IsNotEmpty({ message: 'error' })
+    objUId: string
+
+  amount: number
+  remark?: string
+}
+
+export class WalletRemitResp {
+  billId: string
+  transactionNo: string
 }

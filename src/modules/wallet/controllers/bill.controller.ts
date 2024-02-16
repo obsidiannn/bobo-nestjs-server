@@ -6,7 +6,7 @@ import { BillService } from '../services/bill.service'
 import { BaseIdReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import { BillDetailResp, BillRecordItem, BillRecordReq } from './wallet.dto'
 import { Request } from 'express'
-import { BillDetailService } from '../services/bill.detail.service'
+import { BillDetailService } from '../services/bill-detail.service'
 import { BusinessTypeEnum } from '@/enums'
 import { UserService } from '@/modules/user/services/user.service'
 

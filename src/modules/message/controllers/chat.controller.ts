@@ -6,7 +6,7 @@ import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { Request } from 'express'
 import { MessageService } from '../services/message.service'
-import { ChatUserService } from '../services/chat.user.service'
+import { ChatUserService } from '../services/chat-user.service'
 
 @Controller('chat')
 @UseInterceptors(CryptInterceptor, BaseInterceptor)
