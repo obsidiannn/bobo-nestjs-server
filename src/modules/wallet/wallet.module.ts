@@ -6,11 +6,12 @@ import { BillDetailService } from './services/bill-detail.service'
 import { BillController } from './controllers/bill.controller'
 import { UserModule } from '../user/user.module'
 import { AuthModule } from '../auth/auth.module'
-import { BoboCardService } from './services/bobo-card.service'
+import { PrePaidService } from './services/pre-paid.service'
 import { RedPacketService } from './services/red-packet.service'
+import { MessageModule } from '../message/message.module'
 @Module({
-  imports: [UserModule, AuthModule],
+  imports: [UserModule, AuthModule, MessageModule],
   controllers: [WalletController, BillController],
-  providers: [WalletService, BillService, BillDetailService, BoboCardService, RedPacketService]
+  providers: [WalletService, BillService, BillDetailService, PrePaidService, RedPacketService]
 })
 export class WalletModule {}

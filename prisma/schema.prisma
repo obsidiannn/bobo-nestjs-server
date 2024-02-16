@@ -408,6 +408,7 @@ model RedPacket {
   type            Int         @map("type")  // 类型 1 普通，2 拼手气 3 专属 RedPacketTypeEnum
   sourceType      Int         @map("source_type")  // 1 群聊 2 单聊 RedPacketSourceEnum
   totalAmount     Int         @map("total_amount") // 总金额
+  remark          String      @map("remark")
   singleAmount    Int?         @map("single_amount") // 单个金额
   packetCount     Int         @map("packet_count") // 红包个数
   groupId         String?     @map("gid")
@@ -427,7 +428,7 @@ model RedPacketRecord {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
   uid         String?         @map("uid") // 领取人
   packetId    String          @map("packet_id")
-  amount      Int   ?         @map("amount") // 领取金额 冗余
+  amount      Int             @map("amount") // 领取金额 冗余
   billId      String?         @map("bill_id") // 关联账单id 开始为空
   status      Int             @map("status") // 1 待领取 2 已领取 3 过期 4 过期已退回
   recordAt    DateTime?       @map("record_at") // 领取时间

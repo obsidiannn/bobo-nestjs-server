@@ -21,6 +21,7 @@ import { ChatService } from './chat.service'
 import { UserMessageService } from './user-message.service'
 import { ChatUserService } from './chat-user.service'
 import commonUtil from '@/utils/common.util'
+import { RedPacketInfo } from '@/modules/wallet/controllers/red-packet.dto'
 
 @Injectable()
 export class MessageService {
@@ -82,9 +83,10 @@ export class MessageService {
     isEnc: number,
     extra: MessageExtra,
     action: MessageAction,
-    groupId?: string,
-    objUid?: string
-  ): Promise<any> {
+    redPacketId: string,
+    objUid: string | null,
+    groupId?: string
+  ): Promise<RedPacketInfo> {
     let chatId: string
     if (sourceType === RedPacketSourceEnum.GROUP) {
       const _groupId: string = commonUtil.nullThrow(groupId)
@@ -121,6 +123,13 @@ export class MessageService {
     })
     await this.userMessageService.createMany(userMsgs)
     await this.chatUserService.userChatHide(currentUserId, { ids: [chatId] }, false)
+    const result: RedPacketInfo = {
+      chatId,
+      msgId: message.id,
+      sequence,
+      packetId: redPacketId
+    }
+    return result
   }
 
   async create (data: Prisma.MessageDetailCreateInput): Promise<MessageDetail> {

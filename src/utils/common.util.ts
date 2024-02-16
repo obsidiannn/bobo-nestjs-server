@@ -57,11 +57,36 @@ export const changeF2Y = (amount: number): number => {
   return 0
 }
 
+export const randomSplit = (n: number, total: number): number[] => {
+  const res: number[] = [] // 最后返回的数组
+  let range = total // 生成随机金额的范围
+  let preTotal = 0 // 已经生成的金额的和
+  for (let i = 0; i < (n - 1); i++) {
+    const item = Math.ceil(Math.random() * (range / 2))
+    res.push(item)
+    range -= item // 从范围内减去已经生成的金额
+    preTotal += item // 将已经生成的金额进行累加
+  }
+  res.push(total - preTotal) // 最后将剩下的金额添加到数组中
+  return res
+}
+
+/**
+ * 随机数组下标
+ * @param length
+ * @returns index
+ */
+export const randomIndex = (length: number): number => {
+  return Math.floor((Math.random() * length))
+}
+
 export default {
   arrayDifference,
   pageSkip,
   notNull,
   notEmpty,
   nullThrow,
-  emptyThrow
+  emptyThrow,
+  randomSplit,
+  randomIndex
 }
