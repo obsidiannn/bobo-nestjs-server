@@ -1,13 +1,12 @@
 import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test, TestingModule } from '@nestjs/testing'
-import { BaseIdReq, BaseIdsArrayReq, BasePageResp, BaseArrayResp } from '@/modules/common/dto/common.dto'
+import { BaseIdReq, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'
 import {
-  GroupCreateReq, GroupMemberReq, GroupDescResp,
-  GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq, GroupMemberItem,
-  GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq, GroupNoticeResp,
-  GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupInfoItem,
-  MineGroupInfoItem, GroupDetailItem
+  GroupCreateReq, GroupMemberReq,
+  GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq,
+  GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq,
+  GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq
 } from '@/modules/group/controllers/group.dto'
 import { randomBytes, randomInt } from 'crypto'
 import { buildWallet, generatePrivateKey, computeSharedSecret } from '@/utils/web3'

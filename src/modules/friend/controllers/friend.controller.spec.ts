@@ -1,17 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { UserGenderEnum } from '@/enums'
 import * as request from 'supertest'
-import { buildWallet, generatePrivateKey } from '@/utils/web3'
-import { SystemController } from '@/modules/common/controllers/system.controller'
+import { buildWallet } from '@/utils/web3'
 import testUtil from '@/utils/test-util'
-import { Prisma } from '@prisma/client'
-import { BasePageReq, BaseIdsArrayReq, BaseUIdArrayReq, BaseArrayResp, BasePageResp } from '../../common/dto/common.dto'
-import {
-  FriendRelationItem, FriendInviteApplyReq, FriendInviteApplyItem
-  , FriendInviteAgreeReq, FriendInviteRejectReq, FriendInfoItem, FriendChangeAliasReq, FriendListPageReq
-} from './friend.dto'
 import { UserService } from '@/modules/user/services/user.service'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Wallet } from 'ethers'

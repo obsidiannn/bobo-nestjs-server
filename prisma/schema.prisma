@@ -12,7 +12,7 @@ datasource db {
 
 //  系统用户
 model OfficalUser {
-  id        String   @id @db.ObjectId @default(auto()) @map("_id")
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @map("name")
   avatar    String   @map("avatar")
   desc      String   @map("desc") //应用描述
@@ -44,7 +44,7 @@ model User {
 
 //拉黑表
 model Blacklist {
-  id        String   @id @db.ObjectId @default(auto()) @map("_id") //主键ID md5_16(uid+obj_uid)
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID md5_16(uid+obj_uid)
   uid       String   @map("uid") //用户ID
   objUid    String   @map("obj_uid") //被拉黑的用户ID
   createdAt DateTime @default(now()) @map("create_time") //创建时间
@@ -57,7 +57,7 @@ model Blacklist {
 
 // 好友表
 model Friend {
-  id          String    @id @db.ObjectId @default(auto()) @map("_id") //主键ID
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId //主键ID
   uid         String    @map("uid") //用户ID
   objUid      String    @map("obj_uid") //好友的ID
   agreeAt     DateTime? @map("agree_at") //同意时间
@@ -73,16 +73,16 @@ model Friend {
 
 // 好友申请表
 model FriendApply {
-  id        String   @id @db.ObjectId @default(auto())  @map("_id") //主键ID
-  uid       String   @map("uid") //申请的用户ID
-  objUid    String   @map("obj_uid") //被申请的用户ID
-  status    Int      @default(0) @map("status") // 状态 0-待验证 1-验证通过
-  isRead    Int      @default(0) @map("is_read") // 是否已读 0-未读 1-已读
-  remark    String?  @map("remark") //申请说明、备注
-  rejectReason String? @map("reject_reason")
-  createdAt DateTime @default(now()) @map("created_at") //申请时间
-  expiredAt DateTime @map("expired_at") //过期时间
-  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID
+  uid          String   @map("uid") //申请的用户ID
+  objUid       String   @map("obj_uid") //被申请的用户ID
+  status       Int      @default(0) @map("status") // 状态 0-待验证 1-验证通过
+  isRead       Int      @default(0) @map("is_read") // 是否已读 0-未读 1-已读
+  remark       String?  @map("remark") //申请说明、备注
+  rejectReason String?  @map("reject_reason")
+  createdAt    DateTime @default(now()) @map("created_at") //申请时间
+  expiredAt    DateTime @map("expired_at") //过期时间
+  updatedAt    DateTime @updatedAt @map("updated_at") //更新时间
 
   @@index([uid], name: "uid")
   @@index([objUid], name: "obj_uid")
@@ -91,7 +91,7 @@ model FriendApply {
 
 // 群详情表
 model Group {
-  id          String   @id @db.ObjectId @map("_id") @default(auto()) //主键ID，也为群ID
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID，也为群ID
   creatorId   String   @map("creator_id") //创建者
   ownerId     String   @map("owner_id") //群主
   name        String   @map("name") //群名称 为空默认生成
@@ -127,11 +127,12 @@ model GroupStat {
   msgDay    Int      @default(0) @map("msg_day") //群消息当日总数
   activeDay Int      @default(0) @map("active_day") //群当日活跃人数
   joinDay   Int      @default(0) @map("join_day") // 群新增人数
-  leaveDay   Int      @default(0) @map("leave_day") // 群减少人数
+  leaveDay  Int      @default(0) @map("leave_day") // 群减少人数
   incomeDay Int      @default(0) @map("income_day") //群当日收益
   dateValue String   @map("date_value") // 统计日期，yyyy-mm-dd
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
   @@index([groupId], name: "gid")
   @@index([dateValue], name: "date_value")
   @@map("group_stat")
@@ -156,7 +157,7 @@ model GroupPackage {
 
 // 群用户表
 model GroupMembers {
-  id               String    @id @default(auto()) @db.ObjectId @map("_id") //主键ID
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId //主键ID
   groupId          String    @map("gid") //群ID
   uid              String    @map("uid") //用户ID
   encPri           String    @map("enc_pri") //用户在该群的密钥 只有群主及管理具备
@@ -179,7 +180,7 @@ model GroupMembers {
 
 // 群应用表 （如果应用是共享的，表需要设计成关联形式）
 model GroupApp {
-  id        String   @id @map("_id") @db.ObjectId @default(auto())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   groupId   String   @map("gid") //群ID
   appId     String   @map("app_id") //应用ID
   createdAt DateTime @default(now()) @map("created_at") //创建时间
@@ -192,7 +193,7 @@ model GroupApp {
 
 //会话表
 model Chat {
-  id               String    @id @map("_id") @db.ObjectId  @default(auto()) // 主键ID 及会话ID
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId // 主键ID 及会话ID
   groupId          String?   @map("gid") // 群ID
   creatorUId       String    @map("creator_uid") // 创建者 下面几个字段按道理是从群信息里面读取（个人意见）
   type             Int       @default(1) @map("type") // 1-单聊 2-群聊 3 官方会话
@@ -209,7 +210,7 @@ model Chat {
 
 // 用户会话表
 model ChatUser {
-  id             String   @id @map("_id")  @db.ObjectId @default(auto())//主键ID
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID
   uid            String   @map("uid") //用户ID
   chatId         String   @map("chat_id") //会话ID
   isTop          Int      @default(0) @map("is_top") //是否置顶 1-是 0-否 默认0
@@ -229,7 +230,7 @@ model ChatUser {
 
 // 消息详情表
 model MessageDetail {
-  id         String   @id @map("_id")  @db.ObjectId  @default(auto()) //主键ID 及消息ID
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID 及消息ID
   chatId     String   @map("chat_id") //会话ID
   fromUid    String   @map("from_uid") //发送者用户ID
   content    String   @map("content") //消息内容 加密字符串
@@ -249,85 +250,85 @@ model MessageDetail {
 
 // 用户消息表
 model UserMessage {
-  id       String @id @map("_id") @db.ObjectId  @default(auto())  //主键ID
-  uid      String @map("uid") //用户ID
-  msgId    String @map("msg_id") //消息ID
-  isRead   Int    @default(0) @map("is_read") //是否已读 1-是 0-否 默认0
-  sequence Int    @map("sequence") // 消息序号
-  chatId   String @map("chat_id") // chat id
-  createdAt  DateTime @default(now()) @map("created_at") //创建时间
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID
+  uid       String   @map("uid") //用户ID
+  msgId     String   @map("msg_id") //消息ID
+  isRead    Int      @default(0) @map("is_read") //是否已读 1-是 0-否 默认0
+  sequence  Int      @map("sequence") // 消息序号
+  chatId    String   @map("chat_id") // chat id
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+
   @@index([uid], name: "uid")
   @@index([msgId], name: "msg_id")
   @@map("user_messages")
 }
 
 model SysCategory {
-  id        String    @id @map("_id") @db.ObjectId  @default(auto())//主键ID
-  name      String    @map("name")
-  type      Int       @map("tag_type") // 1 app ,2 group ,3 user
-  sort      Int       @map("sort")
-  config    Json?     @map("config")
+  id     String @id @default(auto()) @map("_id") @db.ObjectId //主键ID
+  name   String @map("name")
+  type   Int    @map("tag_type") // 1 app ,2 group ,3 user
+  sort   Int    @map("sort")
+  config Json?  @map("config")
+
   @@map("sys_category")
 }
 
 // 应用表
 model App {
-  id        String   @id @map("_id") @db.ObjectId  @default(auto())//主键ID
-  name      String   @map("name") //应用名字
-  icon      String   @map("icon") //应用icon
-  desc      String   @map("desc") //应用描述
-  url       String   @map("url") //应用连接
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID
+  name         String   @map("name") //应用名字
+  icon         String   @map("icon") //应用icon
+  desc         String   @map("desc") //应用描述
+  url          String   @map("url") //应用连接
   detailImages String[] @map("detail_img") // 详情图片
-  sort      Int      @map("sort") //应用排序
-  status    Int      @default(1) @map("status") //应用状态 1-正常 2-禁用
-  tags      Json[]   @map("tags")
-  categoryIds String[]  @map("category_ids") // 关联分类
-  author    String   @map("author") //应用作者
-  activeAt  DateTime @map("active_at") // 上架时间
-  avgStar   Float    @map("avg_star") // 应用平分
-  installCount  Int  @map("install_count") // 安装数量
-  createdAt DateTime @default(now()) @map("created_at") //创建时间
-  updatedAt DateTime @updatedAt @map("updated_at") //更新时间
-  
+  sort         Int      @map("sort") //应用排序
+  status       Int      @default(1) @map("status") //应用状态 1-正常 2-禁用
+  tags         Json[]   @map("tags")
+  categoryIds  String[] @map("category_ids") // 关联分类
+  author       String   @map("author") //应用作者
+  activeAt     DateTime @map("active_at") // 上架时间
+  avgStar      Float    @map("avg_star") // 应用平分
+  installCount Int      @map("install_count") // 安装数量
+  createdAt    DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt    DateTime @updatedAt @map("updated_at") //更新时间
+
   @@map("app")
 }
 
 // 应用添加记录
 model AppInstallRecord {
-  id        String @id @map("_id") @db.ObjectId @default(auto())
-  uid       String @map("uid")
-  appId     String @map("app_id")
-  groupId   String @map("group_id")
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  uid       String   @map("uid")
+  appId     String   @map("app_id")
+  groupId   String   @map("group_id")
   createdAt DateTime @default(now()) @map("created_at") //创建时间
+
   @@map("app_install_record")
 }
 
 // 应用评论记录
 model AppComment {
-  id        String  @id @map("_id") @db.ObjectId @default(auto())
-  uid       String  @map("uid")
-  appId     String  @map("appId")
-  star      Int     @map("star") // 评论点赞
-  score     Int     @map("score")
-  content   String  @map("content")
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  uid       String   @map("uid")
+  appId     String   @map("appId")
+  star      Int      @map("star") // 评论点赞
+  score     Int      @map("score")
+  content   String   @map("content")
   createdAt DateTime @default(now()) @map("created_at") //创建时间
 
   @@map("app_comment")
 }
 
-
 // 应用评论点赞记录
 model AppCommentVote {
-  id        String  @id @map("_id") @db.ObjectId @default(auto())
-  uid       String  @map("uid")
-  commentId String  @map("comment_id")
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  uid       String   @map("uid")
+  commentId String   @map("comment_id")
   createdAt DateTime @default(now()) @map("created_at") //创建时间
 
-  @@unique([uid,commentId], map: "unq_comment_uid")
+  @@unique([uid, commentId], map: "unq_comment_uid")
   @@map("app_comment_vote")
 }
-
-
 
 // 投诉表
 model Complaint {
@@ -346,87 +347,89 @@ model Complaint {
 // 钱包
 
 model Wallet {
-  id        String   @id @map("_id") @db.ObjectId @default(auto()) //主键ID
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID
   uid       String   @map("uid") //用户ID
   balance   Int      @default(0) @map("balance") //余额 以usdt为单位
   currency  Int      @map("currency") // 币种： utsd
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
   type      Int      @map("type") // 1 普通 2 系统钱包
+
   @@map("wallet")
 }
 
 // 账单
 model Bill {
-  id        String   @id @map("_id") @db.ObjectId @default(auto())// 主键ID
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
   uid       String   @map("uid") // 用户ID
   type      Int      @map("type") // 账单类型 1-充值 2-提现 3-转账 4-红包 5-群收款 6-群退款 7-群提现 8-申请群付费
   amount    Int      @map("amount") // 金额
-  inOut  Int         @map("in_out") // 1 收入 2 支出
+  inOut     Int      @map("in_out") // 1 收入 2 支出
   status    Int      @default(0) @map("status") //状态 0-待处理 1-已处理 （1 success，2 待支付,3 pending，4 失败）
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
-  
+
   @@map("bill")
 }
 
 // 账单详情表
 model BillDetail {
-  billId        String      @id @map("_id") @db.ObjectId 
-  uid           String      @map("uid")
-  from          String      @map("from") //
-  to            String      @map("to") // 
-  businessId    String?     @map("business_id") // userId groupId systemUserId
-  businessType  Int?        @map("business_type") // user group systemUser
-  remark        String?     @map("remark") // 备注
-  transactionNo String?     @map("transaction_no") // 交易单号
-  sellerNo      String?     @map("seller_no") // 商户订单
+  billId        String  @id @map("_id") @db.ObjectId
+  uid           String  @map("uid")
+  from          String  @map("from") //
+  to            String  @map("to") // 
+  businessId    String? @map("business_id") // userId groupId systemUserId
+  businessType  Int?    @map("business_type") // user group systemUser
+  remark        String? @map("remark") // 备注
+  transactionNo String? @map("transaction_no") // 交易单号
+  sellerNo      String? @map("seller_no") // 商户订单
 
   @@map("bill_detail")
 }
 
 // 充值码
-model BoboCard {
-  id              String    @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  boboCode       String     @map("bobo_code") // 礼包码
-  status          Int       @map("status") // 状态： 1 可用，2 已使用
-  cardAmount     Int        @map("card_amount") // 面值（单位分）
-  convertUid      String?   @map("convert_uid") // 兑换人
-  createdAt       DateTime  @default(now()) @map("created_at") //创建时间
-  updatedAt       DateTime  @updatedAt @map("updated_at") //领取时间时间
+model PrePaidCard {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
+  code       String   @map("code") // 礼包码
+  status     Int      @map("status") // 状态： 1 可用，2 已使用
+  amount      Int      @map("amount") // 面值（单位分）
+  convertUid String?  @map("convert_uid") // 兑换人
+  createdAt  DateTime @default(now()) @map("created_at") //创建时间
+  updatedAt  DateTime @updatedAt @map("updated_at") //领取时间时间
 
-  @@index([boboCode],map: "bobo_code")
-  @@map("bobo_card")
+  @@index([code], map: "code")
+  @@map("pre_paid_card")
 }
 
 // 红包
 model RedPacket {
-  id              String      @id @map("_id")  @db.ObjectId @default(auto())// 主键ID
-  type            Int         @map("type")  // 类型 1 普通，2 拼手气 3 专属
-  packetType      Int         @map("packet_type")  // 1 群聊 2 单聊
-  totalAmount     Int         @map("total_amount") // 总金额
-  SingleAmount    Int         @map("single_amount") // 单个金额
-  packetCount     Int         @map("packet_count") // 红包个数
-  groupId         String?     @map("gid")
-  objUids         String[]    @map("obj_uid") // 如果有指定人
-  createdUid      String      @map("created_uid")  // 发起人
-  status            Int         @map("status") // 1有效 2过期
-  consumeCount      Int         @map("consume_count") // 领取数量
-  consumeAmount     Int         @map("consume_amount") // 已领取金额
-  createdAt       DateTime    @default(now()) @map("created_at") //创建时间
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
+  type          Int      @map("type") // 类型 1 普通，2 拼手气 3 专属
+  packetType    Int      @map("packet_type") // 1 群聊 2 单聊
+  totalAmount   Int      @map("total_amount") // 总金额
+  SingleAmount  Int      @map("single_amount") // 单个金额
+  packetCount   Int      @map("packet_count") // 红包个数
+  groupId       String?  @map("gid")
+  objUids       String[] @map("obj_uid") // 如果有指定人
+  createdUid    String   @map("created_uid") // 发起人
+  status        Int      @map("status") // 1有效 2过期
+  consumeCount  Int      @map("consume_count") // 领取数量
+  consumeAmount Int      @map("consume_amount") // 已领取金额
+  createdAt     DateTime @default(now()) @map("created_at") //创建时间
 
   @@map("red_packet")
 }
 
 // 红包领取表 提前生成
-model RedPacketRecord{
-  id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  uid         String          @map("uid") // 领取人
-  packetId    String          @map("packet_id")
-  amount      Int             @map("amount") // 领取金额 冗余
-  billId      String?          @map("bill_id") // 关联账单id 开始为空
-  status      Int              @map("status") // 1 待领取 2 已领取 3 过期 4 过期已退回
-  createdAt       DateTime @default(now()) @map("created_at") //创建时间
+model RedPacketRecord {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
+  uid       String   @map("uid") // 领取人
+  packetId  String   @map("packet_id")
+  amount    Int      @map("amount") // 领取金额 冗余
+  billId    String?  @map("bill_id") // 关联账单id 开始为空
+  status    Int      @map("status") // 1 待领取 2 已领取 3 过期 4 过期已退回
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
+
   @@index([uid], name: "uid")
   @@index([packetId], name: "packet_id")
   @@map("red_packet_record")
@@ -434,65 +437,67 @@ model RedPacketRecord{
 
 // 探索模块
 //  推文
-model BbsTweet {
-  id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  authorId    String          @map("author_id")
-  authorType  Int             @map("author_type")// 1 普通用户 2 系统用户
-  medias      Json[]          @map("medias")
-  content     String          @map("content")
-  status      Int             @map("status")// 1 正常 2 封禁 3 锁定
-  commentLevel Int            @map("comment_level") //预留 是否可回复: 1 每个人，2 好友 3 不可回复
-  visibleType Int             @map("visible_type")// 1 公开 2 好友 3 自己
-  longitude   Float?          @map("longitude")   // 经度
-  latitude    Float?          @map("latitude")   // 纬度
-  address     String?         @map("address") // 文本
-  retweetId   String          @map("retweet_id")  // 转帖id
-  retweetType Int             @map("retweet_type")// 转帖类型 1 推文，2 评论
-  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
+model Post {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
+  authorId     String   @map("author_id")
+  authorType   Int      @map("author_type") // 1 普通用户 2 系统用户
+  medias       Json[]   @map("medias")
+  content      String   @map("content")
+  status       Int      @map("status") // 1 正常 2 封禁 3 锁定
+  commentLevel Int      @map("comment_level") //预留 是否可回复: 1 每个人，2 好友 3 不可回复
+  visibleType  Int      @map("visible_type") // 1 公开 2 好友 3 自己
+  longitude    Float?   @map("longitude") // 经度
+  latitude     Float?   @map("latitude") // 纬度
+  address      String?  @map("address") // 文本
+  retweetId    String   @map("retweet_id") // 转帖id
+  retweetType  Int      @map("retweet_type") // 转帖类型 1 推文，2 评论
+  createdAt    DateTime @default(now()) @map("created_at") //创建时间
 
-  @@map("bbs_tweet")
+  @@map("Posts")
 }
 
 // 推文索引表
 model BbsTweetIndex {
-  bbsId       String          @id  @map("_id") @db.ObjectId
-  randomSort  Int             @map("random_sort") // 随机数
-  overall     Float           @map("overall")    // 综合分数
-  voteCount   Int             @map("vote_count")   // 喜欢数量
-  commentCount  Int           @map("comment_count")    // 评论数量
-  readCount   Int             @map("read_count")    // 阅读量
-  redditValue Int             @map("reddit_value")    // reddit分值
-  status      Int             @map("status")
-  visibleType Int             @map("visible_type")// 可见性 1 公开 2 好友 3 自己 冗余
-  retweetId   String          @map("retweet_id")  // 转帖id 冗余
-  retweetType Int             @map("retweet_type")// 转帖类型  冗余
-  parentId    String?         @map("parent_id")
-  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
+  bbsId        String   @id @map("_id") @db.ObjectId
+  randomSort   Int      @map("random_sort") // 随机数
+  overall      Float    @map("overall") // 综合分数
+  voteCount    Int      @map("vote_count") // 喜欢数量
+  commentCount Int      @map("comment_count") // 评论数量
+  readCount    Int      @map("read_count") // 阅读量
+  redditValue  Int      @map("reddit_value") // reddit分值
+  status       Int      @map("status")
+  visibleType  Int      @map("visible_type") // 可见性 1 公开 2 好友 3 自己 冗余
+  retweetId    String   @map("retweet_id") // 转帖id 冗余
+  retweetType  Int      @map("retweet_type") // 转帖类型  冗余
+  parentId     String?  @map("parent_id")
+  createdAt    DateTime @default(now()) @map("created_at") //创建时间
+
   @@map("bbs_tweet_index")
 }
 
 // 推文统计表
 model BbsTweetStat {
-  id          String          @id @map("_id") @db.ObjectId @default(auto())// 主键ID
-  bbsId       String          @map("bbs_id") @db.ObjectId
-  dateBucket  String          @map("date_bucket")// yyyyMMdd
-  overall     Float           @map("overall")    // 综合分数
-  voteCount   Int             @map("vote_count")   // 喜欢数量
-  commentCount  Int           @map("comment_count")    // 评论数量
-  readCount   Int             @map("read_count")    // 阅读量
-  redditValue Int             @map("reddit_value")    // reddit分值
-  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
-  @@index([bbsId,dateBucket])
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
+  bbsId        String   @map("bbs_id") @db.ObjectId
+  dateBucket   String   @map("date_bucket") // yyyyMMdd
+  overall      Float    @map("overall") // 综合分数
+  voteCount    Int      @map("vote_count") // 喜欢数量
+  commentCount Int      @map("comment_count") // 评论数量
+  readCount    Int      @map("read_count") // 阅读量
+  redditValue  Int      @map("reddit_value") // reddit分值
+  createdAt    DateTime @default(now()) @map("created_at") //创建时间
+
+  @@index([bbsId, dateBucket])
   @@map("bbs_tweet_stat")
 }
 
 // 计算vote可以采取 定时值 +-自己的方式
 model BbsTweetVote {
-  id          String            @id @map("_id") @db.ObjectId @default(auto())
-  bbsId       String            @map("bbs_id") @db.ObjectId
-  uid         String            @map("uid")
-  createdAt   DateTime          @default(now()) @map("created_at") //创建时间
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  bbsId     String   @map("bbs_id") @db.ObjectId
+  uid       String   @map("uid")
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
 
-  @@index([bbsId,uid])
+  @@index([bbsId, uid])
   @@map("bbs_tweet_vote")
 }
