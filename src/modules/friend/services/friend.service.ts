@@ -6,7 +6,7 @@ import {
   FriendListPageReq
 } from '../controllers/friend.dto'
 import { Prisma, User, Group, GroupMembers, FriendApply, Friend } from '@prisma/client'
-import { BaseUIdArrayReq, BaseIdsArrayReq, CommonEnum, BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
+import { BaseUIdArrayReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import commonUtil from '@/utils/common.util'
 import { ChatService } from '@/modules/message/services/chat.service'
 import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum } from '@/enums'

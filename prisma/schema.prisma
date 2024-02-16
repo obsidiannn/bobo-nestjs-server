@@ -127,11 +127,12 @@ model GroupStat {
   msgDay    Int      @default(0) @map("msg_day") //群消息当日总数
   activeDay Int      @default(0) @map("active_day") //群当日活跃人数
   joinDay   Int      @default(0) @map("join_day") // 群新增人数
-  leaveDay   Int      @default(0) @map("leave_day") // 群减少人数
+  leaveDay  Int      @default(0) @map("leave_day") // 群减少人数
   incomeDay Int      @default(0) @map("income_day") //群当日收益
   dateValue String   @map("date_value") // 统计日期，yyyy-mm-dd
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
+
   @@index([groupId], name: "gid")
   @@index([dateValue], name: "date_value")
   @@map("group_stat")
@@ -319,7 +320,6 @@ model AppComment {
   @@map("app_comment")
 }
 
-
 // 应用评论点赞记录
 model AppCommentVote {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -327,11 +327,9 @@ model AppCommentVote {
   commentId String   @map("comment_id")
   createdAt DateTime @default(now()) @map("created_at") //创建时间
 
-  @@unique([uid,commentId], map: "unq_comment_uid")
+  @@unique([uid, commentId], map: "unq_comment_uid")
   @@map("app_comment_vote")
 }
-
-
 
 // 投诉表
 model Complaint {
@@ -434,12 +432,12 @@ model RedPacketRecord {
   status      Int             @map("status") // 1 待领取 2 已领取 3 过期 4 过期已退回
   recordAt    DateTime?       @map("record_at") // 领取时间
   createdAt       DateTime    @default(now()) @map("created_at") //创建时间
+
   @@index([packetId], name: "packet_id")
   @@map("red_packet_record")
 }
 
 // 探索模块
-//  推文
 //  推文
 model Post {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
@@ -463,44 +461,45 @@ model Post {
 
 // 推文索引表
 model BbsTweetIndex {
-  bbsId       String          @id  @map("_id") @db.ObjectId
-  randomSort  Int             @map("random_sort") // 随机数
-  overall     Float           @map("overall")    // 综合分数
-  voteCount   Int             @map("vote_count")   // 喜欢数量
-  commentCount  Int           @map("comment_count")    // 评论数量
-  readCount   Int             @map("read_count")    // 阅读量
-  redditValue Int             @map("reddit_value")    // reddit分值
-  status      Int             @map("status")
-  visibleType Int             @map("visible_type")// 可见性 1 公开 2 好友 3 自己 冗余
-  retweetId   String          @map("retweet_id")  // 转帖id 冗余
-  retweetType Int             @map("retweet_type")// 转帖类型  冗余
-  parentId    String?         @map("parent_id")
-  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
+  bbsId        String   @id @map("_id") @db.ObjectId
+  randomSort   Int      @map("random_sort") // 随机数
+  overall      Float    @map("overall") // 综合分数
+  voteCount    Int      @map("vote_count") // 喜欢数量
+  commentCount Int      @map("comment_count") // 评论数量
+  readCount    Int      @map("read_count") // 阅读量
+  redditValue  Int      @map("reddit_value") // reddit分值
+  status       Int      @map("status")
+  visibleType  Int      @map("visible_type") // 可见性 1 公开 2 好友 3 自己 冗余
+  retweetId    String   @map("retweet_id") // 转帖id 冗余
+  retweetType  Int      @map("retweet_type") // 转帖类型  冗余
+  parentId     String?  @map("parent_id")
+  createdAt    DateTime @default(now()) @map("created_at") //创建时间
+
   @@map("bbs_tweet_index")
 }
 
 // 推文统计表
 model BbsTweetStat {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId // 主键ID
-  bbsId       String          @map("bbs_id") @db.ObjectId
-  dateBucket  String          @map("date_bucket")// yyyyMMdd
-  overall     Float           @map("overall")    // 综合分数
-  voteCount   Int             @map("vote_count")   // 喜欢数量
-  commentCount  Int           @map("comment_count")    // 评论数量
-  readCount   Int             @map("read_count")    // 阅读量
-  redditValue Int             @map("reddit_value")    // reddit分值
-  createdAt   DateTime        @default(now()) @map("created_at") //创建时间
-  @@index([bbsId,dateBucket])
+  bbsId        String   @map("bbs_id") @db.ObjectId
+  dateBucket   String   @map("date_bucket") // yyyyMMdd
+  overall      Float    @map("overall") // 综合分数
+  voteCount    Int      @map("vote_count") // 喜欢数量
+  commentCount Int      @map("comment_count") // 评论数量
+  readCount    Int      @map("read_count") // 阅读量
+  redditValue  Int      @map("reddit_value") // reddit分值
+  createdAt    DateTime @default(now()) @map("created_at") //创建时间
+  @@index([bbsId, dateBucket])
   @@map("bbs_tweet_stat")
 }
 
 // 计算vote可以采取 定时值 +-自己的方式
 model BbsTweetVote {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  bbsId       String            @map("bbs_id") @db.ObjectId
-  uid         String            @map("uid")
-  createdAt   DateTime          @default(now()) @map("created_at") //创建时间
+  bbsId     String   @map("bbs_id") @db.ObjectId
+  uid       String   @map("uid")
+  createdAt DateTime @default(now()) @map("created_at") //创建时间
 
-  @@index([bbsId,uid])
+  @@index([bbsId, uid])
   @@map("bbs_tweet_vote")
 }
