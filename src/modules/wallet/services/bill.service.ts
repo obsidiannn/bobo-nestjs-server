@@ -4,7 +4,7 @@ import { BillRecordItem, BillRecordReq } from '../controllers/wallet.dto'
 import { BasePageResp } from '@/modules/common/dto/common.dto'
 import { Bill, Prisma } from '@prisma/client'
 import commonUtil from '@/utils/common.util'
-import { BillTypeEnum, BusinessTypeEnum } from '@/enums'
+import { BillInOutEnum, BillStatusEnum, BillTypeEnum, BusinessTypeEnum } from '@/enums'
 
 @Injectable()
 export class BillService {
@@ -54,6 +54,39 @@ export class BillService {
   async create (uid: string, input: Prisma.BillCreateInput): Promise<Bill> {
     input.uid = uid
     return await this.prisma.bill.create({ data: input })
+  }
+
+  // 记录账单
+  async createBill (
+    uid: string,
+    type: BillTypeEnum,
+    amount: number,
+    inOut: BillInOutEnum,
+    status: BillStatusEnum,
+    from: string,
+    to: string,
+    transactionNo: string,
+    remark?: string): Promise<Bill> {
+    // 使用卡片
+    const billInput: Prisma.BillCreateInput = {
+      uid,
+      type,
+      amount,
+      inOut,
+      status
+    }
+    const bill = await this.create(uid, billInput)
+    const billDetailInput: Prisma.BillDetailCreateInput =
+     {
+       billId: bill.id,
+       uid,
+       from,
+       to,
+       transactionNo,
+       remark
+     }
+    await this.prisma.billDetail.create({ data: billDetailInput })
+    return bill
   }
 
   transferDto (e: Bill): BillRecordItem {

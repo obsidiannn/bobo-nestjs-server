@@ -3,6 +3,13 @@ export enum AuthEnumIsRegister {
   YES = 1
 }
 
+export enum CommonSecondEnum {
+  MIN = 60,
+  HOUR = 3600,
+  DAY = HOUR * 24,
+  WEEK = DAY * 7
+}
+
 export enum SysCategoryTypeEnum {
   APP = 1,
   GROUP = 2,
@@ -86,4 +93,36 @@ export enum BillTypeEnum {
 export enum BusinessTypeEnum {
   USER = 1,
   GROUP = 2
+}
+// 消息类型
+export enum MessageTypeEnum {
+  NORMAL = 1,
+  APP = 2,
+  REMIT = 3,
+  RED_PACKET = 4
+}
+export enum MessageStatusEnum {
+  DELETED = 0,
+  NORMAL = 1,
+  SEND_BACK = 2
+}
+
+// 类型 1 普通，2 拼手气 3 专属
+export enum RedPacketTypeEnum {
+  NORMAL = 1,
+  RANDOM = 2,
+  TARGETED = 3,
+}
+// 1 群聊 2 单聊
+export enum RedPacketSourceEnum {
+  GROUP = 1,
+  USER = 2,
+}
+
+// 1 待领取 2 已领取 3 过期 4 过期已退回
+export enum RedPacketStatusEnum {
+  UN_USED = 1,
+  USED = 2,
+  EXPIRED = 3,
+  EXPIRED_REFUND = 4
 }

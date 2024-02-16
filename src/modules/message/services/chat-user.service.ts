@@ -89,7 +89,7 @@ export class ChatUserService {
       where: {
         groupId: { in: groupIds },
         uid,
-        role: { in: [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER] }
+        role: { in: roles }
       }
     })
   }

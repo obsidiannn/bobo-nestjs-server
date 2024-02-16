@@ -6,8 +6,8 @@ import { MessageService } from './services/message.service'
 import { ChatController } from './controllers/chat.controller'
 import { ChatService } from './services/chat.service'
 import { AuthModule } from '../auth/auth.module'
-import { ChatUserService } from './services/chat.user.service'
-import { UserMessageService } from './services/user.message.service'
+import { ChatUserService } from './services/chat-user.service'
+import { UserMessageService } from './services/user-message.service'
 
 @Module({
   imports: [UserModule, AuthModule],

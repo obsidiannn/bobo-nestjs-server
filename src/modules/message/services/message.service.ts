@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { BaseIdsArrayReq, CommonEnum } from '@/modules/common/dto/common.dto'
 import {
   MessageSendReq,
@@ -14,23 +14,113 @@ import {
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { UserService } from '@/modules/user/services/user.service'
 import { Prisma, MessageDetail } from '@prisma/client'
-import { MessageStatus } from './message.enums'
 import { isNumber } from 'class-validator'
-import { GroupMemberRoleEnum } from '@/enums'
+import { GroupMemberRoleEnum, MessageStatusEnum, MessageTypeEnum, RedPacketSourceEnum } from '@/enums'
 import { DropSimpleChatResult } from '../controllers/chat.dto'
 import { ChatService } from './chat.service'
+import { UserMessageService } from './user-message.service'
+import { ChatUserService } from './chat-user.service'
+import commonUtil from '@/utils/common.util'
 
 @Injectable()
 export class MessageService {
   constructor (
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
-    private readonly chatService: ChatService
+    private readonly chatService: ChatService,
+    private readonly userMessageService: UserMessageService,
+    private readonly chatUserService: ChatUserService
   ) {}
 
-  // 发送消息
-  async sendMessage (currentUserId: string, param: MessageSendReq): Promise<any> {
+  /**
+   * 发起转账消息
+   * @param currentUserId
+   */
+  async sendRemitMessage (
+    currentUserId: string,
+    objUid: string,
+    type: MessageTypeEnum,
+    isEnc: number,
+    extra: MessageExtra,
+    action: MessageAction): Promise<any> {
+    const chatId = await this.chatService.findChatIdByUserId(currentUserId, objUid)
+    const messageInput: Prisma.MessageDetailCreateInput = {
+      chatId,
+      content: '发起转账',
+      type,
+      isEnc,
+      fromUid: currentUserId,
+      extra: JSON.stringify(extra),
+      action: JSON.stringify(action),
+      status: MessageStatusEnum.NORMAL
+    }
+    const sequence = await this.findMaxSequenceByChatId(chatId)
+    messageInput.sequence = sequence
+    const message = await this.create(messageInput)
+    // sequence 这里应该是 消息最大序号 + 1
+    const userMsgs = [currentUserId, objUid].map(u => {
+      const userMsg: Prisma.UserMessageCreateInput = {
+        uid: u,
+        msgId: message.id,
+        isRead: CommonEnum.OFF,
+        sequence,
+        chatId
+      }
+      return userMsg
+    })
+    await this.userMessageService.createMany(userMsgs)
+    await this.chatUserService.userChatHide(currentUserId, { ids: [chatId] }, false)
+  }
 
+  /**
+   * 发起红包消息
+   * @param currentUserId
+   */
+  async sendRedPacketMessage (
+    currentUserId: string,
+    sourceType: RedPacketSourceEnum,
+    isEnc: number,
+    extra: MessageExtra,
+    action: MessageAction,
+    groupId?: string,
+    objUid?: string
+  ): Promise<any> {
+    let chatId: string
+    if (sourceType === RedPacketSourceEnum.GROUP) {
+      const _groupId: string = commonUtil.nullThrow(groupId)
+      chatId = (await this.chatService.findChatByGroupId(currentUserId, _groupId)).id
+    } else {
+      const _objUid = commonUtil.nullThrow(objUid)
+      chatId = await this.chatService.findChatIdByUserId(currentUserId, _objUid)
+    }
+
+    const messageInput: Prisma.MessageDetailCreateInput = {
+      chatId,
+      content: '',
+      type: MessageTypeEnum.RED_PACKET,
+      isEnc,
+      fromUid: currentUserId,
+      extra: JSON.stringify(extra),
+      action: JSON.stringify(action),
+      status: MessageStatusEnum.NORMAL
+    }
+    const sequence = await this.findMaxSequenceByChatId(chatId)
+    messageInput.sequence = sequence
+    const message = await this.create(messageInput)
+    // sequence 这里应该是 消息最大序号 + 1
+    const uIds = await this.chatUserService.findUidByChatId(chatId)
+    const userMsgs = uIds.map(u => {
+      const userMsg: Prisma.UserMessageCreateInput = {
+        uid: u,
+        msgId: message.id,
+        isRead: CommonEnum.OFF,
+        sequence,
+        chatId
+      }
+      return userMsg
+    })
+    await this.userMessageService.createMany(userMsgs)
+    await this.chatUserService.userChatHide(currentUserId, { ids: [chatId] }, false)
   }
 
   async create (data: Prisma.MessageDetailCreateInput): Promise<MessageDetail> {

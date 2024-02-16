@@ -65,7 +65,6 @@ export class AppCommentReq {
 };
 // 应用内评论点赞
 export class AppCommentVoteReq {
-  appId: string
   commentId: string
 };
 export class AppCommentVoteResp {
@@ -75,7 +74,8 @@ export class AppCommentVoteResp {
 
 // 我的群组应用列表
 export class GroupAppListReq {
-  groupId: string
+  @IsNotEmpty({ message: 'error' })
+    groupId: string
 }
 
 export class GroupAppItem {

@@ -20,6 +20,14 @@ export class AppsService {
     })
   }
 
+  async findByIdIn (appIds: string[], query?: Prisma.AppSelect): Promise<App[]> {
+    const apps = await this.prisma.app.findMany({
+      where: { id: { in: appIds } },
+      select: query
+    })
+    return apps
+  }
+
   async findActiveApps (param: AppPageReq): Promise<BasePageResp<App>> {
     const query: Prisma.AppFindManyArgs = {
       where: {

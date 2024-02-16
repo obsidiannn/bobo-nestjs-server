@@ -57,4 +57,9 @@ export class WalletService {
   async unlock (uid: string): Promise<boolean > {
     return true
   }
+
+  async checkAmount (uid: string, amount: number): Promise<boolean> {
+    const wallet = await this.findByUid(uid)
+    return wallet.balance > amount
+  }
 }

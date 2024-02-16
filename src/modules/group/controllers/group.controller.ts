@@ -16,7 +16,7 @@ import { CryptInterceptor } from '@/modules/common/interceptors/crypt.intercepto
 import { UserService } from '@/modules/user/services/user.service'
 import { ChatService } from '@/modules/message/services/chat.service'
 import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum } from '@/enums'
-import { GroupMemberService } from '../services/group.member.service'
+import { GroupMemberService } from '../services/group-member.service'
 import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
 import { TransactionInterceptor } from '@/modules/common/interceptors/transaction.interceptor'

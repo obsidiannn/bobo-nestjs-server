@@ -11,7 +11,8 @@ import testUtil from '@/utils/test-util'
 import * as request from 'supertest'
 import { Prisma } from '@prisma/client'
 import { ActiveEnum } from '@/enums'
-import { AppPageReq, AppTagItem } from './apps.dto'
+import { AppCommentPageReq, AppCommentReq, AppPageReq, AppTagItem } from './apps.dto'
+import { randomFill, randomInt } from 'crypto'
 describe('AppsController', () => {
   let app: NestExpressApplication
   let systemPublicKey: string
@@ -80,6 +81,101 @@ describe('AppsController', () => {
     const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
     return await request(app.getHttpServer())
       .post('/apps/page')
+      .send({
+        data: params.encData
+      })
+      .set(params.headers)
+      .expect(200)
+      .then(res => {
+        console.log(res.body)
+      })
+  })
+
+  it('应用详情', async () => {
+    const appData = await prismaService.app.findFirst()
+    if (appData === null) {
+      throw new Error()
+    }
+    const groupMember = await prismaService.groupMembers.findFirst({
+      where: { uid: customId }
+    })
+    if (groupMember === null) {
+      throw new Error()
+    }
+    const req = {
+      appId: appData.id,
+      groupId: groupMember.groupId
+    }
+    const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+    return await request(app.getHttpServer())
+      .post('/apps/detail')
+      .send({
+        data: params.encData
+      })
+      .set(params.headers)
+      .expect(200)
+      .then(res => {
+        console.log(res.body)
+      })
+  })
+
+  it('应用评论列表', async () => {
+    const comment = await prismaService.appComment.findFirst()
+    if (comment === null) {
+      throw new Error()
+    }
+    const req: AppCommentPageReq = {
+      appId: comment.appId,
+      page: 1,
+      limit: 10
+    }
+    const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+    return await request(app.getHttpServer())
+      .post('/apps/comments/page')
+      .send({
+        data: params.encData
+      })
+      .set(params.headers)
+      .expect(200)
+      .then(res => {
+        console.log(res.body)
+      })
+  })
+
+  it('应用打分', async () => {
+    const appData = await prismaService.app.findFirst()
+    if (appData === null) {
+      throw new Error()
+    }
+    const req: AppCommentReq = {
+      appId: appData.id,
+      score: 3.7,
+      content: '随机内容' + randomInt(100).toString()
+    }
+    const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+    return await request(app.getHttpServer())
+      .post('/apps/comments/create')
+      .send({
+        data: params.encData
+      })
+      .set(params.headers)
+      .expect(200)
+      .then(res => {
+        console.log(res.body)
+      })
+  })
+
+  it('应用评论点赞', async () => {
+    const comment = await prismaService.appComment.findFirst()
+    if (comment === null) {
+      throw new Error()
+    }
+    const req = {
+      commentId: comment.id
+    }
+    const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+    return await request(app.getHttpServer())
+      .post('/apps/comments/vote')
       .send({
         data: params.encData
       })
