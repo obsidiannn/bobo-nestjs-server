@@ -1,4 +1,4 @@
-import { Body, Controller, HttpException, HttpStatus, Post, Req } from '@nestjs/common'
+import { Body, Controller, HttpException, HttpStatus, Post, Req, UseInterceptors } from '@nestjs/common'
 import { RedPacketCreateReq, RedPacketDetail, RedPacketInfo, RedPacketRecordItem, RedPacketResp } from './red-packet.dto'
 import { Request } from 'express'
 import { RedPacketService } from '../services/red-packet.service'
@@ -12,7 +12,10 @@ import { randomUUID } from 'crypto'
 import { MessageService } from '@/modules/message/services/message.service'
 import { MessageExtra } from '@/modules/message/controllers/message.dto'
 import { UserService } from '@/modules/user/services/user.service'
+import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
+import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 
+@UseInterceptors(CryptInterceptor, BaseInterceptor)
 @Controller('red-packet')
 export class RedPacketController {
   constructor (
@@ -58,14 +61,18 @@ export class RedPacketController {
     // 钱包划转
     await this.walletService.lock(currentUserId)
     try {
+      const enable = await this.walletService.checkAmount(currentUserId, totalAmount)
+      if (!enable) {
+        throw new HttpException('余额不足', HttpStatus.BAD_REQUEST)
+      }
       await this.walletService.addAmount(currentUserId, -totalAmount)
     } finally {
       await this.walletService.unlock(currentUserId)
     }
     // bill 记录
-    const sysWalletId = await this.walletService.findSystemWallet()
+    const wallet = await this.walletService.findByUid(currentUserId)
     const transactionNo = randomUUID().replaceAll('-', '')
-    await this.billService.createBill(req.uid, BillTypeEnum.RED_PACKET, totalAmount, BillInOutEnum.OUTCOME, BillStatusEnum.SUCCESS, req.uid, sysWalletId, transactionNo, param.remark)
+    await this.billService.createBill(req.uid, BillTypeEnum.RED_PACKET, totalAmount, BillInOutEnum.OUTCOME, BillStatusEnum.SUCCESS, req.uid, wallet.id, transactionNo, param.remark)
 
     const extra: MessageExtra = {
       id: redPacket.id,
@@ -92,7 +99,7 @@ export class RedPacketController {
     const enable = records.filter(r => {
       return r.status === RedPacketStatusEnum.UN_USED
     }).length > 0
-    return { packetId: redPacket.id, expiredFlag, enable }
+    return { packetId: redPacket.id, expiredFlag, enable, createdAt: redPacket.createdAt, expireSecond: redPacket.expireSecond }
   }
 
   // 红包详情

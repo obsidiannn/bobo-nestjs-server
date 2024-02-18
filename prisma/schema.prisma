@@ -448,7 +448,7 @@ model Post {
   content      String   @map("content")
   status       Int      @map("status") // 1 正常 2 封禁 3 锁定
   commentLevel Int      @map("comment_level") //预留 是否可回复: 1 每个人，2 好友 3 不可回复
-  visibleType  Int      @map("visible_type") // 1 公开 2 好友 3 自己
+  visibleType  Int      @map("visible_type") //可见性 1 公开 2 好友 3 自己
   longitude    Float?   @map("longitude") // 经度
   latitude     Float?   @map("latitude") // 纬度
   address      String?  @map("address") // 文本
@@ -462,7 +462,7 @@ model Post {
 
 // 推文索引表
 model BbsTweetIndex {
-  bbsId        String   @id @map("_id") @db.ObjectId
+  tweetId        String   @id @map("_id") @db.ObjectId
   randomSort   Int      @map("random_sort") // 随机数
   overall      Float    @map("overall") // 综合分数
   voteCount    Int      @map("vote_count") // 喜欢数量

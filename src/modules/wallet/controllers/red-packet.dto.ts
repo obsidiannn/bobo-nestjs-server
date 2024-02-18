@@ -44,6 +44,8 @@ export class RedPacketResp {
   packetId: string
   enable: boolean
   expiredFlag: boolean
+  createdAt: Date
+  expireSecond: number
 }
 
 export class RedPacketReq {

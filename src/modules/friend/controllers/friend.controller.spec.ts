@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { AppModule } from '@/app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import * as request from 'supertest'
-import { buildWallet } from '@/utils/web3'
+import { buildWallet, generatePrivateKey } from '@/utils/web3'
 import testUtil from '@/utils/test-util'
 import { UserService } from '@/modules/user/services/user.service'
 import { PrismaService } from '@/modules/common/services/prisma.service'
@@ -11,6 +11,7 @@ import commonUtil from '@/utils/common.util'
 import { randomInt } from 'crypto'
 import { SystemService } from '@/modules/common/services/system.service'
 import bufferUtil from '@/utils/buffer.util'
+import { Prisma } from '@prisma/client'
 
 describe('friend module FriendController', () => {
   let app: NestExpressApplication
@@ -94,7 +95,7 @@ describe('friend module FriendController', () => {
   describe('申请好友', () => {
     it('申请 success', async () => {
       const params = testUtil.buildAuthParams(customPk, systemPublicKey, {
-        uid: '0x624b76f03915666e07bA0e4Aa47Aa6f72C2c4bF6',
+        uid: '0x06712b9964C6cCC5f154e29f5728F40cA374b9Fd',
         remark: 'success remark'
       })
       return await request(app.getHttpServer())
@@ -137,7 +138,7 @@ describe('friend module FriendController', () => {
     })
 
     it('我的审批列表', async () => {
-      const testUserPk = '0x861bc89483eaae7c90d90a47c4eb2e5cc2a7c29de2565b7296103e040d0c6ab1'
+      const testUserPk = '0x79744a14423f39184b4fecbeb3103199e25385edb6f81938277160f1fba266fa'
       const params = testUtil.buildAuthParams(testUserPk, systemPublicKey, {
         page: 1, limit: 10
       })
@@ -181,7 +182,7 @@ describe('friend module FriendController', () => {
     })
 
     it('同意', async () => {
-      const testUserPk = '0x861bc89483eaae7c90d90a47c4eb2e5cc2a7c29de2565b7296103e040d0c6ab1'
+      const testUserPk = '0x79744a14423f39184b4fecbeb3103199e25385edb6f81938277160f1fba266fa'
       const wallet = buildWallet(testUserPk)
       const data = await prismaService.friendApply.findFirst({
         where: {

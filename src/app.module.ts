@@ -7,6 +7,7 @@ import { FriendModule } from './modules/friend/friend.module'
 import { MessageModule } from './modules/message/message.module'
 import { WalletModule } from './modules/wallet/wallet.module'
 import { AppsModule } from './modules/apps/apps.module'
+import { TweetModule } from './modules/tweet/tweet.module'
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { AppsModule } from './modules/apps/apps.module'
     FriendModule,
     MessageModule,
     WalletModule,
-    AppsModule
+    AppsModule,
+    TweetModule
   ]
 })
 export class AppModule {}

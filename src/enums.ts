@@ -126,3 +126,25 @@ export enum RedPacketStatusEnum {
   EXPIRED = 3,
   EXPIRED_REFUND = 4
 }
+
+export enum MediaTypeEnum {
+  IMAGE = 1,
+  VIDEO = 2,
+  AUDIO = 3
+}
+/**
+ * 是否可回复: 1 每个人，2 好友 3 不可回复
+ */
+export enum CommentLevelEnum {
+  EACH = 1,
+  FRIEND = 2,
+  NONE = 3
+}
+/**
+ * 可见性 1 公开 2 好友 3 自己 冗余
+ */
+export enum VisibleTypeEnum {
+  PUBLIC = 1,
+  FRIEND = 2,
+  SELF = 3
+}

@@ -14,6 +14,32 @@ export class RedPacketService {
     return CommonSecondEnum.DAY
   }
 
+  async checkGroupMemberCount (groupId: string, packetCount: number): Promise<void> {
+    const memberCount = await this.prisma.groupMembers.count({
+      where: { groupId }
+    })
+    if (memberCount < packetCount) {
+      throw new HttpException('不可超过群聊人数', HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  /**
+   * 检查是否存在此群成员
+   * @param groupId
+   * @param packetCount
+   */
+  async checkGroupMemberExist (groupId: string, memberId: string): Promise<void> {
+    const member = await this.prisma.groupMembers.count({
+      where: {
+        groupId,
+        uid: memberId
+      }
+    })
+    if (member <= 0) {
+      throw new HttpException('没有此群成员', HttpStatus.BAD_REQUEST)
+    }
+  }
+
   /**
    * 群红包：普通 创建
    * red_packet + red_packet_record
@@ -25,6 +51,7 @@ export class RedPacketService {
     const singleAmount = commonUtil.nullThrow(param.singleAmount)
     const groupId = commonUtil.nullThrow(param.groupId)
     const remark = param.remark === undefined ? '恭喜发财' : param.remark
+    await this.checkGroupMemberCount(groupId, param.packetCount)
     const redPacketInput: Prisma.RedPacketCreateInput = {
       type: param.type,
       remark,
@@ -62,6 +89,7 @@ export class RedPacketService {
     const totalAmount = commonUtil.nullThrow(param.totalAmount)
     const groupId = commonUtil.nullThrow(param.groupId)
     const remark = param.remark === undefined ? '恭喜发财' : param.remark
+    await this.checkGroupMemberCount(groupId, param.packetCount)
     const redPacketInput: Prisma.RedPacketCreateInput = {
       type: param.type,
       remark,
@@ -100,6 +128,7 @@ export class RedPacketService {
     const objUIds: string[] = commonUtil.emptyThrow(param.objUIds)
     const groupId = commonUtil.nullThrow(param.groupId)
     const remark = param.remark === undefined ? '恭喜发财' : param.remark
+    await this.checkGroupMemberExist(groupId, objUIds[0])
     const redPacketInput: Prisma.RedPacketCreateInput = {
       type: param.type,
       remark,
@@ -198,10 +227,10 @@ export class RedPacketService {
   async recordCreate (uid: string, packetId: string): Promise<RedPacketRecord> {
     const packet = await this.findById(packetId)
     if (packet === null) {
-      throw new HttpException('已失效', HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException('已失效', HttpStatus.BAD_REQUEST)
     }
     if (this.checkExpired(packet)) {
-      throw new HttpException('已过期', HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException('已过期', HttpStatus.BAD_REQUEST)
     }
     // 检查是否已领取
     const record = await this.prisma.redPacketRecord.findFirst({
@@ -213,10 +242,10 @@ export class RedPacketService {
     if (record !== null) {
       if (packet.type === RedPacketTypeEnum.TARGETED) {
         if (record.status !== RedPacketStatusEnum.UN_USED) {
-          throw new HttpException('已领取', HttpStatus.INTERNAL_SERVER_ERROR)
+          throw new HttpException('已领取', HttpStatus.BAD_REQUEST)
         }
       } else {
-        throw new HttpException('已领取', HttpStatus.INTERNAL_SERVER_ERROR)
+        throw new HttpException('已领取', HttpStatus.BAD_REQUEST)
       }
     }
     if (packet.type === RedPacketTypeEnum.NORMAL || packet.type === RedPacketTypeEnum.RANDOM) {
@@ -230,12 +259,13 @@ export class RedPacketService {
         throw new HttpException('已被领光', HttpStatus.BAD_REQUEST)
       }
       try {
-        data.uid = uid
-        data.recordAt = new Date()
-        data.status = RedPacketStatusEnum.USED
         return await this.prisma.redPacketRecord.update({
           where: { id: data.id },
-          data
+          data: {
+            uid,
+            recordAt: new Date(),
+            status: RedPacketStatusEnum.USED
+          }
         })
       } finally {
         await this.recordLockOff(data.id)
@@ -249,12 +279,13 @@ export class RedPacketService {
         throw new HttpException('已被领光', HttpStatus.BAD_REQUEST)
       }
       try {
-        record.uid = uid
-        record.recordAt = new Date()
-        record.status = RedPacketStatusEnum.USED
         return await this.prisma.redPacketRecord.update({
           where: { id: record.id },
-          data: record
+          data: {
+            uid,
+            recordAt: new Date(),
+            status: RedPacketStatusEnum.USED
+          }
         })
       } finally {
         await this.recordLockOff(record.id)

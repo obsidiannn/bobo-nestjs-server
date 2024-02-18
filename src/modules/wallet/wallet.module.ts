@@ -9,9 +9,10 @@ import { AuthModule } from '../auth/auth.module'
 import { PrePaidService } from './services/pre-paid.service'
 import { RedPacketService } from './services/red-packet.service'
 import { MessageModule } from '../message/message.module'
+import { RedPacketController } from './controllers/red-packet.controller'
 @Module({
   imports: [UserModule, AuthModule, MessageModule],
-  controllers: [WalletController, BillController],
+  controllers: [WalletController, BillController, RedPacketController],
   providers: [WalletService, BillService, BillDetailService, PrePaidService, RedPacketService]
 })
 export class WalletModule {}
