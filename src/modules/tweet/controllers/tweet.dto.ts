@@ -29,23 +29,23 @@ export class TweetItem {
   authorId: string
   authorName: string
   authorAvatar: string
-  createdAt: string
+  createdAt: Date
   medias: MediaItem[]
   commentLevel: CommentLevelEnum
-  longitude: number
-  latitude: number
-  address: string
+  longitude: number | null
+  latitude: number | null
+  address: string | null
   content: string
   voteCount: number
   voteFlag: boolean
-  transFlag: boolean
-  transCount: number
+  retweetFlag: boolean
+  retweetCount: number
   commentCount: number
   readCount: number
   score: number
-  parentId: string
-  retweetId: string
-  retweetLabel: string
+  retweetId: string | null
+  parentId?: string
+  retweetLabel?: string
 };
 
 export class TweetCreateReq {
@@ -56,6 +56,7 @@ export class TweetCreateReq {
   content: string
   longitude: number
   latitude: number
+  address: string
   commentLevel: CommentLevelEnum
 };
 
@@ -63,12 +64,12 @@ export class TweetCommentPageReq extends BasePageReq {
   tweetId: string
 }
 
-export class TweetTransPostReq {
+export class TweetRetweetReq {
   tweetId: string
 }
 
-export class TweetTransPostResp {
-  transFlag: boolean
+export class TweetRetweetResp {
+  retweetFlag: boolean
 }
 
 export class TweetVoteReq {

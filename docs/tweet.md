@@ -37,7 +37,7 @@
 
 ### 2.推文分页列表（推荐）
 
-* path: `/tweet/recommend`
+* path: `/tweet/recommend/page`
 
 * reqBody
   ```json
@@ -70,8 +70,8 @@
             "retweetLabel":"",
             "voteCount": 12,
             "voteFlag": false,
-            "transFlag": true,
-            "transCount": 103,
+            "retweetFlag": true,
+            "retweetCount": 103,
             "commentCount": 16,
             "readCount": 23,
             "score": 32,
@@ -102,8 +102,8 @@
 | commentCount | 评论数量                                |
 | score        | 热度分值                                |
 | medias       | 关联媒体                                |
-| transFlag    | 自己是否转帖                            |
-| transCount   | 转帖数量                                |
+| retweetFlag    | 自己是否转帖                            |
+| retweetCount   | 转帖数量                                |
 
 * medias
 
@@ -116,13 +116,13 @@
 
 ### 3.推文分页列表（好友）
 
-* path: `/tweet/friend`
+* path: `/tweet/friend/page`
 
 * 出入参同#1
 
 ### 我的推文分页
 
-* path `/tweet/mine`
+* path `/tweet/mine/page`
 * 出入参同#1
 
 ### 推文详情
@@ -131,7 +131,7 @@
 
 ### 发推/发评论
 
-* path: `/tweet/create`
+* path: `/tweet/post`
 
 * reqBody
   ```json
@@ -216,8 +216,8 @@
             "commentCount": 16,
             "readCount": 23,
             "score": 32,
-            "transFlag": true,
-            "transCount": 132
+            "retweetFlag": true,
+            "retweetCount": 132
           }
         ],
         "status": 0
@@ -245,8 +245,8 @@
 | commentCount | 评论数量                                |
 | score        | 热度分值                                |
 | medias       | 关联媒体                                |
-| transFlag    | 自己是否转帖                            |
-| transCount   | 转帖数量                                |
+| retweetFlag    | 自己是否转帖                            |
+| retweetCount   | 转帖数量                                |
 
 
 * medias
@@ -262,7 +262,7 @@
 ### 转发/取消转发
 > 转帖不可评论、点赞
 
-* path: `/tweet/tranpost`
+* path: `/tweet/retweet`
 
 * reqBody
   ```json
@@ -277,7 +277,7 @@
       "code: 200,
       "msg": "",
       "data": {
-        "transFlag": true
+        "retweetFlag": true
       }
   }
   ```

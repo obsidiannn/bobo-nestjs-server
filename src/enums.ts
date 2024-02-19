@@ -148,3 +148,16 @@ export enum VisibleTypeEnum {
   FRIEND = 2,
   SELF = 3
 }
+
+export enum TweetStatusEnum {
+  NORMAL = 1,
+  DISABLE = 2,
+  LOCKED = 3
+}
+
+// 转帖类型： 1 普通，2 推，3 评论
+export enum TweetRetweetTypeEnum {
+  NONE = 1,
+  RETWEET = 2,
+  COMMENT = 3
+}

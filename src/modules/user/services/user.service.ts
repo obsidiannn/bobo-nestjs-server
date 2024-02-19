@@ -2,6 +2,8 @@
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { Prisma, User } from '@prisma/client'
+import { UserInfoItem } from '../controllers/user.dto'
+import { GenderEnum } from '@/enums'
 
 @Injectable()
 export class UserService {
@@ -48,17 +50,36 @@ export class UserService {
   /**
    * userHash detail
    * @param userIds
+   * @returns
    */
-  async userHash (userIds: string[]): Promise<Map<string, User>> {
+  async userHash (userIds: string[]): Promise<Map<string, UserInfoItem>> {
     const users = await this.prismaService.user.findMany({
       where: {
         id: { in: userIds }
+      },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        gender: true
       }
     })
-    const result = new Map<string, User>()
+    const result = new Map<string, UserInfoItem>()
     users.forEach(u => {
-      result.set(u.id, u)
+      result.set(u.id, {
+        id: u.id,
+        name: u.name,
+        avatar: u.avatar,
+        gender: u.gender
+      })
     })
     return result
+  }
+
+  defaultUserItem: UserInfoItem = {
+    id: 'default',
+    name: '已注销',
+    avatar: '',
+    gender: GenderEnum.UNKNOWN
   }
 }

@@ -80,6 +80,14 @@ export const randomIndex = (length: number): number => {
   return Math.floor((Math.random() * length))
 }
 
+export const hashValueDefault = <T> (k: any, hash: Map<any, any>, defaultValue: T): T => {
+  const v = hash.get(k)
+  if (v === null) {
+    return defaultValue
+  }
+  return v
+}
+
 export default {
   arrayDifference,
   pageSkip,
@@ -88,5 +96,6 @@ export default {
   nullThrow,
   emptyThrow,
   randomSplit,
-  randomIndex
+  randomIndex,
+  hashValueDefault
 }
