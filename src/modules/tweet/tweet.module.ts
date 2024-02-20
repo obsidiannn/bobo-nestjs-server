@@ -4,6 +4,7 @@ import { UserModule } from '../user/user.module'
 import { AuthModule } from '../auth/auth.module'
 import { TweetController } from './controllers/tweet.controller'
 import { TweetService } from './services/tweet.service'
+import { SearchService } from './services/search.service'
 
 @Module({
   imports: [UserModule, AuthModule],
@@ -11,7 +12,7 @@ import { TweetService } from './services/tweet.service'
     TweetController
   ],
   providers: [
-    TweetService
+    TweetService, SearchService
   ]
 })
 export class TweetModule {

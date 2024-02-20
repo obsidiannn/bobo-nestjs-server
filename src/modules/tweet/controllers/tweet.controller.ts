@@ -2,47 +2,57 @@ import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { Body, Controller, Post, Req, UseInterceptors } from '@nestjs/common'
 import { SearchReq, SearchResultItem, TweetCommentPageReq, TweetCreateReq, TweetItem, TweetPageReq, TweetRetweetReq, TweetRetweetResp, TweetVoteReq, TweetVoteResp } from './tweet.dto'
-import { BaseArrayResp, BasePageResp } from '@/modules/common/dto/common.dto'
+import { BasePageResp } from '@/modules/common/dto/common.dto'
 import { TweetService } from '../services/tweet.service'
 import { Prisma } from '@prisma/client'
-import { TweetRetweetTypeEnum, TweetStatusEnum, WalletTypeEnum } from '@/enums'
+import { CommentLevelEnum, TweetRetweetTypeEnum, TweetStatusEnum, WalletTypeEnum } from '@/enums'
 import { Request } from 'express'
 import commonUtil from '@/utils/common.util'
+import { SearchService } from '../services/search.service'
 
 @UseInterceptors(CryptInterceptor, BaseInterceptor)
 @Controller('tweet')
 export class TweetController {
-  constructor (private readonly tweetService: TweetService) {}
+  constructor (
+    private readonly tweetService: TweetService,
+    private readonly searchService: SearchService
+  ) {}
 
   // 搜索（群组）
   @Post('search')
-  async search (@Req() req: Request, @Body() param: SearchReq): Promise<BaseArrayResp<SearchResultItem>> {
-
+  async search (@Req() req: Request, @Body() param: SearchReq): Promise<BasePageResp<SearchResultItem>> {
+    return await this.searchService.searchGroup(param)
   }
 
   // 推文分页列表（推荐）
   @Post('recommend/page')
   async recommendPage (@Req() req: Request, @Body() param: TweetPageReq): Promise<BasePageResp<TweetItem>> {
-
+    const page = await this.tweetService.queryByIndex(req.uid, param)
+    const items = await this.tweetService.tweetItemChange(req.uid, page.items)
+    return page.transfer(items)
   }
 
   // 推文分页列表（好友）
   @Post('friend/page')
   async friendPage (@Req() req: Request, @Body() param: TweetPageReq): Promise<BasePageResp<TweetItem>> {
-
+    const page = await this.tweetService.queryByFriend(req.uid, param)
+    const items = await this.tweetService.tweetItemChange(req.uid, page.items)
+    return page.transfer(items)
   }
 
-  // 推文分页列表（好友）
+  // 推文分页列表（我的）
   @Post('mine/page')
   async minePage (@Req() req: Request, @Body() param: TweetPageReq): Promise<BasePageResp<TweetItem>> {
-
+    const page = await this.tweetService.queryByMine(req.uid, param)
+    const items = await this.tweetService.tweetItemChange(req.uid, page.items)
+    return page.transfer(items)
   }
 
-  // 搜索（群组）
-  @Post('detail')
-  async detail (@Req() req: Request, @Body() param: SearchReq): Promise<TweetItem> {
+  // // 搜索（群组）
+  // @Post('detail')
+  // async detail (@Req() req: Request, @Body() param: SearchReq): Promise<TweetItem> {
 
-  }
+  // }
 
   // 发推/发评论
   @Post('post')
@@ -58,6 +68,7 @@ export class TweetController {
       if (commonUtil.notNull(param.parentId)) {
         retweetType = TweetRetweetTypeEnum.COMMENT
         retweetId = param.parentId
+        await this.tweetService.checkCommentLevelById(req.uid, param.parentId)
       } else {
         retweetType = TweetRetweetTypeEnum.NONE
         retweetId = null

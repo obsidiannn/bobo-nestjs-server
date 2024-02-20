@@ -1,16 +1,16 @@
-import { CommentLevelEnum, MediaTypeEnum, VisibleTypeEnum } from '@/enums'
+import { BusinessTypeEnum, CommentLevelEnum, MediaTypeEnum, TweetRetweetTypeEnum, VisibleTypeEnum } from '@/enums'
 import { AppTagItem } from '@/modules/apps/controllers/apps.dto'
 import { BasePageReq } from '@/modules/common/dto/common.dto'
 
-export class SearchReq {
+export class SearchReq extends BasePageReq {
   keyword: string
 }
 
 export class SearchResultItem {
   sourceId: string
-  sourceType: string
+  sourceType: BusinessTypeEnum
   label: string
-  desc: string
+  desc: string | null
   memberCount: number
   tags: AppTagItem[]
 };
@@ -45,13 +45,13 @@ export class TweetItem {
   score: number
   retweetId: string | null
   parentId?: string
-  retweetLabel?: string
+  tweetType?: TweetRetweetTypeEnum
 };
 
 export class TweetCreateReq {
   visibleType: VisibleTypeEnum
-  retweetId: string
-  parentId: string
+  retweetId: string | null
+  parentId: string | null
   medias: MediaItem[]
   content: string
   longitude: number

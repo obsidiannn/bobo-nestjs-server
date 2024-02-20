@@ -15,7 +15,7 @@ import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { UserService } from '@/modules/user/services/user.service'
 import { ChatService } from '@/modules/message/services/chat.service'
-import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum } from '@/enums'
+import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum, GroupStatusEnum } from '@/enums'
 import { GroupMemberService } from '../services/group-member.service'
 import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
@@ -50,9 +50,9 @@ export class GroupController {
       searchType: param.searchType,
       creatorId: currentUserId,
       ownerId: currentUserId,
-      cover: '1'
+      cover: '1',
+      status: GroupStatusEnum.ENABLE
     }
-    console.log('group')
     await this.prisma.$transaction(async (tx) => {
       const currentUser = await this.userService.findById(currentUserId)
       if (currentUser === null) {

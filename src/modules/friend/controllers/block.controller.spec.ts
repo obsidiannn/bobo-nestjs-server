@@ -8,6 +8,7 @@ import { SystemService } from '@/modules/common/services/system.service'
 import { buildWallet } from '@/utils/web3'
 import testUtil from '@/utils/test-util'
 import * as request from 'supertest'
+import { FriendStatusEnum } from '@/enums'
 describe('BlockController', () => {
   let app: NestExpressApplication
   let systemPublicKey: string
@@ -62,9 +63,10 @@ describe('BlockController', () => {
   })
 
   it('解除拉黑', async () => {
-    const blockUser = await prismaService.blacklist.findFirst({
+    const blockUser = await prismaService.friend.findFirst({
       where: {
-        uid: customId
+        uid: customId,
+        status: FriendStatusEnum.BLOCK
       }
     })
     if (blockUser === null) {

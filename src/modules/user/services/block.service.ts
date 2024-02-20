@@ -1,3 +1,4 @@
+import { FriendStatusEnum } from '@/enums'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { Blacklist, Prisma } from '@prisma/client'
@@ -8,31 +9,50 @@ export class BlockService {
     private readonly prisma: PrismaService
   ) {}
 
-  async checkExist (uid: string, objUid: string): Promise<boolean> {
-    return await this.prisma.blacklist.count({
+  async isBlock (uid: string, objUid: string): Promise<boolean> {
+    return await this.prisma.friend.count({
       where: {
         uid,
-        objUid
+        objUid,
+        status: FriendStatusEnum.BLOCK
       }
     }) > 0
   }
 
-  async create (input: Prisma.BlacklistCreateInput): Promise<Blacklist> {
-    return await this.prisma.blacklist.create({ data: input })
-  }
-
-  async delete (uid: string, objUid: string): Promise<Prisma.BatchPayload> {
-    return await this.prisma.blacklist.deleteMany({
+  //  拉黑
+  async doBlock (uid: string, objUid: string): Promise<void> {
+    await this.prisma.friend.updateMany({
       where: {
         uid,
-        objUid
+        objUid,
+        status: FriendStatusEnum.NORMAL
+      },
+      data: {
+        status: FriendStatusEnum.BLOCK
+      }
+    })
+  }
+
+  //  解除拉黑
+  async unBlock (uid: string, objUid: string): Promise<void> {
+    await this.prisma.friend.updateMany({
+      where: {
+        uid,
+        objUid,
+        status: FriendStatusEnum.BLOCK
+      },
+      data: {
+        status: FriendStatusEnum.NORMAL
       }
     })
   }
 
   async findManyByUid (uid: string): Promise<Blacklist[]> {
-    return await this.prisma.blacklist.findMany({
-      where: { uid },
+    return await this.prisma.friend.findMany({
+      where: {
+        uid,
+        status: FriendStatusEnum.BLOCK
+      },
       orderBy: {
         createdAt: 'asc'
       }

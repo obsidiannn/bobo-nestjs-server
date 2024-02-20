@@ -33,6 +33,12 @@ export enum FriendApplyStatusEnum {
   REFUSED = 2
 }
 
+// 群状态
+export enum GroupStatusEnum {
+  ENABLE = 1,
+  DISABLE = 2
+}
+
 export enum GroupMemberStatus {
   PENDING = 0,
   NORMAL = 1
@@ -66,6 +72,11 @@ export enum WalletTypeEnum {
   NORMAL = 1,
   SYSTEM = 2
 }
+
+export enum CurrencyTypeEnum {
+  USD = 1
+}
+
 
 export enum BillStatusEnum {
   SUCCESS = 1,
@@ -161,3 +172,15 @@ export enum TweetRetweetTypeEnum {
   RETWEET = 2,
   COMMENT = 3
 }
+
+export enum FriendStatusEnum {
+  NORMAL = 1,
+  BLOCK = 2
+}
+
+// 1 可被搜 2 不可被搜索
+export enum SourceSearchTypeEnum {
+  ALLOW = 1,
+  DENIED = 2
+}
+

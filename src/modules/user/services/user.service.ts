@@ -3,7 +3,7 @@ import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { Prisma, User } from '@prisma/client'
 import { UserInfoItem } from '../controllers/user.dto'
-import { GenderEnum } from '@/enums'
+import { CurrencyTypeEnum, GenderEnum, WalletTypeEnum } from '@/enums'
 
 @Injectable()
 export class UserService {
@@ -17,15 +17,17 @@ export class UserService {
   }
 
   async create (data: Prisma.UserCreateInput): Promise<User> {
-    return await this.prismaService.user.create({
+    const user = await this.prismaService.user.create({
       data
     })
-  }
-
-  async createBatch (data: Prisma.UserCreateInput[]): Promise<Prisma.BatchPayload> {
-    return await this.prismaService.user.createMany({
-      data
-    })
+    const wallet: Prisma.WalletCreateInput = {
+      uid: user.id,
+      balance: 0,
+      type: WalletTypeEnum.NORMAL,
+      currency: CurrencyTypeEnum.USD
+    }
+    await this.prismaService.wallet.create({ data: wallet })
+    return user
   }
 
   async update (id: string, data: Prisma.UserUpdateInput): Promise<User> {

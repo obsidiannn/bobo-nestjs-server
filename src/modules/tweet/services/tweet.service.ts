@@ -1,12 +1,13 @@
 import { BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import { PrismaService } from '@/modules/common/services/prisma.service'
-import { Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { Post, PostIndex, Prisma } from '@prisma/client'
 import { randomInt, randomUUID } from 'crypto'
 import { MediaItem, TweetItem, TweetPageReq, TweetRetweetResp, TweetVoteResp } from '../controllers/tweet.dto'
-import { TweetRetweetTypeEnum, VisibleTypeEnum } from '@/enums'
+import { CommentLevelEnum, FriendStatusEnum, TweetRetweetTypeEnum, TweetStatusEnum, VisibleTypeEnum } from '@/enums'
 import commonUtil from '@/utils/common.util'
 import { UserService } from '@/modules/user/services/user.service'
+import { id } from 'ethers'
 
 @Injectable()
 export class TweetService {
@@ -40,23 +41,105 @@ export class TweetService {
     return post
   }
 
-  async queryByIndex (currentUserId: string, param: TweetPageReq): Promise<any> {
-
-  }
-
-  async queryByFriend (currentUserId: string, param: TweetPageReq): Promise<any> {
-    await this.prisma.post.findMany({
+  /**
+   * 根据热度分页排序
+   *  1.推文可见权限设置
+   *  2.根据overall 分值排序
+   * @param currentUserId
+   * @param param
+   */
+  async queryByIndex (currentUserId: string, param: TweetPageReq): Promise<BasePageResp<Post>> {
+    const friendIds = await this.findFriendId(currentUserId)
+    const where: Prisma.PostWhereInput = {
+      OR: [
+        { visibleType: VisibleTypeEnum.PUBLIC },
+        { visibleType: VisibleTypeEnum.FRIEND, authorId: { in: friendIds } },
+        { visibleType: VisibleTypeEnum.SELF, authorId: currentUserId }
+      ],
+      status: TweetStatusEnum.NORMAL
+    }
+    const result = await this.prisma.post.findMany({
+      where,
+      skip: commonUtil.pageSkip(param),
+      take: param.limit,
       include: {
         postIndex: {
-          where: {
-
+          select: {
+            overall: true
           }
         }
       },
-      orderBy: {
+      orderBy: [
+        {
+          postIndex: {
+            overall: 'desc'
+          }
+        },
+        {
+          createdAt: 'desc'
+        }
+      ]
+    })
+    const total = await this.prisma.post.count({
+      where
+    })
+    return new BasePageResp(param, result, total)
+  }
 
+  /**
+   * 好友的推文
+   *  不包含自己
+   *  不包含路人
+   * @param currentUserId
+   * @param param
+   */
+  async queryByFriend (currentUserId: string, param: TweetPageReq): Promise<BasePageResp<Post>> {
+    const friendIds = await this.findFriendId(currentUserId)
+    const where: Prisma.PostWhereInput = {
+      visibleType: { in: [VisibleTypeEnum.PUBLIC, VisibleTypeEnum.FRIEND] },
+      authorId: { in: friendIds },
+      status: TweetStatusEnum.NORMAL
+    }
+    const result = await this.prisma.post.findMany({
+      where,
+      skip: commonUtil.pageSkip(param),
+      take: param.limit,
+      orderBy: [{
+        postIndex: {
+          overall: 'desc'
+        }
+      },
+      { createdAt: 'desc' }
+      ]
+    })
+    const total = await this.prisma.post.count({
+      where
+    })
+    return new BasePageResp(param, result, total)
+  }
+
+  /**
+   * 我自己的推文
+   * @param currentUserId
+   * @param param
+   */
+  async queryByMine (currentUserId: string, param: TweetPageReq): Promise<BasePageResp<Post>> {
+    const where: Prisma.PostWhereInput = {
+      authorId: currentUserId,
+      status: TweetStatusEnum.NORMAL
+    }
+    const result = await this.prisma.post.findMany({
+      where,
+      skip: commonUtil.pageSkip(param),
+      take: param.limit,
+      orderBy: {
+        createdAt: 'desc'
       }
     })
+    const total = await this.prisma.post.count({
+      where
+    })
+    return new BasePageResp(param, result, total)
   }
 
   /**
@@ -231,6 +314,70 @@ export class TweetService {
       })
     }
     return { retweetFlag: !has }
+  }
+
+  /**
+   * 获取好友id
+   *  与uid是互相关注的关系
+   *  并去除黑名单的干扰
+   * @param uid
+   */
+  async findFriendId (uid: string): Promise<string[]> {
+    const myList = await this.prisma.friend.findMany({
+      where: {
+        uid,
+        status: FriendStatusEnum.NORMAL
+      },
+      select: {
+        objUid: true
+      }
+    })
+    const friendList = await this.prisma.friend.findMany({
+      where: {
+        uid: { in: myList.map(u => u.objUid) },
+        objUid: uid,
+        status: FriendStatusEnum.NORMAL
+      },
+      select: {
+        uid: true
+      }
+    })
+    return friendList.map(u => u.uid)
+  }
+
+  /**
+   * 可评论检查
+   * @param uid
+   * @param tweetId
+   */
+  async checkCommentLevelById (uid: string, tweetId: string | null): Promise<void> {
+    if (tweetId === null) {
+      throw new HttpException('不可评论', HttpStatus.BAD_REQUEST)
+    }
+    const data = await this.prisma.post.findFirstOrThrow({
+      where: { id: tweetId },
+      select: {
+        commentLevel: true,
+        authorId: true
+      }
+    })
+    if (data.commentLevel === CommentLevelEnum.NONE) {
+      throw new HttpException('不可评论', HttpStatus.BAD_REQUEST)
+    }
+
+    if (data.commentLevel === CommentLevelEnum.FRIEND) {
+      if (uid !== data.authorId) {
+        const count = await this.prisma.friend.count({
+          where: {
+            uid: { in: [uid, data.authorId] },
+            objUid: { in: [uid, data.authorId] }
+          }
+        })
+        if (count < 2) {
+          throw new HttpException('不可评论 非好友', HttpStatus.BAD_REQUEST)
+        }
+      }
+    }
   }
 
   mediaEntity2Dto (data: Prisma.JsonValue[]): MediaItem[] {

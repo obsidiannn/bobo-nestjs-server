@@ -4,7 +4,6 @@ import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { Body, Controller, Post, Req, UseInterceptors } from '@nestjs/common'
 import { Request } from 'express'
 import { BaseArrayResp, BaseUIdReq } from '@/modules/common/dto/common.dto'
-import { Prisma } from '@prisma/client'
 import { BlockService } from '../../user/services/block.service'
 import { BlockInfoItem } from './friend.dto'
 
@@ -22,20 +21,16 @@ export class BlockController {
     if (req.uid === param.uid) {
       return
     }
-    if (await this.blockService.checkExist(req.uid, param.uid)) {
+    if (await this.blockService.isBlock(req.uid, param.uid)) {
       return
     }
-    const input: Prisma.BlacklistCreateInput = {
-      uid: req.uid,
-      objUid: param.uid
-    }
-    await this.blockService.create(input)
+    await this.blockService.doBlock(req.uid, param.uid)
   }
 
   // 解除拉黑
   @Post('remove-user-black')
   async removeBlock (@Req() req: Request, @Body() param: BaseUIdReq): Promise<void> {
-    await this.blockService.delete(req.uid, param.uid)
+    await this.blockService.unBlock(req.uid, param.uid)
   }
 
   // 黑名单列表
