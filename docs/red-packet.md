@@ -101,28 +101,17 @@
 * respBody  
   ```json
   {
-    "chatId": "",
-    "msgId": "",
-    "sequence": "",
     "packetId": "",
-    "createdBy":"",
-    "createdUid":"",
-    "createdAt": "",
-    "expireSeconds": 40000,
+    "expiredFlag":false,
     "enable": false,
-    "remark": "",
   }
   ```
 
-| key           | desc                             |
-| ------------- | -------------------------------- |
-| sequence      | 当前message的sequence            |
-| packetId      | 红包id                           |
-| createdBy     | 发起人的名称                     |
-| createdAt     | 发起日期                         |
-| expireSeconds | 过期秒                           |
-| enable        | true： 可被领取，false：已被领取 |
-| remark        | 备注                             |
+| key         | desc                                   |
+| ----------- | -------------------------------------- |
+| packetId    | 红包id                                 |
+| expiredFlag | 是否过期  true 已经过期 false 没有过期 |
+| enable      | true： 可被领取，false：已被领取       |
 
 
 ### 3.红包详情
@@ -145,6 +134,9 @@
     "createdAt": "",
     "createdAvatar": "",
     "expireSeconds": 40000,
+    "packetCount": 10,
+    "totalAmount": 10000,
+    "expiredFlag": false,
     "enable": false,
     "remark": "",
     "records": [
@@ -159,19 +151,22 @@
   }
   ```
 
-| key           | desc                         |
-| ------------- | ---------------------------- |
-| packetId      | 红包id                       |
-| type          | 类型 1 普通，2 拼手气 3 专属 |
-| createdBy     | 发起人的名称                 |
-| createdUid    | 发起人id                     |
-| createdAvatar | 发起人头像                             |
+| key           | desc                             |
+| ------------- | -------------------------------- |
+| packetId      | 红包id                           |
+| type          | 类型 1 普通，2 拼手气 3 专属     |
+| createdBy     | 发起人的名称                     |
+| createdUid    | 发起人id                         |
+| createdAvatar | 发起人头像                       |
 | createdAt     | 发起日期                         |
 | expireSeconds | 过期秒                           |
 | enable        | true： 可被领取，false：已被领取 |
+| expiredFlag   | true 已经过期 false 没有过期     | 
 | remark        | 备注                             |
+| totalAmount   | 总金额（分）                     |
+| packetCount   | 总数量                           |
 
-* record item
+* record item （领取记录）
 
 | key      | desc       |
 | -------- | ---------- |

@@ -9,7 +9,7 @@ import { Prisma, User, Group, GroupMembers, FriendApply, Friend } from '@prisma/
 import { BaseUIdArrayReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import commonUtil from '@/utils/common.util'
 import { ChatService } from '@/modules/message/services/chat.service'
-import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum } from '@/enums'
+import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum, FriendStatusEnum } from '@/enums'
 import { MessageService } from '@/modules/message/services/message.service'
 
 @Injectable()
@@ -28,7 +28,8 @@ export class FriendService {
     const subscribe = await this.prisma.friend.findMany({
       where: {
         uid: currentUserId,
-        objUid: { in: uIds }
+        objUid: { in: uIds },
+        status: FriendStatusEnum.NORMAL
       },
       select: {
         uid: true,
@@ -37,20 +38,16 @@ export class FriendService {
     })
     // 订阅我的人 在uIds内，且订阅我的人
     const follower = await this.prisma.friend.findMany({
-      where: { objUid: { in: uIds } },
+      where: {
+        uid: { in: uIds },
+        objUid: currentUserId,
+        status: FriendStatusEnum.NORMAL
+      },
       select: {
         uid: true,
         objUid: true
       }
     })
-
-    // // 去掉我已经拉黑的人
-    // await this.prisma.blacklist.findMany({
-    //   where: {
-    //     uid: userId,
-    //     objUid: { in: uIds }
-    //   }
-    // })
 
     const subscribeSet = new Set(subscribe.map(i => i.objUid))
     const followerSet = new Set(follower.map(i => i.objUid))
@@ -117,10 +114,11 @@ export class FriendService {
 
   // 好友列表
   async getFriendList (currentUserId: string, param: FriendListPageReq): Promise<BasePageResp<Friend>> {
-    const where: any = {
-      uid: currentUserId
+    const where: Prisma.FriendWhereInput = {
+      uid: currentUserId,
+      status: FriendStatusEnum.NORMAL
     }
-    if (param.uids != null && param.uids.length > 0) {
+    if (commonUtil.notEmpty(param.uids)) {
       where.objUid = { in: param.uids }
     }
     const data = await this.prisma.friend.findMany({
@@ -132,9 +130,7 @@ export class FriendService {
       }
     })
     return new BasePageResp(param, data, await this.prisma.friend.count({
-      where: {
-        uid: currentUserId
-      }
+      where
     }))
   }
 
@@ -171,21 +167,23 @@ export class FriendService {
   }
 
   // 是否拉黑
-  async isDenied (currentUserId: string, uids: string[]): Promise<boolean> {
-    return await this.prisma.blacklist.count({
+  async isDenied (currentUserId: string, uid: string): Promise<boolean> {
+    return await this.prisma.friend.count({
       where: {
         uid: currentUserId,
-        objUid: { in: uids }
+        objUid: uid,
+        status: FriendStatusEnum.BLOCK
       }
     }) > 0
   }
 
   // 是否为好友
-  async isFriend (currentUserId: string, uids: string[]): Promise<boolean> {
+  async isFriend (currentUserId: string, uid: string): Promise<boolean> {
     return await this.prisma.friend.count({
       where: {
         uid: currentUserId,
-        objUid: { in: uids }
+        objUid: uid,
+        status: FriendStatusEnum.NORMAL
       }
     }) > 0
   }

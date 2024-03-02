@@ -30,14 +30,50 @@ export class RedPacketInfo {
   msgId: string
   sequence: number
   packetId: string
-  createdBy: string
-  createdUid: string
-  createdAt: Date
-  expireSeconds: number
-  enable: boolean
-  remark: string
+  // enable: boolean
+  // expiredFlag: boolean
 };
 
-export class RedPacketDetail {
+export class RedPacketRecordTempDto {
+  id: string
+  uid: string | null
+  status: number
+}
 
+export class RedPacketResp {
+  packetId: string
+  enable: boolean
+  expiredFlag: boolean
+  createdAt: Date
+  expireSecond: number
+}
+
+export class RedPacketReq {
+  msgId: string
+  packetId: string
+}
+
+export class RedPacketRecordItem {
+  uid?: string | null
+  uidDesc?: string | null
+  avatar?: string | null
+  amount?: number | null
+  recordAt: Date | null
+  status: number
+};
+
+export interface RedPacketDetail {
+  packetId: string
+  packetCount: number
+  totalAmount: number
+  type: RedPacketTypeEnum
+  createdBy?: string
+  createdUid: string
+  createdAt: Date
+  createdAvatar?: string
+  expireSeconds: number
+  enable: boolean
+  expiredFlag: boolean
+  remark: string
+  records: RedPacketRecordItem[]
 }

@@ -12,7 +12,7 @@ import {
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { FriendApplyService } from '../services/friend-apply.service'
 import { FriendApply, Prisma } from '@prisma/client'
-import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum } from '@/enums'
+import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum, FriendStatusEnum } from '@/enums'
 import { ChatService } from '@/modules/message/services/chat.service'
 import { MessageService } from '@/modules/message/services/message.service'
 // import { AuthInterceptor } from '@/modules/auth/interceptors/auth.interceptor'
@@ -39,11 +39,11 @@ export class FriendController {
   @Post('invite-apply')
   async inviteApply (@Req() req: Request, @Body() param: FriendInviteApplyReq): Promise<void> {
     const currentUserId = req.uid
-    if (await this.friendService.isFriend(currentUserId, [param.uid])) {
+    if (await this.friendService.isFriend(currentUserId, param.uid)) {
       return
     }
     // 是否拉黑
-    if (await this.friendService.isDenied(currentUserId, [param.uid])) {
+    if (await this.friendService.isDenied(currentUserId, param.uid)) {
       return
     }
 
@@ -106,7 +106,7 @@ export class FriendController {
         agreeAt: new Date(),
         remark: param.alias,
         remarkIndex: '',
-        createdAt: new Date()
+        status: FriendStatusEnum.NORMAL
       },
       {
         uid: apply.uid,
@@ -114,7 +114,7 @@ export class FriendController {
         agreeAt: new Date(),
         remark: '',
         remarkIndex: '',
-        createdAt: new Date()
+        status: FriendStatusEnum.NORMAL
       }
     ]
     await this.friendService.createBatch(inputs)

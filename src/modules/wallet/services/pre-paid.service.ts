@@ -1,26 +1,26 @@
 import { ActiveEnum } from '@/enums'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { HttpException, Injectable } from '@nestjs/common'
-import { BoboCard } from '@prisma/client'
+import { PrePaidCard } from '@prisma/client'
 
 @Injectable()
-export class BoboCardService {
+export class PrePaidService {
   constructor (
     private readonly prisma: PrismaService
   ) {}
 
-  async findActiveByCardNo (cardNo: string): Promise<BoboCard | null> {
-    const result = await this.prisma.boboCard.findFirst({
+  async findActiveByCardNo (cardNo: string): Promise<PrePaidCard | null> {
+    const result = await this.prisma.prePaidCard.findFirst({
       where: {
-        boboCode: cardNo,
+        code: cardNo,
         status: ActiveEnum.ACTIVE
       }
     })
     return result
   }
 
-  async useCard (uid: string, card: BoboCard): Promise<number> {
-    const result = await this.prisma.boboCard.update({
+  async useCard (uid: string, card: PrePaidCard): Promise<number> {
+    const result = await this.prisma.prePaidCard.update({
       where: {
         id: card.id
       },
@@ -30,6 +30,6 @@ export class BoboCardService {
         updatedAt: new Date()
       }
     })
-    return result.cardAmount
+    return result.amount
   }
 }

@@ -33,6 +33,12 @@ export enum FriendApplyStatusEnum {
   REFUSED = 2
 }
 
+// 群状态
+export enum GroupStatusEnum {
+  ENABLE = 1,
+  DISABLE = 2
+}
+
 export enum GroupMemberStatus {
   PENDING = 0,
   NORMAL = 1
@@ -66,6 +72,11 @@ export enum WalletTypeEnum {
   NORMAL = 1,
   SYSTEM = 2
 }
+
+export enum CurrencyTypeEnum {
+  USD = 1
+}
+
 
 export enum BillStatusEnum {
   SUCCESS = 1,
@@ -126,3 +137,50 @@ export enum RedPacketStatusEnum {
   EXPIRED = 3,
   EXPIRED_REFUND = 4
 }
+
+export enum MediaTypeEnum {
+  IMAGE = 1,
+  VIDEO = 2,
+  AUDIO = 3
+}
+/**
+ * 是否可回复: 1 每个人，2 好友 3 不可回复
+ */
+export enum CommentLevelEnum {
+  EACH = 1,
+  FRIEND = 2,
+  NONE = 3
+}
+/**
+ * 可见性 1 公开 2 好友 3 自己 冗余
+ */
+export enum VisibleTypeEnum {
+  PUBLIC = 1,
+  FRIEND = 2,
+  SELF = 3
+}
+
+export enum TweetStatusEnum {
+  NORMAL = 1,
+  DISABLE = 2,
+  LOCKED = 3
+}
+
+// 转帖类型： 1 普通，2 推，3 评论
+export enum TweetRetweetTypeEnum {
+  NONE = 1,
+  RETWEET = 2,
+  COMMENT = 3
+}
+
+export enum FriendStatusEnum {
+  NORMAL = 1,
+  BLOCK = 2
+}
+
+// 1 可被搜 2 不可被搜索
+export enum SourceSearchTypeEnum {
+  ALLOW = 1,
+  DENIED = 2
+}
+

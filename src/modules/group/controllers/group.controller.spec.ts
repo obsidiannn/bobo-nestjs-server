@@ -127,6 +127,67 @@ describe('GroupController', () => {
         })
     })
 
+    // 邀请加入群聊
+    it('邀请所有人加入群聊', async () => {
+      const groupMember = await prismaService.groupMembers.findFirst({
+        where: {
+          uid: customId,
+          role: { in: [GroupMemberRoleEnum.OWNER, GroupMemberRoleEnum.MANAGER] }
+        }
+      })
+      if (groupMember === null) { throw new Error() }
+      const group = await prismaService.group.findFirst({
+        where: {
+          id: groupMember.groupId
+        }
+      })
+      if (group === null) { throw new Error() }
+
+      const members = await prismaService.groupMembers.findMany({
+        where: { groupId: group.id },
+        select: { uid: true }
+      })
+      const memberIds = members.map(m => m.uid)
+      memberIds.push(customId)
+      const inviteUsers = await prismaService.user.findMany({
+        where: { id: { notIn: memberIds } }
+      })
+      if (inviteUsers.length <= 0) { throw new Error() }
+
+      const req: GroupInviteJoinReq = {
+        id: groupMember.groupId,
+        items: inviteUsers.map(u => {
+          const sharedPk = computeSharedSecret(buildWallet(groupMember.encPri), u.pubKey)
+          return {
+            uid: u.id,
+            encKey: sharedPk,
+            encPri: ''
+          }
+        })
+      }
+
+      inviteUsers.map(u => {
+        const sharedPk = computeSharedSecret(buildWallet(groupMember.encPri), u.pubKey)
+        return {
+          uid: u.id,
+          encKey: sharedPk,
+          encPri: ''
+        }
+      })
+
+      const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+      return await request(app.getHttpServer())
+        .post('/groups/invite-join')
+        .send({
+          data: params.encData
+        })
+        .set(params.headers)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+        })
+    })
+
     it('踢出群聊', async () => {
       const req: GroupKickOutReq = {
         id: _groupId,

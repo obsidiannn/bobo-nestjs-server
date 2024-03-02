@@ -13,4 +13,13 @@ describe('工具类的测试', () => {
       expect(result).toEqual([2, 3])
     })
   })
+
+  describe('红包随机拆分等份', () => {
+    const total = 2553
+    const result = commonUtil.randomSplit(23, total)
+    console.log(result)
+    const resultTotal = result.reduce((a, b) => { return a + b })
+    console.log(resultTotal)
+    expect(resultTotal).toEqual(total)
+  })
 })

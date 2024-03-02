@@ -5,7 +5,7 @@ import { Request } from 'express'
 import { WalletCardFillReq, WalletDetailResp, WalletRemitReq, WalletRemitResp } from './wallet.dto'
 import { WalletService } from '../services/wallet.service'
 import { BillService } from '../services/bill.service'
-import { BoboCardService } from '../services/bobo-card.service'
+import { PrePaidService } from '../services/pre-paid.service'
 import { Prisma } from '@prisma/client'
 import { BillInOutEnum, BillStatusEnum, BillTypeEnum, MessageTypeEnum } from '@/enums'
 import { BillDetailService } from '../services/bill-detail.service'
@@ -20,7 +20,7 @@ export class WalletController {
     private readonly walletService: WalletService,
     private readonly billService: BillService,
     private readonly billDetailService: BillDetailService,
-    private readonly boboCardService: BoboCardService,
+    private readonly prePaidService: PrePaidService,
     private readonly messageService: MessageService
   ) {}
 
@@ -32,9 +32,9 @@ export class WalletController {
   }
 
   // 礼品卡充值
-  @Post('fill/bobo-card')
+  @Post('fill/pre-paid-card')
   async fillByCard (@Req() req: Request, @Body() param: WalletCardFillReq): Promise<void> {
-    const card = await this.boboCardService.findActiveByCardNo(param.cardNo)
+    const card = await this.prePaidService.findActiveByCardNo(param.cardNo)
     if (card === null) {
       throw new HttpException('卡无效', HttpStatus.BAD_REQUEST)
     }
@@ -42,7 +42,7 @@ export class WalletController {
     await this.walletService.lock(req.uid)
     try {
       // 使用卡片
-      const amount = await this.boboCardService.useCard(req.uid, card)
+      const amount = await this.prePaidService.useCard(req.uid, card)
       await this.walletService.addAmount(req.uid, amount)
       const billInput: Prisma.BillCreateInput = {
         uid: req.uid,

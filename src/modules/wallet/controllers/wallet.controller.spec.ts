@@ -7,7 +7,7 @@ import { buildWallet } from '@/utils/web3'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test, TestingModule } from '@nestjs/testing'
 import { Prisma } from '@prisma/client'
-import { getRandomValues, randomUUID } from 'crypto'
+import { randomUUID } from 'crypto'
 import { Wallet } from 'ethers'
 import * as request from 'supertest'
 
@@ -38,19 +38,19 @@ describe('WalletController', () => {
     customId = customWallet.address
   })
 
-  // it('初始化当前用户的wallet', async () => {
-  //   const users = await prisma.user.findMany({})
-  //   const walletInputs = users.map(u => {
-  //     const wallet: Prisma.WalletCreateInput = {
-  //       uid: u.id,
-  //       balance: 0,
-  //       currency: 1,
-  //       type: WalletTypeEnum.NORMAL
-  //     }
-  //     return wallet
-  //   })
-  //   await prisma.wallet.createMany({ data: walletInputs })
-  // })
+  it('初始化当前用户的wallet', async () => {
+    const users = await prisma.user.findMany({})
+    const walletInputs = users.map(u => {
+      const wallet: Prisma.WalletCreateInput = {
+        uid: u.id,
+        balance: 0,
+        currency: 1,
+        type: WalletTypeEnum.NORMAL
+      }
+      return wallet
+    })
+    await prisma.wallet.createMany({ data: walletInputs })
+  })
 
   // it('初始化系统用户及wallet', async () => {
   //   const sysUserInput: Prisma.OfficalUserCreateInput = {
@@ -84,20 +84,20 @@ describe('WalletController', () => {
   })
 
   it('批量创建礼品卡', async () => {
-    const list: Prisma.BoboCardCreateInput[] = []
+    const list: Prisma.PrePaidCardCreateInput[] = []
     for (let index = 0; index < 10; index++) {
-      const item: Prisma.BoboCardCreateInput = {
-        boboCode: randomUUID(),
+      const item: Prisma.PrePaidCardCreateInput = {
+        code: randomUUID(),
         status: ActiveEnum.ACTIVE,
-        cardAmount: 100000
+        amount: 100000
       }
       list.push(item)
     }
-    await prisma.boboCard.createMany({ data: list })
+    await prisma.prePaidCard.createMany({ data: list })
   })
 
   it('礼品卡充值', async () => {
-    const card = await prisma.boboCard.findFirst({
+    const card = await prisma.prePaidCard.findFirst({
       where: {
         status: ActiveEnum.ACTIVE
       }
@@ -106,7 +106,7 @@ describe('WalletController', () => {
       throw new Error()
     }
     const req = {
-      cardNo: card.boboCode
+      cardNo: card.code
     }
     const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
     return await request(app.getHttpServer())
