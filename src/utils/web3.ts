@@ -1,5 +1,5 @@
 
-import { Wallet, ethers } from 'ethers'
+import { Provider, Wallet, ethers } from 'ethers'
 import * as Crypto from 'crypto'
 
 ethers.randomBytes.register((length) => {
@@ -23,6 +23,10 @@ ethers.sha512.register((data) => {
 
 export const buildWallet = (privateKey: string): ethers.Wallet => {
   return new ethers.Wallet(privateKey)
+}
+
+export const buildWalletByProvider = (privateKey: string, provider: Provider): ethers.Wallet => {
+  return new ethers.Wallet(privateKey, provider)
 }
 
 export const computeSharedSecretByPk = (privateKey: string, pubKey: string): string => {

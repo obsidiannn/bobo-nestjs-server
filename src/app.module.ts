@@ -8,6 +8,7 @@ import { MessageModule } from './modules/message/message.module'
 import { WalletModule } from './modules/wallet/wallet.module'
 import { AppsModule } from './modules/apps/apps.module'
 import { TweetModule } from './modules/tweet/tweet.module'
+import { SocketModule } from './modules/socket/socket.module'
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { TweetModule } from './modules/tweet/tweet.module'
     MessageModule,
     WalletModule,
     AppsModule,
-    TweetModule
+    TweetModule,
+    SocketModule
   ]
 })
 export class AppModule {}

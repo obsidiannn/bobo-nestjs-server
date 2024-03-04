@@ -12,7 +12,6 @@ import { TRANSACTION_KEY } from '../decorator/transactional'
 @Injectable()
 export class TransactionInterceptor implements NestInterceptor {
   constructor (private readonly prisma: PrismaService) {}
-
   async intercept (context: ExecutionContext, next: CallHandler): Promise<any> {
     const isTransaction: boolean = Reflect.getMetadata(
       TRANSACTION_KEY,
