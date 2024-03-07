@@ -14,7 +14,7 @@ lerna-debug.log*
 test.ts
 # OS
 .DS_Store
-
+bobo-chat-d0c99-firebase-adminsdk-8wr5p-8140deb171.json
 # Tests
 /coverage
 /.nyc_output
