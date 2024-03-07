@@ -77,7 +77,6 @@ export enum CurrencyTypeEnum {
   USD = 1
 }
 
-
 export enum BillStatusEnum {
   SUCCESS = 1,
   NEED_PAY = 2,
@@ -184,3 +183,9 @@ export enum SourceSearchTypeEnum {
   DENIED = 2
 }
 
+// 系统级别的常量key
+export enum PropConstant {
+  HTTP_PROXY = 'HTTP_PROXY',
+  REDIS_HOST = 'REDIS_HOST',
+  FIREBASE_PATH = 'FIREBASE_PATH'
+}

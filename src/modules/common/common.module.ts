@@ -7,10 +7,10 @@ import { PrismaService } from './services/prisma.service'
 import { SystemService } from './services/system.service'
 import { SystemController } from './controllers/system.controller'
 import { SystemWalletService } from './services/system-wallet.service'
-import { APP_INTERCEPTOR } from '@nestjs/core'
 import { TransactionInterceptor } from './interceptors/transaction.interceptor'
 import { SystemCategoryService } from './services/system-category.service'
 import { SystemCategoryController } from './controllers/system-category.controller'
+import { FirebaseService } from './services/firebase.service'
 @Module({})
 export class CommonModule {
   static register (): DynamicModule {
@@ -48,10 +48,12 @@ export class CommonModule {
       providers: [
         PrismaService,
         SystemService,
-        SystemCategoryService
+        SystemCategoryService,
+        FirebaseService
       ],
       exports: [
-        PrismaService
+        PrismaService,
+        FirebaseService
       ]
     }
   }
