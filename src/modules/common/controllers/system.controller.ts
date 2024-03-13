@@ -23,7 +23,7 @@ export class SystemController {
     return { nodes }
   }
 
-  @Get('info')
+  @Post('info')
   async getInfo (): Promise<ISystemController.SysInfoResponse> {
     const pubKey = this.systemService.getPubKey()
     const staticUrl = this.systemService.getStaticUrl()
