@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common'
 import { Prisma, User } from '@prisma/client'
 import { UserInfoItem } from '../controllers/user.dto'
 import { CurrencyTypeEnum, GenderEnum, WalletTypeEnum } from '@/enums'
+import commonUtil from '@/utils/common.util'
 
 @Injectable()
 export class UserService {
@@ -76,6 +77,23 @@ export class UserService {
       })
     })
     return result
+  }
+
+  async checkById (id: string): Promise<UserInfoItem | null> {
+    if (!commonUtil.notNull(id)) {
+      return null
+    }
+    return await this.prismaService.user.findFirst({
+      where: {
+        id
+      },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        gender: true
+      }
+    })
   }
 
   defaultUserItem: UserInfoItem = {

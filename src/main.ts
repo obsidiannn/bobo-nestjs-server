@@ -9,6 +9,14 @@ const bootstrap = async (): Promise<void> => {
     whitelist: true,
     transform: true
   }))
+
+  const corsOptions = {
+    origin: '*', // 允许的前端域名
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    credentials: true
+  }
+
+  app.enableCors(corsOptions)
   await app.listen(4000)
 }
 bootstrap().then(() => {
