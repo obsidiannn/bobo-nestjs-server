@@ -15,4 +15,14 @@ describe('aes test', () => {
     const de = aes.DeBuffer(en, key)
     expect(de).toEqual(textBuffer)
   })
+
+  it('rsa', () => {
+    const result = aes.encryptAndSign('helloWorld')
+    const pkArray = result.priKey.split('\n')
+    const pkStr = pkArray.filter(row=>{return row.indexOf('--') < 0;}).join().replaceAll(',','')
+    console.log(pkStr)
+    console.log(result)
+
+  })
+  
 })

@@ -28,9 +28,46 @@ const DeBuffer = (val: Buffer, key: string): Buffer => {
   const data = decipher.update(val, undefined, 'hex') + decipher.final('hex')
   return Buffer.from(data, 'hex')
 }
+
+export const encryptAndSign = (originalData: string): {
+  e: string
+  d: string
+  priKey: string
+  pubKey: string
+} => {
+  const { publicKey, privateKey } = Crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+      type: 'pkcs1',
+      format: 'pem'
+    },
+    privateKeyEncoding: {
+      type: 'pkcs8',
+      format: 'pem'
+    }
+  })
+  const encrypted = Crypto.publicEncrypt({
+    key: publicKey,
+    padding: Crypto.constants.RSA_PKCS1_PADDING
+  }, Buffer.from(originalData))
+
+  const decrypted = Crypto.privateDecrypt({
+    key: privateKey,
+    padding: Crypto.constants.RSA_PKCS1_PADDING
+  }, encrypted)
+
+  return {
+    e: encrypted.toString('base64'),
+    d: decrypted.toString('base64'),
+    pubKey: publicKey,
+    priKey: privateKey
+  }
+}
+
 export default {
   En,
   De,
   EnBuffer,
-  DeBuffer
+  DeBuffer,
+  encryptAndSign
 }

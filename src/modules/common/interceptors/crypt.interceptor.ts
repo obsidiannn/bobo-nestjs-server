@@ -23,7 +23,7 @@ export class CryptInterceptor implements NestInterceptor {
       tap((data) => {
         const resp = ctx.switchToHttp().getResponse<Response>()
         resp.status(HttpStatus.OK)
-        return data
+        return aes.En(JSON.stringify(data), pubKey)
       })
     )
   }

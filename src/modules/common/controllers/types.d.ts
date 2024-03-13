@@ -9,4 +9,10 @@ declare namespace ISystemController {
   interface GetNodesResponse {
     nodes: string[] | undefined
   }
+
+  interface SysInfoResponse {
+    pubKey?: string
+    staticUrl?: string
+  }
+
 }

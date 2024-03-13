@@ -1,9 +1,10 @@
 
-import { Controller, Post } from '@nestjs/common'
+import { Controller, Get, Post, UseInterceptors } from '@nestjs/common'
 import { SystemService } from '../services/system.service'
 @Controller('system')
 export class SystemController {
   constructor (private readonly systemService: SystemService) { }
+
   @Post('get-pub-key')
   async getPubKey (): Promise<ISystemController.GetPubKeyResponse> {
     const pubKey = this.systemService.getPubKey()
@@ -20,5 +21,15 @@ export class SystemController {
   async getNodes (): Promise<ISystemController.GetNodesResponse> {
     const nodes = this.systemService.getNodes()
     return { nodes }
+  }
+
+  @Get('info')
+  async getInfo (): Promise<ISystemController.SysInfoResponse> {
+    const pubKey = this.systemService.getPubKey()
+    const staticUrl = this.systemService.getStaticUrl()
+    const result = { pubKey, staticUrl }
+    console.log(result)
+
+    return result
   }
 }

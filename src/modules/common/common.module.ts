@@ -11,6 +11,8 @@ import { TransactionInterceptor } from './interceptors/transaction.interceptor'
 import { SystemCategoryService } from './services/system-category.service'
 import { SystemCategoryController } from './controllers/system-category.controller'
 import { FirebaseService } from './services/firebase.service'
+import { HttpExceptionFilter } from './filter/global.exception.filter'
+import { APP_FILTER } from '@nestjs/core'
 @Module({})
 export class CommonModule {
   static register (): DynamicModule {
@@ -49,7 +51,11 @@ export class CommonModule {
         PrismaService,
         SystemService,
         SystemCategoryService,
-        FirebaseService
+        FirebaseService,
+        {
+          provide: APP_FILTER,
+          useClass: HttpExceptionFilter
+        }
       ],
       exports: [
         PrismaService,
