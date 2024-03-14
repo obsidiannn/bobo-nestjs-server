@@ -15,6 +15,7 @@ export class FriendInviteApplyReq {
 export class FriendInviteApplyItem {
   id: string
   uid: string
+  objUid: string
   remark: string | null
   rejectReason?: string
   status: number
@@ -46,7 +47,13 @@ export class FriendListPageReq extends BasePageReq {
 export class FriendInfoItem {
   uid: string
   chatId?: string
-  alias: string | null
+  remark: string | null
+  remarkIndex: string | null
+  name: string
+  nameIndex: string
+  gender: number
+  avatar: string
+  pubKey: string
 };
 
 export class FriendChangeAliasReq {

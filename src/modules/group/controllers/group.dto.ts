@@ -138,7 +138,7 @@ export class GroupTransferReq {
   encKey: string
 }
 
-export class GroupInfoItem {
+export class GroupApplyItem {
   id: string
   gid: string
   uid: string

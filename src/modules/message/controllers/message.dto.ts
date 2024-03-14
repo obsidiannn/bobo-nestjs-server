@@ -31,6 +31,8 @@ export class MessageListReq {
 
   @IsNotEmpty({ message: 'not empty' })
     direction: string
+
+  limit?: number
 }
 
 export class MessageDetailListReq {

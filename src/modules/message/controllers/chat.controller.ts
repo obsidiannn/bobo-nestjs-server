@@ -7,9 +7,10 @@ import { CryptInterceptor } from '@/modules/common/interceptors/crypt.intercepto
 import { Request } from 'express'
 import { MessageService } from '../services/message.service'
 import { ChatUserService } from '../services/chat-user.service'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
 @Controller('chat')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class ChatController {
   constructor (
     private readonly chatService: ChatService,

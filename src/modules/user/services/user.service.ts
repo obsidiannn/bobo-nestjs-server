@@ -64,7 +64,9 @@ export class UserService {
         id: true,
         name: true,
         avatar: true,
-        gender: true
+        gender: true,
+        nameIdx: true,
+        pubKey: true
       }
     })
     const result = new Map<string, UserInfoItem>()
@@ -73,7 +75,9 @@ export class UserService {
         id: u.id,
         name: u.name,
         avatar: u.avatar,
-        gender: u.gender
+        gender: u.gender,
+        nameIndex: u.nameIdx,
+        pubKey: u.pubKey
       })
     })
     return result
@@ -83,7 +87,7 @@ export class UserService {
     if (!commonUtil.notNull(id)) {
       return null
     }
-    return await this.prismaService.user.findFirst({
+    const result = await this.prismaService.user.findFirst({
       where: {
         id
       },
@@ -91,15 +95,29 @@ export class UserService {
         id: true,
         name: true,
         avatar: true,
-        gender: true
+        gender: true,
+        nameIdx: true
       }
     })
+    if (result === null) {
+      return null
+    }
+    return {
+      id: result?.id,
+      name: result?.name,
+      avatar: result?.avatar,
+      gender: result?.gender,
+      nameIndex: result?.nameIdx ?? '',
+      pubKey: ''
+    }
   }
 
   defaultUserItem: UserInfoItem = {
     id: 'default',
     name: '已注销',
     avatar: '',
-    gender: GenderEnum.UNKNOWN
+    gender: GenderEnum.UNKNOWN,
+    nameIndex: '',
+    pubKey: ''
   }
 }

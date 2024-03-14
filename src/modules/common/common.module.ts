@@ -7,12 +7,12 @@ import { PrismaService } from './services/prisma.service'
 import { SystemService } from './services/system.service'
 import { SystemController } from './controllers/system.controller'
 import { SystemWalletService } from './services/system-wallet.service'
-import { TransactionInterceptor } from './interceptors/transaction.interceptor'
 import { SystemCategoryService } from './services/system-category.service'
 import { SystemCategoryController } from './controllers/system-category.controller'
 import { FirebaseService } from './services/firebase.service'
 import { HttpExceptionFilter } from './filter/global.exception.filter'
-import { APP_FILTER } from '@nestjs/core'
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { ResponseInterceptor } from './interceptors/response.interceptor'
 @Module({})
 export class CommonModule {
   static register (): DynamicModule {
@@ -52,6 +52,7 @@ export class CommonModule {
         SystemService,
         SystemCategoryService,
         FirebaseService,
+        ResponseInterceptor,
         {
           provide: APP_FILTER,
           useClass: HttpExceptionFilter

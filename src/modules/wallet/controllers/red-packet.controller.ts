@@ -14,8 +14,9 @@ import { MessageExtra } from '@/modules/message/controllers/message.dto'
 import { UserService } from '@/modules/user/services/user.service'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 @Controller('red-packet')
 export class RedPacketController {
   constructor (

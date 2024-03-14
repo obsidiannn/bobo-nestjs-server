@@ -9,7 +9,6 @@ import { WalletModule } from './modules/wallet/wallet.module'
 import { AppsModule } from './modules/apps/apps.module'
 import { TweetModule } from './modules/tweet/tweet.module'
 import { SocketModule } from './modules/socket/socket.module'
-import { CommonHttpMiddleware } from './modules/common/middlewares/common-http.middleware'
 @Module({
   imports: [
     CommonModule.register(),
@@ -23,9 +22,10 @@ import { CommonHttpMiddleware } from './modules/common/middlewares/common-http.m
     TweetModule,
     SocketModule
   ]
+
 })
 export class AppModule implements NestModule {
   configure (consumer: MiddlewareConsumer): void {
-    consumer.apply(CommonHttpMiddleware).forRoutes('*')
+    // consumer.apply(CommonHttpMiddleware).forRoutes('*')
   }
 }

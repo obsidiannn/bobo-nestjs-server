@@ -8,8 +8,9 @@ import { Request } from 'express'
 import { BaseInterceptor } from '../interceptors/base.interceptor'
 import { UpdateAvatarParams, UpdateGenderParams, UpdateNameParams } from './auth.dto'
 import { AuthInterceptor } from '../interceptors/auth.interceptor'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 @Controller('auth')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class AuthController {
   constructor (private readonly userService: UserService) {}
   @Post('is-register')

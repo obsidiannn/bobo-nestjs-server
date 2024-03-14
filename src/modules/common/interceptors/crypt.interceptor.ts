@@ -2,9 +2,10 @@ import aes from '@/utils/aes'
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, HttpException, HttpStatus } from '@nestjs/common'
 import { Request, Response } from 'express'
 import { Observable } from 'rxjs'
-import { tap } from 'rxjs/operators'
+import { map } from 'rxjs/operators'
 import { SystemWalletService } from '../services/system-wallet.service'
 
+// 解密interceptor
 @Injectable()
 export class CryptInterceptor implements NestInterceptor {
   intercept (ctx: ExecutionContext, next: CallHandler): Observable<any> {
@@ -17,13 +18,16 @@ export class CryptInterceptor implements NestInterceptor {
     const body = request.body?.data ?? ''
     if (body !== '') {
       const decData = aes.De(body, sharedSecret)
+      console.log('[request body]', decData)
       request.body = JSON.parse(decData) ?? {}
     }
+
     return next.handle().pipe(
-      tap((data) => {
+      map((data) => {
         const resp = ctx.switchToHttp().getResponse<Response>()
         resp.status(HttpStatus.OK)
-        return aes.En(JSON.stringify(data), pubKey)
+        console.log('[interceptor] 局部', data)
+        return aes.En(JSON.stringify(data), sharedSecret)
       })
     )
   }

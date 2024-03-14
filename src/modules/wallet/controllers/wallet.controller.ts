@@ -12,9 +12,10 @@ import { BillDetailService } from '../services/bill-detail.service'
 import { randomUUID } from 'crypto'
 import { MessageService } from '@/modules/message/services/message.service'
 import { CommonEnum } from '@/modules/common/dto/common.dto'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
 @Controller('wallet')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class WalletController {
   constructor (
     private readonly walletService: WalletService,

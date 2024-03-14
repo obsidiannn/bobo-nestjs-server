@@ -9,9 +9,10 @@ import { AppCommentService } from '../services/apps-comment.service'
 import { UserService } from '@/modules/user/services/user.service'
 import { AppsCommentVoteService } from '../services/apps-comment-vote.service'
 import { Prisma } from '@prisma/client'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
 @Controller('apps')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class AppsController {
   constructor (
     private readonly appService: AppsService,

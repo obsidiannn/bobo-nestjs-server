@@ -3,7 +3,7 @@ import {
   GroupCreateReq, GroupMemberReq, GroupDescResp,
   GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq, GroupMemberItem,
   GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq, GroupNoticeResp,
-  GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupInfoItem,
+  GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupApplyItem,
   MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq, GroupInviteJoinItem
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BaseIdsArrayReq, BasePageResp, BaseArrayResp, CommonEnum } from '@/modules/common/dto/common.dto'
@@ -21,9 +21,10 @@ import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
 import { TransactionInterceptor } from '@/modules/common/interceptors/transaction.interceptor'
 import { PrismaService } from '@/modules/common/services/prisma.service'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
 @Controller('groups')
-@UseInterceptors(CryptInterceptor, BaseInterceptor, TransactionInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor, TransactionInterceptor)
 export class GroupController {
   constructor (
     private readonly groupService: GroupService,
@@ -432,9 +433,36 @@ export class GroupController {
     }
   }
 
+  // TODO: 拒绝加入群聊
+  @Post('reject-join')
+  async rejectMemberJoin (@Req() req: Request, @Body() param: GroupApplyJoinReq): Promise<void> {
+    const currentUserId = req.uid
+    await this.groupMemberService.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
+    const existMembers = await this.groupMemberService.findMany({
+      where: {
+        groupId: { equals: param.id },
+        uid: { in: param.uids },
+        status: { equals: GroupMemberStatus.PENDING }
+      }
+    })
+    if (existMembers.length > 0) {
+      // 当前存在的申请记录
+      const existIds: string[] = existMembers.map(e => e.id)
+      await this.groupMemberService.updateMany({
+        where: {
+          groupId: { equals: param.id },
+          uid: { in: existIds }
+        },
+        data: {
+          status: GroupMemberStatus.NORMAL
+        }
+      })
+    }
+  }
+
   // 待审核申请列表 只有群主和管理员有权限
   @Post('apply-list')
-  async applyList (@Req() req: Request, @Body() param: BaseIdsArrayReq): Promise<GroupInfoItem[]> {
+  async applyList (@Req() req: Request, @Body() param: BaseIdsArrayReq): Promise<GroupApplyItem[]> {
     const currentUserId = req.uid
     const managedGroups = await this.groupMemberService.findMany({
       where: {
@@ -451,7 +479,7 @@ export class GroupController {
         }
       })
       return pendingMembers.map(m => {
-        const item: GroupInfoItem = {
+        const item: GroupApplyItem = {
           id: m.id,
           gid: m.groupId,
           uid: m.uid,

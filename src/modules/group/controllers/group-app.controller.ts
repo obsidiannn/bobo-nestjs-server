@@ -6,9 +6,10 @@ import { Body, Controller, Post, Req, UseInterceptors } from '@nestjs/common'
 import { Request } from 'express'
 import { GroupAppService } from '../services/group-app.service'
 import { AppsService } from '@/modules/apps/services/apps.service'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
 @Controller('groups/app')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class GroupAppController {
   constructor (
     private readonly groupAppService: GroupAppService,

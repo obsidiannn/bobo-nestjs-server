@@ -1,7 +1,9 @@
 
-import { Controller, Get, Post, UseInterceptors } from '@nestjs/common'
+import { Controller, Post, UseInterceptors } from '@nestjs/common'
 import { SystemService } from '../services/system.service'
+import { ResponseInterceptor } from '../interceptors/response.interceptor'
 @Controller('system')
+@UseInterceptors(ResponseInterceptor)
 export class SystemController {
   constructor (private readonly systemService: SystemService) { }
 

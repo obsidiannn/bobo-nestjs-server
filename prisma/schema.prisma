@@ -156,6 +156,30 @@ model GroupPackage {
   @@map("group_packages")
 }
 
+
+// 群用户表申请表
+model GroupApply {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId //主键ID
+  groupId          String    @map("gid") //群ID
+  uid              String    @map("uid") //用户ID
+  encPri           String    @map("enc_pri") //用户在该群的密钥 只有群主及管理具备
+  encKey           String    @map("enc_key") //用户在该群的加密key
+  inviteUid        String?   @map("invite_uid") //邀请者ID 没有则为主动加入
+  role             Int       @default(3) @map("role") //角色 1-群主 2-管理员 3-普通用户 默认普通用户
+  joinType         Int       @map("join_type") //加入方式 1-邀请 2-扫码 （枚举待定）
+  myAlias          String    @map("my_alias") //在群里的昵称
+  status           Int       @default(1) @map("status") //用户状态 0 pending 1-正常
+  banType          Int       @default(1) @map("ban_type") // 禁言类型  1-正常 2-禁言
+  adminAt          DateTime? @map("admin_at") //成为管理员的时间
+  packageExpiredAt DateTime? @map("package_expired_at") // 群订阅过期时间
+  createdAt        DateTime  @default(now()) @map("created_at") //创建时间
+  updatedAt        DateTime  @updatedAt @map("updated_at") //更新时间
+
+  @@index([groupId], name: "gid")
+  @@index([uid], name: "uid")
+  @@map("group_applys")
+}
+
 // 群用户表
 model GroupMembers {
   id               String    @id @default(auto()) @map("_id") @db.ObjectId //主键ID
@@ -215,7 +239,7 @@ model ChatUser {
   uid            String   @map("uid") //用户ID
   chatId         String   @map("chat_id") //会话ID
   isTop          Int      @default(0) @map("is_top") //是否置顶 1-是 0-否 默认0
-  isMute         Int      @default(0) @map("is_mute") //是否免打扰 1-是 0-否 默认0
+  isMute         Int      @default(0) @map("is_mute") // 是否免打扰 1-是 0-否 默认0 
   isShow         Int      @default(1) @map("is_show") //是否显示 1-是 0-否 默认1
   isHide         Int      @default(0) @map("is_hide") //是否隐藏 1-是 0-否 默认0
   maxReadSeq     Int      @default(0) @map("max_read_seq") // 最大读取的消息序号，个人建议用用户的dbIdx表存储
