@@ -7,7 +7,7 @@ export class FriendRelationItem {
   isFriend: number
 };
 
-export class FriendInviteApplyReq {
+export interface FriendInviteApplyReq {
   uid: string
   remark: string
 };

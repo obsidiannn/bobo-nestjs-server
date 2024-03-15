@@ -5,7 +5,11 @@ import { Observable, map } from 'rxjs'
 export class ResponseInterceptor implements NestInterceptor {
   intercept (context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
+
       map(data => {
+        const request = context.switchToHttp().getRequest<Request>()
+        console.log('[req]', request.url)
+        console.log('[response]', data)
         return {
           code: 200,
           data,

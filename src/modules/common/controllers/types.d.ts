@@ -16,3 +16,15 @@ declare namespace ISystemController {
   }
 
 }
+
+declare namespace IFileController{
+  interface PreSignRequest {
+    key: string
+
+  }
+  interface PreSignResponse {
+    result: string
+
+  }
+
+}

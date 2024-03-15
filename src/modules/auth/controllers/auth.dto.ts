@@ -4,7 +4,13 @@ import { IsEnum, IsNotEmpty, IsString, Matches } from 'class-validator'
 export class UpdateNameParams {
   @IsString({ message: '类型不一致' })
   @IsNotEmpty({ message: 'valid error' })
-    username: string
+    name: string
+}
+
+export class UpdateSignParams {
+  @IsString({ message: '类型不一致' })
+  @IsNotEmpty({ message: 'valid error' })
+    sign: string
 }
 
 export class UpdateGenderParams {

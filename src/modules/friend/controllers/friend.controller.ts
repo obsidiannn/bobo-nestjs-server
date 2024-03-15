@@ -32,8 +32,10 @@ export class FriendController {
 
   // 获取用户关系
   @Post('relation-list')
-  async getRelationList (@Req() req: Request, @Body() param: BaseUIdArrayReq): Promise<BaseArrayResp<FriendRelationItem>> {
-    return { items: await this.friendService.getRelationList(req.uid, param) }
+  async getRelationList (@Req() req: Request, @Body() params: BaseUIdArrayReq): Promise<BaseArrayResp<FriendRelationItem>> {
+    console.log(params)
+
+    return { items: await this.friendService.getRelationList(req.uid, params) }
   }
 
   // 申请好友

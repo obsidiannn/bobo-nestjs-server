@@ -1,7 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { CacheModule } from '@nestjs/cache-manager'
-import { RedisClientOptions } from 'redis'
 import { redisStore } from 'cache-manager-redis-yet'
 import { PrismaService } from './services/prisma.service'
 import { SystemService } from './services/system.service'
@@ -53,6 +51,7 @@ export class CommonModule {
         SystemCategoryService,
         FirebaseService,
         ResponseInterceptor,
+        ConfigService,
         {
           provide: APP_FILTER,
           useClass: HttpExceptionFilter
@@ -60,7 +59,8 @@ export class CommonModule {
       ],
       exports: [
         PrismaService,
-        FirebaseService
+        FirebaseService,
+        ConfigService
       ]
     }
   }

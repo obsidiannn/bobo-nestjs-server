@@ -10,6 +10,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor'
   imports: [UserModule],
   controllers: [
     AuthController
+    
   ],
   providers: [
     AuthService,

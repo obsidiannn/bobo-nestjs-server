@@ -35,7 +35,7 @@ export class BasePageResp<T> {
   }
 }
 
-export class BaseArrayResp<T> {
+export interface BaseArrayResp<T> {
   items: T[]
 }
 
@@ -43,19 +43,19 @@ export class BaseIdReq {
   id: string
 }
 
-export class BaseUIdReq {
+export interface BaseUIdReq {
   uid: string
 }
 
-export class BaseIdsArrayReq {
+export interface BaseIdsArrayReq {
   ids: string[]
 }
 
-export class BaseUIdArrayReq {
+export interface BaseUIdArrayReq {
   uids: string[]
 }
 
-export class FieldChange {
+export interface FieldChange {
   id: string
   fieldKey: string
   fieldValue: string

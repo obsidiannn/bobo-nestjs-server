@@ -29,4 +29,12 @@ export class SystemService {
     }
     return userId
   }
+
+  getConfig (configKey: string): string {
+    const userId = this.configService.get<string>('TEST_USER_ID')
+    if (userId === undefined) {
+      return ''
+    }
+    return userId
+  }
 }

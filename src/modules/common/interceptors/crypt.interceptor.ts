@@ -18,7 +18,7 @@ export class CryptInterceptor implements NestInterceptor {
     const body = request.body?.data ?? ''
     if (body !== '') {
       const decData = aes.De(body, sharedSecret)
-      console.log('[request body]', decData)
+      console.log('[request body] ', decData)
       request.body = JSON.parse(decData) ?? {}
     }
 
@@ -26,7 +26,6 @@ export class CryptInterceptor implements NestInterceptor {
       map((data) => {
         const resp = ctx.switchToHttp().getResponse<Response>()
         resp.status(HttpStatus.OK)
-        console.log('[interceptor] 局部', data)
         return aes.En(JSON.stringify(data), sharedSecret)
       })
     )

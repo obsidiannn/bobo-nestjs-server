@@ -4,7 +4,7 @@ import {
   GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq, GroupMemberItem,
   GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq, GroupNoticeResp,
   GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupApplyItem,
-  MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq, GroupInviteJoinItem
+  MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq, GroupInviteJoinItem, GroupInfoItem, GroupIdsReq
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BaseIdsArrayReq, BasePageResp, BaseArrayResp, CommonEnum } from '@/modules/common/dto/common.dto'
 import { GroupService } from '../services/group.service'
@@ -155,6 +155,25 @@ export class GroupController {
   @Post('list')
   async mineGroup (@Req() req: Request): Promise<BaseArrayResp<string>> {
     return { items: await this.groupMemberService.findGroupIdByUid(req.uid) }
+  }
+
+  @Post('list-by-ids')
+  async groupList (@Req() req: Request, @Body() param: GroupIdsReq): Promise<BaseArrayResp<GroupInfoItem>> {
+    const groups = await this.groupService.findByIds(param.gids)
+    const result = groups.map(g => {
+      const item: GroupInfoItem = {
+        id: g.id,
+        name: g.name,
+        avatar: g.avatar,
+        memberLimit: g.memberLimit,
+        total: g.total,
+        pubKey: g.pubKey,
+        desc: g.desc ?? '',
+        isEnc: g.isEnc
+      }
+      return item
+    })
+    return { items: result }
   }
 
   // 修改群名称
