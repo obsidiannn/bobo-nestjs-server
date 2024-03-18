@@ -85,7 +85,7 @@ export class RedPacketController {
     if (param.objUIds !== undefined && commonUtil.notEmpty(param.objUIds)) {
       objUid = param.objUIds[0]
     } else { objUid = null }
-    return await this.messageService.sendRedPacketMessage(req.uid, param.sourceType, 0, extra, {}, redPacket.id, objUid, param.groupId)
+    return await this.messageService.sendRedPacketMessage(param.id, req.uid, param.sourceType, 0, extra, {}, redPacket.id, objUid, param.groupId)
   }
 
   // 红包摘要

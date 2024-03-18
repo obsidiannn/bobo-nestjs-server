@@ -2,6 +2,7 @@ import { RedPacketSourceEnum, RedPacketTypeEnum } from '@/enums'
 import { IsArray, IsInt, IsNotEmpty, IsString, isInt } from 'class-validator'
 
 export class RedPacketCreateReq {
+  id: string
   @IsNotEmpty({ message: 'req error' })
     type: RedPacketTypeEnum
 

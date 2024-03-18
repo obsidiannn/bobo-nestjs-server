@@ -40,6 +40,7 @@ export class WalletCardFillReq {
 }
 
 export class WalletRemitReq {
+  id: string
   @IsNotEmpty({ message: 'error' })
     objUId: string
 

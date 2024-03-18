@@ -255,7 +255,7 @@ model ChatUser {
 
 // 消息详情表
 model MessageDetail {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId //主键ID 及消息ID
+  id         String   @id  @map("_id") @db.ObjectId //主键ID 及消息ID
   chatId     String   @map("chat_id") //会话ID
   fromUid    String   @map("from_uid") //发送者用户ID
   content    String   @map("content") //消息内容 加密字符串
@@ -264,7 +264,7 @@ model MessageDetail {
   isEnc      Int      @default(0) @map("is_enc") // 是否加密 1-是 0-否 默认0
   sequence   Int?     @map("sequence") // 消息序号
   receiveIds String[] @map("receive_ids") // 指定接收的用户Id
-  extra      Json     @map("extra") //内容外的额外信息
+  extra      Json?     @map("extra") //内容外的额外信息
   action     Json?    @map("action") //消息的操作类型，有些操作可以通过消息做响应的通知操作 我的预留 不需要可删
   createdAt  DateTime @default(now()) @map("created_at") //创建时间
   updatedAt  DateTime @updatedAt @map("updated_at") //更新时间
