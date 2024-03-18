@@ -43,7 +43,7 @@ export class FirebaseService {
    * @param token 设备注册token
    * @returns
    */
-  async sendDeviceMessage (token: string, message: Message): Promise<any> {
+  async sendDeviceMessage (token: string, message: Message): Promise<string> {
     message = {
       ...message,
       token

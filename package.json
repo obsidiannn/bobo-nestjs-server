@@ -29,6 +29,7 @@
     "@nestjs/platform-socket.io": "^10.3.3",
     "@nestjs/websockets": "^10.3.3",
     "@prisma/client": "5.8.0",
+    "aws-sdk": "^2.1578.0",
     "cache-manager": "^5.3.2",
     "cache-manager-redis-store": "^3.0.1",
     "cache-manager-redis-yet": "^4.1.2",

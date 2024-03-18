@@ -6,9 +6,10 @@ import { Request } from 'express'
 import { BaseArrayResp, BaseUIdReq } from '@/modules/common/dto/common.dto'
 import { BlockService } from '../../user/services/block.service'
 import { BlockInfoItem } from './friend.dto'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
 @Controller('auth')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class BlockController {
   constructor (
     private readonly userService: UserService,

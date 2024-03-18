@@ -52,11 +52,22 @@ export class GroupApplyJoinReq {
 }
 
 export class GroupIdsReq {
-  gids?: string[]
+  gids: string[]
 }
 
 export class GroupListIdResp {
   gids: string[]
+}
+
+export class GroupInfoItem {
+  id: string
+  name: string
+  avatar: string
+  memberLimit: number
+  total: number
+  pubKey: string
+  desc: string
+  isEnc: number
 }
 
 export class GroupInviteJoinItem {
@@ -138,7 +149,7 @@ export class GroupTransferReq {
   encKey: string
 }
 
-export class GroupInfoItem {
+export class GroupApplyItem {
   id: string
   gid: string
   uid: string

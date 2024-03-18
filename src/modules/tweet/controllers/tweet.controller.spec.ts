@@ -315,7 +315,7 @@ describe('TweetController', () => {
         .set(params.headers)
         .expect(200)
         .then(res => {
-          console.log(res.body)
+          console.log(JSON.stringify(res.body))
         })
     })
   })

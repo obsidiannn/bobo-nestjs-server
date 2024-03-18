@@ -9,9 +9,10 @@ import { Request } from 'express'
 import { BillDetailService } from '../services/bill-detail.service'
 import { BusinessTypeEnum } from '@/enums'
 import { UserService } from '@/modules/user/services/user.service'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
 @Controller('bill')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class BillController {
   constructor (
     private readonly walletService: WalletService,

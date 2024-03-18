@@ -1,16 +1,16 @@
 import { DynamicModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { CacheModule } from '@nestjs/cache-manager'
-import { RedisClientOptions } from 'redis'
 import { redisStore } from 'cache-manager-redis-yet'
 import { PrismaService } from './services/prisma.service'
 import { SystemService } from './services/system.service'
 import { SystemController } from './controllers/system.controller'
 import { SystemWalletService } from './services/system-wallet.service'
-import { TransactionInterceptor } from './interceptors/transaction.interceptor'
 import { SystemCategoryService } from './services/system-category.service'
 import { SystemCategoryController } from './controllers/system-category.controller'
 import { FirebaseService } from './services/firebase.service'
+import { HttpExceptionFilter } from './filter/global.exception.filter'
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { ResponseInterceptor } from './interceptors/response.interceptor'
 @Module({})
 export class CommonModule {
   static register (): DynamicModule {
@@ -49,11 +49,18 @@ export class CommonModule {
         PrismaService,
         SystemService,
         SystemCategoryService,
-        FirebaseService
+        FirebaseService,
+        ResponseInterceptor,
+        ConfigService,
+        {
+          provide: APP_FILTER,
+          useClass: HttpExceptionFilter
+        }
       ],
       exports: [
         PrismaService,
-        FirebaseService
+        FirebaseService,
+        ConfigService
       ]
     }
   }

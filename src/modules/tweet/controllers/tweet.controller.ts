@@ -9,8 +9,9 @@ import { CommentLevelEnum, TweetRetweetTypeEnum, TweetStatusEnum, WalletTypeEnum
 import { Request } from 'express'
 import commonUtil from '@/utils/common.util'
 import { SearchService } from '../services/search.service'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 @Controller('tweet')
 export class TweetController {
   constructor (

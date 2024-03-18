@@ -12,13 +12,14 @@ import {
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { FriendApplyService } from '../services/friend-apply.service'
 import { FriendApply, Prisma } from '@prisma/client'
-import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum, FriendStatusEnum } from '@/enums'
+import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum, FriendStatusEnum, GenderEnum } from '@/enums'
 import { ChatService } from '@/modules/message/services/chat.service'
 import { MessageService } from '@/modules/message/services/message.service'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 // import { AuthInterceptor } from '@/modules/auth/interceptors/auth.interceptor'
 
 @Controller('friends')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class FriendController {
   constructor (
     private readonly userService: UserService,
@@ -31,8 +32,10 @@ export class FriendController {
 
   // 获取用户关系
   @Post('relation-list')
-  async getRelationList (@Req() req: Request, @Body() param: BaseUIdArrayReq): Promise<BaseArrayResp<FriendRelationItem>> {
-    return { items: await this.friendService.getRelationList(req.uid, param) }
+  async getRelationList (@Req() req: Request, @Body() params: BaseUIdArrayReq): Promise<BaseArrayResp<FriendRelationItem>> {
+    console.log(params)
+
+    return { items: await this.friendService.getRelationList(req.uid, params) }
   }
 
   // 申请好友
@@ -67,7 +70,8 @@ export class FriendController {
     const data: FriendInviteApplyItem[] = result.items.map(d => {
       const dto: FriendInviteApplyItem = {
         id: d.id,
-        uid: d.uid,
+        uid: req.uid,
+        objUid: d.uid,
         remark: d.remark,
         status: d.status,
         createdAt: d.createdAt
@@ -84,6 +88,7 @@ export class FriendController {
     const dtos: FriendInviteApplyItem[] = data.items.map(d => {
       const dto: FriendInviteApplyItem = {
         id: d.id,
+        objUid: req.uid,
         uid: d.objUid,
         remark: d.remark,
         status: d.status,
@@ -150,12 +155,22 @@ export class FriendController {
     if (data.items.length <= 0) {
       return new BasePageResp(param, [], data.total)
     }
+    const uids = data.items.map(d => d.objUid)
+    const userHash = await this.userService.userHash(uids)
+    // 获取个人信息
     const chatHash = await this.chatService.getChatHashByUserIds(req.uid, data.items.map(i => i.objUid))
     const dtos = data.items.map(f => {
+      const user = userHash.get(f.objUid)
       const dto: FriendInfoItem = {
         uid: f.objUid,
-        alias: f.remark,
-        chatId: chatHash.get(f.objUid)
+        remark: f.remark,
+        remarkIndex: f.remarkIndex,
+        name: user?.name ?? '',
+        nameIndex: user?.nameIndex ?? '',
+        chatId: chatHash.get(f.objUid),
+        gender: user?.gender ?? GenderEnum.UNKNOWN,
+        pubKey: user?.pubKey ?? '',
+        avatar: user?.avatar ?? ''
       }
       return dto
     })

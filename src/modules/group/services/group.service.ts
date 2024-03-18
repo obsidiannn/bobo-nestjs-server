@@ -6,7 +6,7 @@ import {
   GroupMemberReq, GroupInviteJoinItem,
   GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq,
   GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq,
-  GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupInfoItem,
+  GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq,
   MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BasePageResp, CommonEnum, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'

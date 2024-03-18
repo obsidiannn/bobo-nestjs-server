@@ -20,9 +20,10 @@ import { ChatUserService } from '../services/chat-user.service'
 import { UserMessageService } from '../services/user-message.service'
 import { ChatService } from '../services/chat.service'
 import { GroupMemberRoleEnum, MessageStatusEnum } from '@/enums'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
 @Controller('messages')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class MessageController {
   constructor (
     private readonly messageService: MessageService,
@@ -91,7 +92,7 @@ export class MessageController {
         chatId: param.chatId,
         sequence
       },
-      take: 100,
+      take: param.limit ?? 20,
       orderBy: {
         sequence: 'asc'
       }

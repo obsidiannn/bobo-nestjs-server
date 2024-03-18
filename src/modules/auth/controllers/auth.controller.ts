@@ -6,10 +6,12 @@ import { Prisma, User } from '@prisma/client'
 import { AuthEnumIsRegister, UserGenderEnum } from '@/enums'
 import { Request } from 'express'
 import { BaseInterceptor } from '../interceptors/base.interceptor'
-import { UpdateAvatarParams, UpdateGenderParams, UpdateNameParams } from './auth.dto'
+import { UpdateAvatarParams, UpdateGenderParams, UpdateNameParams, UpdateSignParams } from './auth.dto'
 import { AuthInterceptor } from '../interceptors/auth.interceptor'
+import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
+import { UserDetailDto, UserInfoItem } from '@/modules/user/controllers/user.dto'
 @Controller('auth')
-@UseInterceptors(CryptInterceptor, BaseInterceptor)
+@UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class AuthController {
   constructor (private readonly userService: UserService) {}
   @Post('is-register')
@@ -54,7 +56,14 @@ export class AuthController {
   @UseInterceptors(AuthInterceptor)
   async updateName (@Req() req: Request, @Body() params: UpdateNameParams): Promise<User> {
     return await this.userService.update(req.uid, {
-      name: params.username
+      name: params.name
+    })
+  }
+
+  @Post('update-sign')
+  async updateSign (@Req() req: Request, @Body() params: UpdateSignParams): Promise<User> {
+    return await this.userService.update(req.uid, {
+      sign: params.sign
     })
   }
 
@@ -72,6 +81,23 @@ export class AuthController {
     return await this.userService.update(req.uid, {
       avatar: params.avatar
     })
+  }
+
+  @Post('user-info')
+  async currentUserInfo (@Req() req: Request): Promise<UserDetailDto> {
+    const user = await this.userService.findById(req.uid)
+    if (user === null) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST)
+    }
+    return {
+      id: user?.id,
+      avatar: user?.avatar,
+      name: user?.name,
+      nameIndex: user?.nameIdx,
+      gender: user?.gender,
+      pubKey: user?.pubKey,
+      sign: user.sign ?? ''
+    }
   }
 
   // @Post('destroy')

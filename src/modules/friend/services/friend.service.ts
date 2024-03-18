@@ -22,7 +22,7 @@ export class FriendService {
 
   // 获取用户关系
   async getRelationList (currentUserId: string, param: BaseUIdArrayReq): Promise<FriendRelationItem[]> {
-    const uIds = param.uids
+    const uIds: string[] = param.uids
 
     // 我的订阅 在uIds内，且是我的订阅的人
     const subscribe = await this.prisma.friend.findMany({
@@ -36,6 +36,7 @@ export class FriendService {
         objUid: true
       }
     })
+    console.log(uIds)
     // 订阅我的人 在uIds内，且订阅我的人
     const follower = await this.prisma.friend.findMany({
       where: {
@@ -48,12 +49,13 @@ export class FriendService {
         objUid: true
       }
     })
-
+    console.log(uIds)
     const subscribeSet = new Set(subscribe.map(i => i.objUid))
     const followerSet = new Set(follower.map(i => i.objUid))
+    console.log(uIds)
 
     // 是否是好友 0-互为陌生人 1-互为好友 2-我单方面关注 3-对方单方面关注
-    return uIds.map(id => {
+    return param.uids.map(id => {
       const subscribeFlag = subscribeSet.has(id)
       const followerFlag = followerSet.has(id)
       const item: FriendRelationItem = {
