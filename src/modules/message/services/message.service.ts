@@ -38,6 +38,7 @@ export class MessageService {
    * @param currentUserId
    */
   async sendRemitMessage (
+    id: string,
     currentUserId: string,
     objUid: string,
     type: MessageTypeEnum,
@@ -46,6 +47,7 @@ export class MessageService {
     action: MessageAction): Promise<any> {
     const chatId = await this.chatService.findChatIdByUserId(currentUserId, objUid)
     const messageInput: Prisma.MessageDetailCreateInput = {
+      id,
       chatId,
       content: '发起转账',
       type,
@@ -78,6 +80,7 @@ export class MessageService {
    * @param currentUserId
    */
   async sendRedPacketMessage (
+    id: string,
     currentUserId: string,
     sourceType: RedPacketSourceEnum,
     isEnc: number,
@@ -97,6 +100,7 @@ export class MessageService {
     }
 
     const messageInput: Prisma.MessageDetailCreateInput = {
+      id,
       chatId,
       content: '',
       type: MessageTypeEnum.RED_PACKET,

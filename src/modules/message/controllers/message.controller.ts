@@ -9,7 +9,8 @@ import {
   MessageListReq,
   MessageDetailListReq,
   MessageExtra,
-  MessageAction
+  MessageAction,
+  MessageSendResp
 } from '../controllers/message.dto'
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
@@ -35,9 +36,10 @@ export class MessageController {
 
   // 发送消息
   @Post('send')
-  async sendMessage (@Req() req: Request, @Body() param: MessageSendReq): Promise<any> {
+  async sendMessage (@Req() req: Request, @Body() param: MessageSendReq): Promise<MessageSendResp> {
     const currentUserId = req.uid
     const messageInput: Prisma.MessageDetailCreateInput = {
+      id: param.id,
       chatId: param.chatId,
       content: param.content,
       type: param.type,
@@ -48,6 +50,8 @@ export class MessageController {
       createdAt: new Date(),
       status: MessageStatusEnum.NORMAL
     }
+    console.log(messageInput)
+
     const sequence = await this.messageService.findMaxSequenceByChatId(param.chatId)
     messageInput.sequence = sequence
     const message = await this.messageService.create(messageInput)
@@ -73,6 +77,11 @@ export class MessageController {
     })
     await this.userMessageService.createMany(userMsgs)
     await this.chatUserService.userChatHide(currentUserId, { ids: [param.chatId] }, false)
+    return {
+      sequence,
+      id: param.id,
+      fromUid: req.uid
+    }
   }
 
   // 我的消息列表
@@ -94,7 +103,7 @@ export class MessageController {
       },
       take: param.limit ?? 20,
       orderBy: {
-        sequence: 'asc'
+        sequence: up ? 'asc' : 'desc'
       }
     })
     if (userMessages.length <= 0) {
@@ -104,6 +113,7 @@ export class MessageController {
     const data = userMessages.map(u => {
       const item: MessageListItem = {
         id: u.id,
+        msgId: u.msgId,
         isRead: u.isRead,
         sequence: u.sequence,
         createdAt: u.createdAt

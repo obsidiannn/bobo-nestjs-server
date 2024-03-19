@@ -88,7 +88,7 @@ export class WalletController {
     await this.walletService.addAmount(param.objUId, param.amount)
     await this.billService.createBill(param.objUId, BillTypeEnum.REMIT, param.amount, BillInOutEnum.INCOME, BillStatusEnum.SUCCESS, req.uid, param.objUId, transactionNo, param.remark)
     // 发起转账消息
-    await this.messageService.sendRemitMessage(req.uid, param.objUId, MessageTypeEnum.REMIT, CommonEnum.OFF,
+    await this.messageService.sendRemitMessage(param.id, req.uid, param.objUId, MessageTypeEnum.REMIT, CommonEnum.OFF,
       { remark: param.remark }, {}
     )
     return { billId: selfBill.id, transactionNo }

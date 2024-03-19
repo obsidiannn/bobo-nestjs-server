@@ -182,7 +182,7 @@ describe('friend module FriendController', () => {
     })
 
     it('同意', async () => {
-      const testUserPk = '0x79744a14423f39184b4fecbeb3103199e25385edb6f81938277160f1fba266fa'
+      const testUserPk = '0xe63046465622d3ce8537cfeb9daea155ccb7fbf0e4b948e2a6b2029256d98ff3'
       const wallet = buildWallet(testUserPk)
       const data = await prismaService.friendApply.findFirst({
         where: {
