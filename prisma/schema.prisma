@@ -220,6 +220,7 @@ model GroupApp {
 model Chat {
   id               String    @id @default(auto()) @map("_id") @db.ObjectId // 主键ID 及会话ID
   groupId          String?   @map("gid") // 群ID
+  userIds          String[]   @map("uids")
   creatorUId       String    @map("creator_uid") // 创建者 下面几个字段按道理是从群信息里面读取（个人意见）
   type             Int       @default(1) @map("type") // 1-单聊 2-群聊 3 官方会话
   status           Int       @map("status") //状态 1-正常 2-禁用

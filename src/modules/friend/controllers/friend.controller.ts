@@ -71,14 +71,14 @@ export class FriendController {
       const dto: FriendInviteApplyItem = {
         id: d.id,
         uid: req.uid,
-        objUid: d.uid,
+        objUid: d.objUid,
         remark: d.remark,
         status: d.status,
         createdAt: d.createdAt
       }
       return dto
     })
-    return new BasePageResp(param, data, result.total)
+    return result.transfer(data)
   }
 
   // 我的审批列表

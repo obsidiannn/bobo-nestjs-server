@@ -22,12 +22,15 @@ export class ChatListItem {
 export class ChatDetailItem {
   id: string
   creatorId: string
-  type: number
+  avatar: string
+  sourceId: string
+  chatAlias: string
+  type: ChatTypeEnum
   status: number
   isEnc: number
   lastReadSequence: number
   lastSequence: number
-  lastTime: Date | null
+  lastTime: number | null
   createdAt: Date
 }
 
@@ -35,4 +38,9 @@ export class ChatDetailItem {
 export class DropSimpleChatResult {
   chat: string[]
   chatUser: string[]
+}
+
+export class ChatTargetDto {
+  avatar: string
+  alias: string
 }

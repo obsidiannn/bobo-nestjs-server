@@ -22,4 +22,11 @@ describe('工具类的测试', () => {
     console.log(resultTotal)
     expect(resultTotal).toEqual(total)
   })
+
+  // describe('拼音test', () => {
+  //   console.log(commonUtil.getFirstLetterOfPinyin('你好'))
+  //   console.log(commonUtil.getFirstLetterOfPinyin('李文哲'))
+  //   console.log(commonUtil.getFirstLetterOfPinyin('陈世美'))
+  //   console.log(commonUtil.getFirstLetterOfPinyin('tom'))
+  // })
 })

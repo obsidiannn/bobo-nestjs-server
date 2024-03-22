@@ -48,6 +48,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         console.log('====================================')
         this.putClient(client, user.id)
       } else {
+        console.log('鉴权失败')
         client.disconnect()
       }
     } catch (e) {
