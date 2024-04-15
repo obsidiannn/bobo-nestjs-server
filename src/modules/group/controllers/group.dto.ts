@@ -1,14 +1,12 @@
 import { IsNotEmpty, ArrayNotEmpty } from 'class-validator'
 import { BaseIdReq, BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '../../common/dto/common.dto'
 
-export class GroupCreateReq {
-  @IsNotEmpty({ message: 'not empty' })
-    id: string
-
+export interface GroupCreateReq {
+  id: string
   pubKey: string
   avatar: string
   name: string
-  isEnc: CommonEnum
+  isEnc: number
   type: number // 群类型 1-普通 2-付费 3-私密 默认1
   banType: number // 禁言类型 1-不禁言 2-全员禁言 3-仅管理员可发言 4-仅群主可发言 默认1
   searchType: number
