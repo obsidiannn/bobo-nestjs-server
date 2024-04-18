@@ -38,13 +38,16 @@ describe('BillController', () => {
   })
 
   it('查看账单列表', async () => {
-    const req: BillRecordReq = {
+    const req = {
       page: 1,
       limit: 20,
-      inOut: BillInOutEnum.INCOME,
-      type: BillTypeEnum.FILL_IN
+      inOut: BillInOutEnum.OUTCOME,
+      types: [BillTypeEnum.DRAW_CASH]
     }
-    const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
+    const reqStr = JSON.stringify(req)
+    console.log('req body', reqStr)
+
+    const params = testUtil.buildAuthParams(customPk, systemPublicKey, reqStr)
     return await request(app.getHttpServer())
       .post('/bill/records')
       .send({

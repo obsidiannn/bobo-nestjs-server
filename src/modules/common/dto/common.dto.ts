@@ -7,9 +7,9 @@ export class BaseResp<T> {
 
 export class BasePageReq {
   // 限制 最多 100个
-  limit: number = 10
+  limit: number
   // 当前页
-  page: number = 1
+  page: number
 }
 
 export class BasePageResp<T> {

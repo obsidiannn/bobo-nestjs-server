@@ -20,6 +20,8 @@ export class BillService {
   }
 
   async queryPage (uid: string, param: BillRecordReq): Promise<BasePageResp<Bill>> {
+    console.log(param)
+
     const pageParam: Prisma.BillFindManyArgs = {
       where: { uid },
       skip: commonUtil.pageSkip(param),
@@ -28,19 +30,23 @@ export class BillService {
         createdAt: 'desc'
       }
     }
-    if (param.inOut && param.inOut !== null) {
+    if ((param.inOut ?? 0) > 0 && param.inOut !== null) {
       pageParam.where = {
         ...pageParam.where,
         inOut: param.inOut
       }
     }
-    if (param.type && param.type in BillTypeEnum) {
+    if ((param.types ?? []).length > 0) {
+      console.log('do types')
+
       pageParam.where = {
         ...pageParam.where,
-        type: param.type
+        type: { in: param.types }
       }
     }
-
+    console.log('====================================')
+    console.log(pageParam)
+    console.log('====================================')
     const countParam: Prisma.BillCountArgs = { where: { ...pageParam.where } }
     const data = await this.prisma.bill.findMany(pageParam)
     const total = await this.prisma.bill.count(countParam)

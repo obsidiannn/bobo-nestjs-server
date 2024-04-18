@@ -8,9 +8,9 @@ export class WalletDetailResp {
   type: number
 }
 
-export class BillRecordReq extends BasePageReq {
-  inOut?: BillInOutEnum
-  type?: BillTypeEnum
+export interface BillRecordReq extends BasePageReq {
+  inOut?: number
+  types?: number[]
 }
 
 export class BillRecordItem {

@@ -22,8 +22,10 @@ export class BillController {
   ) {}
 
   @Post('records')
-  async queryPage (@Req() req: Request, @Body() param: BillRecordReq): Promise<BasePageResp<BillRecordItem>> {
-    const result = await this.billService.queryPage(req.uid, param)
+  async queryPage (@Req() req: Request, @Body() params: BillRecordReq): Promise<BasePageResp<BillRecordItem>> {
+    console.log('---logs', params)
+
+    const result = await this.billService.queryPage(req.uid, params)
     const data = result.items.map(i => {
       return this.billService.transferDto(i)
     })
@@ -31,10 +33,10 @@ export class BillController {
   }
 
   @Post('detail')
-  async billDetail (@Req() req: Request, @Body() param: BaseIdReq): Promise<BillDetailResp> {
-    const bill = await this.billService.findById(param.id)
+  async billDetail (@Req() req: Request, @Body() params: BaseIdReq): Promise<BillDetailResp> {
+    const bill = await this.billService.findById(params.id)
     const billDto = this.billService.transferDto(bill)
-    const detail = await this.billDetailService.findOneByUIdAndBillId(req.uid, param.id)
+    const detail = await this.billDetailService.findOneByUIdAndBillId(req.uid, params.id)
     const result: BillDetailResp = {
       ...billDto,
       uid: detail.uid,
