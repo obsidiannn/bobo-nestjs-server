@@ -1,5 +1,5 @@
 import { BillInOutEnum, BillTypeEnum } from '@/enums'
-import { BasePageReq } from '@/modules/common/dto/common.dto'
+import { BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import { IsNotEmpty } from 'class-validator'
 
 export class WalletDetailResp {
@@ -11,6 +11,11 @@ export class WalletDetailResp {
 export interface BillRecordReq extends BasePageReq {
   inOut?: number
   types?: number[]
+}
+
+export class WalletRecordPageResp<T> extends BasePageResp<T> {
+  incomeTotal: number
+  outcomeTotal: number
 }
 
 export class BillRecordItem {

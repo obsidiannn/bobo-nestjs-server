@@ -4,7 +4,7 @@ import { Body, Controller, Post, Req, UseInterceptors } from '@nestjs/common'
 import { WalletService } from '../services/wallet.service'
 import { BillService } from '../services/bill.service'
 import { BaseIdReq, BasePageResp } from '@/modules/common/dto/common.dto'
-import { BillDetailResp, BillRecordItem, BillRecordReq } from './wallet.dto'
+import { BillDetailResp, BillRecordItem, BillRecordReq, WalletRecordPageResp } from './wallet.dto'
 import { Request } from 'express'
 import { BillDetailService } from '../services/bill-detail.service'
 import { BusinessTypeEnum } from '@/enums'
@@ -22,14 +22,10 @@ export class BillController {
   ) {}
 
   @Post('records')
-  async queryPage (@Req() req: Request, @Body() params: BillRecordReq): Promise<BasePageResp<BillRecordItem>> {
-    console.log('---logs', params)
-
+  async queryPage (@Req() req: Request, @Body() params: BillRecordReq):
+  Promise<WalletRecordPageResp<BillRecordItem>> {
     const result = await this.billService.queryPage(req.uid, params)
-    const data = result.items.map(i => {
-      return this.billService.transferDto(i)
-    })
-    return result.transfer(data)
+    return result
   }
 
   @Post('detail')
