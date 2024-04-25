@@ -1,6 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { redisStore } from 'cache-manager-redis-yet'
 import { PrismaService } from './services/prisma.service'
 import { SystemService } from './services/system.service'
 import { SystemController } from './controllers/system.controller'
@@ -9,7 +8,7 @@ import { SystemCategoryService } from './services/system-category.service'
 import { SystemCategoryController } from './controllers/system-category.controller'
 import { FirebaseService } from './services/firebase.service'
 import { HttpExceptionFilter } from './filter/global.exception.filter'
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { APP_FILTER } from '@nestjs/core'
 import { ResponseInterceptor } from './interceptors/response.interceptor'
 @Module({})
 export class CommonModule {
@@ -17,7 +16,7 @@ export class CommonModule {
     const configService = new ConfigService()
     const systemPrivateKey = configService.get<string>('SYSTEM_PRIVATE_KEY')
     if (systemPrivateKey === undefined) {
-      throw new Error('SYSTEM_PRI_KEY is not defined')
+      throw new Error('SYSTEM_PRIVATE_KEY is not defined')
     }
     SystemWalletService.init(systemPrivateKey)
     return {

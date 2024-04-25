@@ -19,7 +19,7 @@ export class FirebaseService {
   // 初始化 firebase
   private initFirebase (): void {
     const httpProxy = this.configService.get<string>(PropConstant.HTTP_PROXY)
-    const agent = httpProxy !== null ? new HttpsProxyAgent(httpProxy ?? '') : undefined
+    const agent = (httpProxy !== undefined && httpProxy !== '') ? new HttpsProxyAgent(httpProxy) : undefined
 
     const config: Credential = cert(path.join(process.cwd(), 'firebase-adminsdk.json'), agent)
     this.firebaseApp = admin.initializeApp({
