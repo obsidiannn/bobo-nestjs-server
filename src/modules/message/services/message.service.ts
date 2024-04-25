@@ -100,6 +100,7 @@ export class MessageService {
     action: MessageAction,
     redPacketId: string,
     objUid: string | null,
+    content: string,
     groupId?: string
   ): Promise<RedPacketInfo> {
     let chatId: string
@@ -114,7 +115,7 @@ export class MessageService {
     const messageInput: Prisma.MessageDetailCreateInput = {
       id,
       chatId,
-      content: '',
+      content,
       type: MessageTypeEnum.RED_PACKET,
       isEnc,
       fromUid: currentUserId,
@@ -143,7 +144,10 @@ export class MessageService {
       chatId,
       msgId: message.id,
       sequence,
-      packetId: redPacketId
+      packetId: redPacketId,
+      createdAt: message.createdAt,
+      fromUid: message.fromUid,
+      remark: extra.remark ?? ''
     }
     return result
   }
