@@ -6,7 +6,8 @@ import { BatchResponse, Message, MulticastMessage, getMessaging } from 'firebase
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { PropConstant } from '@/enums'
 import { Injectable } from '@nestjs/common'
-
+import * as path from 'path'
+import * as process from 'process'
 @Injectable()
 export class FirebaseService {
   constructor (private readonly configService: ConfigService) {
@@ -19,7 +20,8 @@ export class FirebaseService {
   private initFirebase (): void {
     const httpProxy = this.configService.get<string>(PropConstant.HTTP_PROXY)
     const agent = httpProxy !== null ? new HttpsProxyAgent(httpProxy ?? '') : undefined
-    const config: Credential = cert(this.configService.get<string>(PropConstant.FIREBASE_PATH) ?? '', agent)
+
+    const config: Credential = cert(path.join(process.cwd(), 'firebase-adminsdk.json'), agent)
     this.firebaseApp = admin.initializeApp({
       credential: config,
       httpAgent: agent

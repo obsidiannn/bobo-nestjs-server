@@ -34,3 +34,4 @@ test.ts
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+firebase-adminsdk.json

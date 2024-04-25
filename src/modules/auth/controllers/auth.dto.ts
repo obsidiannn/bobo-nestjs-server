@@ -9,7 +9,6 @@ export class UpdateNameParams {
 
 export class UpdateSignParams {
   @IsString({ message: '类型不一致' })
-  @IsNotEmpty({ message: 'valid error' })
     sign: string
 }
 
