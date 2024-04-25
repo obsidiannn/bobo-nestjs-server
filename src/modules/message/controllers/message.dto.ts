@@ -28,6 +28,7 @@ export interface MessageSendResp {
   id?: string
   fromUid: string
   content?: string
+  time: Date
 }
 
 export class MessageListReq {

@@ -36,7 +36,7 @@ export class FriendService {
         objUid: true
       }
     })
-    console.log(uIds)
+    console.log('subs=', subscribe.map(i => i.objUid))
     // 订阅我的人 在uIds内，且订阅我的人
     const follower = await this.prisma.friend.findMany({
       where: {
@@ -49,18 +49,20 @@ export class FriendService {
         objUid: true
       }
     })
-    console.log(uIds)
+    console.log('follows=', follower.map(i => i.uid))
     const subscribeSet = new Set(subscribe.map(i => i.objUid))
-    const followerSet = new Set(follower.map(i => i.objUid))
+    const followerSet = new Set(follower.map(i => i.uid))
     console.log(uIds)
-
+    const chatHash = await this.chatService.getChatHashByUserIds(currentUserId, param.uids)
     // 是否是好友 0-互为陌生人 1-互为好友 2-我单方面关注 3-对方单方面关注
     return param.uids.map(id => {
       const subscribeFlag = subscribeSet.has(id)
       const followerFlag = followerSet.has(id)
+      const chatId = chatHash.get(id)
       const item: FriendRelationItem = {
         uid: id,
-        isFriend: 0
+        isFriend: 0,
+        chatId
       }
       if (subscribeFlag && followerFlag) {
         // 互相关注

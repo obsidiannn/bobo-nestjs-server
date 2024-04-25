@@ -19,7 +19,7 @@ export class FriendApplyService {
   async getFriendInviteApplyPage (currentUserId: string, param: BasePageReq): Promise<BasePageResp<FriendApply>> {
     const data = await this.prisma.friendApply.findMany({
       where: {
-        objUid: currentUserId
+        uid: currentUserId
       },
       orderBy: {
         createdAt: 'desc'

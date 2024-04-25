@@ -1,6 +1,6 @@
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Injectable } from '@nestjs/common'
-import { BillRecordItem, BillRecordReq } from '../controllers/wallet.dto'
+import { BillRecordItem, BillRecordReq, WalletRecordPageResp } from '../controllers/wallet.dto'
 import { BasePageResp } from '@/modules/common/dto/common.dto'
 import { Bill, Prisma } from '@prisma/client'
 import commonUtil from '@/utils/common.util'
@@ -19,7 +19,9 @@ export class BillService {
     })
   }
 
-  async queryPage (uid: string, param: BillRecordReq): Promise<BasePageResp<Bill>> {
+  async queryPage (uid: string, param: BillRecordReq): Promise<WalletRecordPageResp<BillRecordItem>> {
+    console.log(param)
+
     const pageParam: Prisma.BillFindManyArgs = {
       where: { uid },
       skip: commonUtil.pageSkip(param),
@@ -28,23 +30,49 @@ export class BillService {
         createdAt: 'desc'
       }
     }
-    if (param.inOut && param.inOut !== null) {
+    if ((param.inOut ?? 0) > 0 && param.inOut !== null) {
       pageParam.where = {
         ...pageParam.where,
         inOut: param.inOut
       }
     }
-    if (param.type && param.type in BillTypeEnum) {
+    if ((param.types ?? []).length > 0) {
+      console.log('do types')
+
       pageParam.where = {
         ...pageParam.where,
-        type: param.type
+        type: { in: param.types }
       }
     }
-
+    console.log('====================================')
+    console.log(pageParam)
+    console.log('====================================')
     const countParam: Prisma.BillCountArgs = { where: { ...pageParam.where } }
+
+    const sumResult = await this.prisma.bill.groupBy({
+      by: ['uid', 'inOut'],
+      _sum: {
+        amount: true
+      }
+    })
+
     const data = await this.prisma.bill.findMany(pageParam)
+    const list = data.map(d => {
+      return this.transferDto(d)
+    })
+
     const total = await this.prisma.bill.count(countParam)
-    return new BasePageResp(param, data, total)
+    const result: WalletRecordPageResp<BillRecordItem> = new WalletRecordPageResp<BillRecordItem>(param, list, total)
+
+    sumResult.forEach(s => {
+      if (s.inOut === BillInOutEnum.INCOME) {
+        result.incomeTotal = s._sum.amount ?? 0
+      } else if (s.inOut === BillInOutEnum.OUTCOME) {
+        result.outcomeTotal = s._sum.amount ?? 0
+      }
+    })
+
+    return result
   }
 
   async count (param: Prisma.BillCountArgs): Promise<number> {

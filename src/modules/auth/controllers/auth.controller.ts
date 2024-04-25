@@ -10,6 +10,7 @@ import { UpdateAvatarParams, UpdateGenderParams, UpdateNameParams, UpdateSignPar
 import { AuthInterceptor } from '../interceptors/auth.interceptor'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 import { UserDetailDto, UserInfoItem } from '@/modules/user/controllers/user.dto'
+import commonUtil from '@/utils/common.util'
 @Controller('auth')
 @UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class AuthController {
@@ -56,7 +57,8 @@ export class AuthController {
   @UseInterceptors(AuthInterceptor)
   async updateName (@Req() req: Request, @Body() params: UpdateNameParams): Promise<User> {
     return await this.userService.update(req.uid, {
-      name: params.name
+      name: params.name,
+      nameIdx: commonUtil.getFirstLetterOfPinyin(params.name)
     })
   }
 

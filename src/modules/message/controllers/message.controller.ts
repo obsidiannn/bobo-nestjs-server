@@ -80,7 +80,8 @@ export class MessageController {
     return {
       sequence,
       id: param.id,
-      fromUid: req.uid
+      fromUid: req.uid,
+      time: message.createdAt
     }
   }
 

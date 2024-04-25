@@ -38,6 +38,8 @@ export class RedPacketController {
    */
   @Post('create')
   async create (@Req() req: Request, @Body() param: RedPacketCreateReq): Promise<RedPacketInfo> {
+    console.log(param)
+
     const currentUserId: string = req.uid
     const type: number = param.type
     let redPacket: RedPacket | undefined
@@ -85,7 +87,7 @@ export class RedPacketController {
     if (param.objUIds !== undefined && commonUtil.notEmpty(param.objUIds)) {
       objUid = param.objUIds[0]
     } else { objUid = null }
-    return await this.messageService.sendRedPacketMessage(param.id, req.uid, param.sourceType, 0, extra, {}, redPacket.id, objUid, param.groupId)
+    return await this.messageService.sendRedPacketMessage(param.id, req.uid, param.sourceType, 0, extra, {}, redPacket.id, objUid, param.content, param.groupId)
   }
 
   // 红包摘要

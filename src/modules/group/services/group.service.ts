@@ -63,6 +63,23 @@ export class GroupService {
    * @param param
    * @returns
    */
+  async getGroupMembersById (gid: string): Promise<GroupMembers[]> {
+    const data = await this.prisma.groupMembers.findMany({
+      where: {
+        groupId: gid
+      },
+      orderBy: {
+        createdAt: 'asc' // 按照创建时间降序排序，你可以根据需要修改排序字段和顺序
+      }
+    })
+    return data
+  }
+
+  /**
+   * 获取群成员
+   * @param param
+   * @returns
+   */
   async getGroupMembers (param: GroupMemberReq): Promise<BasePageResp<GroupMembers>> {
     const data = await this.prisma.groupMembers.findMany({
       where: {
@@ -74,6 +91,7 @@ export class GroupService {
         createdAt: 'asc' // 按照创建时间降序排序，你可以根据需要修改排序字段和顺序
       }
     })
+
     return new BasePageResp(
       param, data, await this.prisma.groupMembers.count({
         where: { groupId: { equals: param.id } }

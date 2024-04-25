@@ -1,5 +1,6 @@
 import { BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import { HttpException, HttpStatus } from '@nestjs/common'
+import { pinyin } from 'pinyin-pro'
 
 /**
  * 求数组差集
@@ -26,6 +27,10 @@ export const pageSkip = (param: BasePageReq): number => {
 
 export const notNull = (o: any): boolean => {
   return o !== null && o !== undefined
+}
+
+export const notBlank = (o: string): boolean => {
+  return o !== undefined && o !== null && o.length > 0
 }
 
 export const nullThrow = (o: any): any => {
@@ -88,6 +93,17 @@ export const hashValueDefault = <T> (k: any, hash: Map<any, any>, defaultValue: 
   return v
 }
 
+// 定义一个函数来获取汉字的拼音首字母
+const getFirstLetterOfPinyin = (word: string): string => {
+  if (notBlank(word)) {
+    const result = pinyin(word.charAt(0), { type: 'array', toneType: 'none' })
+      .map(i => i[0].toUpperCase())
+    return result[0]
+  } else {
+    return '#' // 如果没有拼音，返回空字符串
+  }
+}
+
 export default {
   arrayDifference,
   pageSkip,
@@ -97,5 +113,7 @@ export default {
   emptyThrow,
   randomSplit,
   randomIndex,
-  hashValueDefault
+  hashValueDefault,
+  notBlank,
+  getFirstLetterOfPinyin
 }

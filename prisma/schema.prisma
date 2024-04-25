@@ -190,7 +190,8 @@ model GroupMembers {
   inviteUid        String?   @map("invite_uid") //邀请者ID 没有则为主动加入
   role             Int       @default(3) @map("role") //角色 1-群主 2-管理员 3-普通用户 默认普通用户
   joinType         Int       @map("join_type") //加入方式 1-邀请 2-扫码 （枚举待定）
-  myAlias          String    @map("my_alias") //在群里的昵称
+  myAlias          String?    @map("my_alias") //在群里的昵称
+  aliasIdx         String?    @map("alias_idx") // 群昵称首字母
   status           Int       @default(1) @map("status") //用户状态 0 pending 1-正常
   banType          Int       @default(1) @map("ban_type") // 禁言类型  1-正常 2-禁言
   adminAt          DateTime? @map("admin_at") //成为管理员的时间
@@ -220,6 +221,7 @@ model GroupApp {
 model Chat {
   id               String    @id @default(auto()) @map("_id") @db.ObjectId // 主键ID 及会话ID
   groupId          String?   @map("gid") // 群ID
+  userIds          String[]   @map("uids")
   creatorUId       String    @map("creator_uid") // 创建者 下面几个字段按道理是从群信息里面读取（个人意见）
   type             Int       @default(1) @map("type") // 1-单聊 2-群聊 3 官方会话
   status           Int       @map("status") //状态 1-正常 2-禁用

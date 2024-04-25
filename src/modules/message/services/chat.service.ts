@@ -1,7 +1,7 @@
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { AddChatDto, ChatDetailItem, ChatListItem, DropSimpleChatResult } from '../controllers/chat.dto'
-import { Chat, Prisma } from '@prisma/client'
+import { AddChatDto, ChatDetailItem, ChatListItem, ChatTargetDto, DropSimpleChatResult } from '../controllers/chat.dto'
+import { Chat, ChatUser, Prisma } from '@prisma/client'
 import { CommonEnum } from '@/modules/common/dto/common.dto'
 import { strMd5 } from '@/utils/buffer.util'
 import commonUtil from '@/utils/common.util'
@@ -247,7 +247,8 @@ export class ChatService {
       isEnc: CommonEnum.ON,
       creatorUId: currentUserId,
       lastReadSequence: 0,
-      lastSequence: 0
+      lastSequence: 0,
+      userIds: [currentUserId, receiver]
     }
     const chat = await this.prisma.chat.create({ data: input })
 
@@ -291,28 +292,123 @@ export class ChatService {
 
   // 会话详情
   async chatDetail (currentUserId: string, chatIds: string[]): Promise<ChatDetailItem[]> {
-    const chats = await this.prisma.chat.findMany({
-      where: {
-        id: { in: chatIds }
-      }
-    })
     const chatArray = await this.prisma.chatUser.findMany({
       where: {
         chatId: { in: chatIds },
         uid: currentUserId
       },
       select: {
-        chatId: true
+        chatId: true,
+        maxReadSeq: true,
+        lastOnlineTime: true
       }
     })
-    const exitChatIds = chatArray.map(c => c.chatId)
-    return chats.filter(c => exitChatIds.includes(c.id)).map(c => {
+    const chatUserHash = new Map<string, number[]>()
+    chatArray.forEach(c => {
+      chatUserHash.set(c.chatId, [c.maxReadSeq, c.lastOnlineTime.getTime()])
+    })
+    const chats = await this.prisma.chat.findMany({
+      where: {
+        id: { in: chatArray.map(c => c.chatId) }
+      }
+    })
+
+    const groupChat: string[] = []
+    const userChat: string[] = []
+
+    chats.forEach(c => {
+      if (c.type === ChatTypeEnum.GROUP) {
+        groupChat.push(c.groupId ?? '')
+      } else if (c.type === ChatTypeEnum.NORMAL) {
+        userChat.push((c.userIds ?? []).find(id => id !== currentUserId) ?? '')
+      }
+    })
+    const groupHash = await this.chatGroupInfo(groupChat)
+    const userHash = await this.chatUserInfo(userChat, currentUserId)
+    return chats.map(c => {
       const item: ChatDetailItem = {
         ...c,
-        creatorId: c.creatorUId
+        avatar: '',
+        sourceId: '',
+        chatAlias: '',
+        creatorId: c.creatorUId,
+        lastReadSequence: (chatUserHash.get(c.id) ?? [0])[0],
+        lastTime: (chatUserHash.get(c.id) ?? [0, 0])[1]
+      }
+      if (c.type === ChatTypeEnum.GROUP) {
+        const sourceId = c.groupId ?? ''
+        item.sourceId = sourceId
+        const group = groupHash.get(sourceId) ?? null
+        if (group !== null) {
+          item.avatar = group.avatar
+          item.chatAlias = group.alias
+        }
+      } else if (c.type === ChatTypeEnum.NORMAL) {
+        const sourceId = (c.userIds ?? []).find(id => id !== currentUserId) ?? ''
+        item.sourceId = sourceId
+        const user = userHash.get(sourceId) ?? null
+        if (user !== null) {
+          item.avatar = user.avatar
+          item.chatAlias = user.alias
+        }
       }
       return item
     })
+  }
+
+  async chatGroupInfo (groupIds: string[]): Promise<Map<string, ChatTargetDto>> {
+    const data = await this.prisma.group.findMany({
+      where: { id: { in: groupIds } },
+      select: {
+        id: true,
+        avatar: true,
+        name: true
+      }
+    })
+    const result = new Map<string, ChatTargetDto>()
+    data.forEach(d => {
+      const item: ChatTargetDto = {
+        avatar: d.avatar,
+        alias: d.name
+      }
+      result.set(d.id, item)
+    })
+    return result
+  }
+
+  async chatUserInfo (userIds: string[], currentUserId: string): Promise<Map<string, ChatTargetDto>> {
+    const data = await this.prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: {
+        id: true,
+        avatar: true,
+        name: true
+      }
+    })
+    const friends = await this.prisma.friend.findMany({
+      where: {
+        objUid: { in: userIds },
+        uid: currentUserId
+      }
+    })
+    const result = new Map<string, ChatTargetDto>()
+    data.forEach(d => {
+      const item: ChatTargetDto = {
+        avatar: d.avatar,
+        alias: d.name
+      }
+      result.set(d.id, item)
+    })
+    // 替换为备注
+    friends.forEach(f => {
+      if (commonUtil.notBlank(f.remark ?? '')) {
+        const user = result.get(f.objUid) ?? null
+        if (user !== null) {
+          user.alias = f.remark ?? ''
+        }
+      }
+    })
+    return result
   }
 
   //   /**

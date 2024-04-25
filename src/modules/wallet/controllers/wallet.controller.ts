@@ -78,7 +78,7 @@ export class WalletController {
    */
   @Post('remit')
   async remit (@Req() req: Request, @Body() param: WalletRemitReq): Promise<WalletRemitResp> {
-    const enable = await this.walletService.checkAmount(param.objUId, param.amount)
+    const enable = await this.walletService.checkAmount(req.uid, param.amount)
     if (!enable) {
       throw new HttpException('余额不足', HttpStatus.BAD_REQUEST)
     }
@@ -88,9 +88,9 @@ export class WalletController {
     await this.walletService.addAmount(param.objUId, param.amount)
     await this.billService.createBill(param.objUId, BillTypeEnum.REMIT, param.amount, BillInOutEnum.INCOME, BillStatusEnum.SUCCESS, req.uid, param.objUId, transactionNo, param.remark)
     // 发起转账消息
-    await this.messageService.sendRemitMessage(param.id, req.uid, param.objUId, MessageTypeEnum.REMIT, CommonEnum.OFF,
-      { remark: param.remark }, {}
+    const msgResp = await this.messageService.sendRemitMessage(param.id, req.uid, param.objUId, MessageTypeEnum.REMIT, CommonEnum.OFF,
+      { remark: param.remark }, {}, param.content, param.chatId
     )
-    return { billId: selfBill.id, transactionNo }
+    return { billId: selfBill.id, transactionNo, ...msgResp }
   }
 }

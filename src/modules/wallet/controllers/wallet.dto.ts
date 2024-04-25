@@ -1,5 +1,5 @@
 import { BillInOutEnum, BillTypeEnum } from '@/enums'
-import { BasePageReq } from '@/modules/common/dto/common.dto'
+import { BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import { IsNotEmpty } from 'class-validator'
 
 export class WalletDetailResp {
@@ -8,9 +8,14 @@ export class WalletDetailResp {
   type: number
 }
 
-export class BillRecordReq extends BasePageReq {
-  inOut?: BillInOutEnum
-  type?: BillTypeEnum
+export interface BillRecordReq extends BasePageReq {
+  inOut?: number
+  types?: number[]
+}
+
+export class WalletRecordPageResp<T> extends BasePageResp<T> {
+  incomeTotal: number
+  outcomeTotal: number
 }
 
 export class BillRecordItem {
@@ -39,16 +44,24 @@ export class WalletCardFillReq {
   cardNo: string
 }
 
-export class WalletRemitReq {
+export interface WalletRemitReq {
   id: string
-  @IsNotEmpty({ message: 'error' })
-    objUId: string
-
+  objUId: string
   amount: number
   remark?: string
+  chatId: string
+  content: string
+
 }
 
 export class WalletRemitResp {
   billId: string
   transactionNo: string
+  sequence: number
+  id?: string
+  fromUid: string
+  remark: string
+  amount: number
+  time: Date
+  content?: string
 }

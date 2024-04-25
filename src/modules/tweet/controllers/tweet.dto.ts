@@ -2,7 +2,7 @@ import { BusinessTypeEnum, CommentLevelEnum, MediaTypeEnum, TweetRetweetTypeEnum
 import { AppTagItem } from '@/modules/apps/controllers/apps.dto'
 import { BasePageReq } from '@/modules/common/dto/common.dto'
 
-export class SearchReq extends BasePageReq {
+export interface SearchReq extends BasePageReq {
   keyword: string
 }
 
@@ -15,7 +15,7 @@ export class SearchResultItem {
   tags: AppTagItem[]
 };
 
-export class TweetPageReq extends BasePageReq {
+export interface TweetPageReq extends BasePageReq {
   keyword?: string
 }
 
@@ -60,7 +60,7 @@ export class TweetCreateReq {
   commentLevel: CommentLevelEnum
 };
 
-export class TweetCommentPageReq extends BasePageReq {
+export interface TweetCommentPageReq extends BasePageReq {
   tweetId: string
 }
 

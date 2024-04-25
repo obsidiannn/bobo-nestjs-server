@@ -2,7 +2,9 @@ import { RedPacketSourceEnum, RedPacketTypeEnum } from '@/enums'
 import { IsArray, IsInt, IsNotEmpty, IsString, isInt } from 'class-validator'
 
 export class RedPacketCreateReq {
-  id: string
+  @IsString()
+    id: string
+
   @IsNotEmpty({ message: 'req error' })
     type: RedPacketTypeEnum
 
@@ -12,7 +14,9 @@ export class RedPacketCreateReq {
   @IsInt()
     packetCount: number
 
-  remark?: string
+  @IsString()
+    remark?: string
+
   @IsInt()
     singleAmount?: number
 
@@ -24,6 +28,9 @@ export class RedPacketCreateReq {
 
   @IsString()
     groupId?: string
+
+  @IsString()
+    content: string
 };
 
 export class RedPacketInfo {
@@ -31,8 +38,9 @@ export class RedPacketInfo {
   msgId: string
   sequence: number
   packetId: string
-  // enable: boolean
-  // expiredFlag: boolean
+  createdAt: Date
+  fromUid: string
+  remark: string
 };
 
 export class RedPacketRecordTempDto {
