@@ -44,16 +44,24 @@ export class WalletCardFillReq {
   cardNo: string
 }
 
-export class WalletRemitReq {
+export interface WalletRemitReq {
   id: string
-  @IsNotEmpty({ message: 'error' })
-    objUId: string
-
+  objUId: string
   amount: number
   remark?: string
+  chatId: string
+  content: string
+
 }
 
 export class WalletRemitResp {
   billId: string
   transactionNo: string
+  sequence: number
+  id?: string
+  fromUid: string
+  remark: string
+  amount: number
+  time: Date
+  content?: string
 }

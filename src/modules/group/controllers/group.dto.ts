@@ -24,7 +24,9 @@ export class GroupMemberItem {
   uid: string
   gid: string
   role: number
-  myAlias: string
+  myAlias: string | null
+  aliasIdx: string | null
+  // nameIdx: string
   adminAt: Date | null
   createdAt: Date | null
 };

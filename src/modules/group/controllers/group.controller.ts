@@ -91,12 +91,25 @@ export class GroupController {
     })
   }
 
+  @Post('members-list')
+  async getMemberList (@Req() req: Request, @Body() param: BaseIdReq): Promise<BaseArrayResp<GroupMemberItem>> {
+    const result = await this.groupService.getGroupMembersById(param.id)
+    const data = result.map(i => {
+      const dto: GroupMemberItem = { ...i, gid: i.groupId, aliasIdx: i.aliasIdx }
+      return dto
+    })
+    return { items: data }
+  }
+
   // 获取群聊用户分页
   @Post('members')
   async getMembers (@Req() req: Request, @Body() param: GroupMemberReq): Promise<BasePageResp<GroupMemberItem>> {
     const result = await this.groupService.getGroupMembers(param)
+    // const uids = result.items.map(g => g.uid)
+    // const userHash = await this.userService.userHash(uids)
+
     const data = result.items.map(i => {
-      const dto: GroupMemberItem = { ...i, gid: i.groupId }
+      const dto: GroupMemberItem = { ...i, gid: i.groupId, aliasIdx: i.aliasIdx }
       return dto
     })
     return result.transfer(data)

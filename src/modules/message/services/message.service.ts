@@ -9,7 +9,8 @@ import {
   MessageAction,
   MessageDeleteByMsgIdReq,
   MessageListReq,
-  MessageDetailListReq
+  MessageDetailListReq,
+  MessageSendResp
 } from '../controllers/message.dto'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { UserService } from '@/modules/user/services/user.service'
@@ -44,12 +45,15 @@ export class MessageService {
     type: MessageTypeEnum,
     isEnc: number,
     extra: MessageExtra,
-    action: MessageAction): Promise<any> {
-    const chatId = await this.chatService.findChatIdByUserId(currentUserId, objUid)
+    action: MessageAction,
+    content: string,
+    chatId: string
+  ): Promise<any> {
+    // const chatId = await this.chatService.findChatIdByUserId(currentUserId, objUid)
     const messageInput: Prisma.MessageDetailCreateInput = {
       id,
       chatId,
-      content: '发起转账',
+      content,
       type,
       isEnc,
       fromUid: currentUserId,
@@ -60,8 +64,9 @@ export class MessageService {
     const sequence = await this.findMaxSequenceByChatId(chatId)
     messageInput.sequence = sequence
     const message = await this.create(messageInput)
+    const uids = await this.chatUserService.findUidByChatId(chatId)
     // sequence 这里应该是 消息最大序号 + 1
-    const userMsgs = [currentUserId, objUid].map(u => {
+    const userMsgs = uids.map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
         uid: u,
         msgId: message.id,
@@ -73,6 +78,13 @@ export class MessageService {
     })
     await this.userMessageService.createMany(userMsgs)
     await this.chatUserService.userChatHide(currentUserId, { ids: [chatId] }, false)
+    const result: MessageSendResp = {
+      id,
+      sequence,
+      fromUid: currentUserId,
+      time: message.createdAt
+    }
+    return result
   }
 
   /**

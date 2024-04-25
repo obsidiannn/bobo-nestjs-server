@@ -19,6 +19,9 @@ export class ChatListItem {
   lastOnlineTime: Date
 }
 
+export class ChatItem {
+
+}
 export class ChatDetailItem {
   id: string
   creatorId: string
