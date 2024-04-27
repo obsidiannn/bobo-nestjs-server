@@ -1,5 +1,5 @@
 import { IsNotEmpty, ArrayMaxSize, IsString } from 'class-validator'
-import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '../../common/dto/common.dto'
+import { BasePageReq } from '../../common/dto/common.dto'
 
 export class FriendRelationItem {
   uid: string

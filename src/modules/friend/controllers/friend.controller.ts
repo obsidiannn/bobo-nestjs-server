@@ -70,7 +70,7 @@ export class FriendController {
     const data: FriendInviteApplyItem[] = result.items.map(d => {
       const dto: FriendInviteApplyItem = {
         id: d.id,
-        uid: req.uid,
+        uid: d.uid,
         objUid: d.objUid,
         remark: d.remark,
         status: d.status,
