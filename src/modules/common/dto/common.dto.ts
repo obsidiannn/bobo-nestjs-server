@@ -1,3 +1,4 @@
+import { IsString } from 'class-validator'
 
 export class BaseResp<T> {
   code: number
@@ -40,7 +41,8 @@ export interface BaseArrayResp<T> {
 }
 
 export class BaseIdReq {
-  id: string
+  @IsString()
+    id: string
 }
 
 export interface BaseUIdReq {

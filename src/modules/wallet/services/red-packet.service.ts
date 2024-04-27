@@ -3,7 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { Prisma, RedPacket, RedPacketRecord } from '@prisma/client'
 import { RedPacketCreateReq, RedPacketRecordTempDto } from '../controllers/red-packet.dto'
 import commonUtil from '@/utils/common.util'
-import { CommonSecondEnum, RedPacketSourceEnum, RedPacketStatusEnum, RedPacketTypeEnum } from '@/enums'
+import { CommonSecondEnum, RedPacketResultEnum, RedPacketSourceEnum, RedPacketStatusEnum, RedPacketTypeEnum } from '@/enums'
 import { CommonEnum } from '@/modules/common/dto/common.dto'
 
 @Injectable()
@@ -192,7 +192,28 @@ export class RedPacketService {
     return await this.prisma.redPacket.findFirst({ where: { id: packetId } })
   }
 
-  async findRecordIdById (packetId: string): Promise<RedPacketRecordTempDto[]> {
+  async checkMineFlag (packetId: string, uid: string): Promise<number> {
+    const data = await this.prisma.redPacketRecord.count({
+      where: {
+        packetId,
+        uid,
+        status: RedPacketStatusEnum.USED
+      }
+    })
+    return data
+  }
+
+  async checkEnable (packetId: string): Promise<number> {
+    const data = await this.prisma.redPacketRecord.count({
+      where: {
+        packetId,
+        status: RedPacketStatusEnum.UN_USED
+      }
+    })
+    return data
+  }
+
+  async findRecordIdById (packetId: string, status: RedPacketStatusEnum): Promise<RedPacketRecordTempDto[]> {
     const data = await this.prisma.redPacketRecord.findMany({
       where: {
         packetId
@@ -224,13 +245,15 @@ export class RedPacketService {
    * @param uid
    * @param packetId
    */
-  async recordCreate (uid: string, packetId: string): Promise<RedPacketRecord> {
+  async recordCreate (uid: string, packetId: string): Promise<RedPacketRecord | RedPacketResultEnum> {
     const packet = await this.findById(packetId)
     if (packet === null) {
-      throw new HttpException('已失效', HttpStatus.BAD_REQUEST)
+      // throw new HttpException('已失效', HttpStatus.BAD_REQUEST)
+      return RedPacketResultEnum.DISABLE
     }
     if (this.checkExpired(packet)) {
-      throw new HttpException('已过期', HttpStatus.BAD_REQUEST)
+      // throw new HttpException('已过期', HttpStatus.BAD_REQUEST)
+      return RedPacketResultEnum.EXPIRED
     }
     // 检查是否已领取
     const record = await this.prisma.redPacketRecord.findFirst({
@@ -242,21 +265,23 @@ export class RedPacketService {
     if (record !== null) {
       if (packet.type === RedPacketTypeEnum.TARGETED) {
         if (record.status !== RedPacketStatusEnum.UN_USED) {
-          throw new HttpException('已领取', HttpStatus.BAD_REQUEST)
+          return RedPacketResultEnum.TOUCHED
         }
       } else {
-        throw new HttpException('已领取', HttpStatus.BAD_REQUEST)
+        // throw new HttpException('已领取', HttpStatus.BAD_REQUEST)
+        return RedPacketResultEnum.TOUCHED
       }
     }
     if (packet.type === RedPacketTypeEnum.NORMAL || packet.type === RedPacketTypeEnum.RANDOM) {
       const enableRecords = await this.findRecordByIdAndStatus(packetId, RedPacketStatusEnum.UN_USED)
       if (enableRecords.length <= 0) {
-        throw new HttpException('已被领光', HttpStatus.BAD_REQUEST)
+        // throw new HttpException('已被领光', HttpStatus.BAD_REQUEST)
+        return RedPacketResultEnum.USEDUP
       }
       const data = enableRecords[commonUtil.randomIndex(enableRecords.length)]
       const locked = await this.recordLockOn(data.id)
       if (!locked) {
-        throw new HttpException('已被领光', HttpStatus.BAD_REQUEST)
+        return RedPacketResultEnum.USEDUP
       }
       try {
         return await this.prisma.redPacketRecord.update({
@@ -272,11 +297,11 @@ export class RedPacketService {
       }
     } else if (packet.type === RedPacketTypeEnum.TARGETED) {
       if (record === null) {
-        throw new HttpException('error', HttpStatus.BAD_REQUEST)
+        return RedPacketResultEnum.DISABLE
       }
       const locked = await this.recordLockOn(record.id)
       if (!locked) {
-        throw new HttpException('已被领光', HttpStatus.BAD_REQUEST)
+        return RedPacketResultEnum.USEDUP
       }
       try {
         return await this.prisma.redPacketRecord.update({
@@ -291,7 +316,7 @@ export class RedPacketService {
         await this.recordLockOff(record.id)
       }
     }
-    throw new HttpException('不支持的红包类型', HttpStatus.BAD_REQUEST)
+    return RedPacketResultEnum.DISABLE
   }
 
   async recordUpdate (record: RedPacketRecord, billId: string): Promise<void> {

@@ -24,6 +24,8 @@ export class ChatService {
    */
   async findChatIdByUserId (uid: string, objUid: string): Promise<string> {
     const userRef = this.userRefGenerate([uid, objUid])
+    console.log('userRef=', userRef)
+
     const result = await this.prisma.chatUser.findFirstOrThrow({
       where: {
         uid,

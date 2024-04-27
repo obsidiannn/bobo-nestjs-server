@@ -1,9 +1,9 @@
 import { Body, Controller, HttpException, HttpStatus, Post, Req, UseInterceptors } from '@nestjs/common'
-import { RedPacketCreateReq, RedPacketDetail, RedPacketInfo, RedPacketRecordItem, RedPacketResp } from './red-packet.dto'
+import { RedPacketCreateReq, RedPacketDetail, RedPacketInfo, RedPacketRecordItem, RedPacketResp, RedPacketTouchResult } from './red-packet.dto'
 import { Request } from 'express'
 import { RedPacketService } from '../services/red-packet.service'
 import { BaseIdReq } from '@/modules/common/dto/common.dto'
-import { BillInOutEnum, BillStatusEnum, BillTypeEnum, RedPacketSourceEnum, RedPacketStatusEnum, RedPacketTypeEnum } from '@/enums'
+import { BillInOutEnum, BillStatusEnum, BillTypeEnum, RedPacketResultEnum, RedPacketSourceEnum, RedPacketStatusEnum, RedPacketTypeEnum } from '@/enums'
 import { RedPacket } from '@prisma/client'
 import { WalletService } from '../services/wallet.service'
 import { BillService } from '../services/bill.service'
@@ -38,6 +38,8 @@ export class RedPacketController {
    */
   @Post('create')
   async create (@Req() req: Request, @Body() param: RedPacketCreateReq): Promise<RedPacketInfo> {
+    console.log('redpacket')
+
     console.log(param)
 
     const currentUserId: string = req.uid
@@ -58,6 +60,8 @@ export class RedPacketController {
       }
     }
     if (!(redPacket !== null && redPacket !== undefined)) {
+      console.log('errrrr')
+
       throw new HttpException('不支持的类型', HttpStatus.BAD_REQUEST)
     }
     const totalAmount = redPacket.totalAmount
@@ -98,11 +102,9 @@ export class RedPacketController {
       throw new HttpException('已失效', HttpStatus.INTERNAL_SERVER_ERROR)
     }
     const expiredFlag = this.redPacketService.checkExpired(redPacket)
-    const records = await this.redPacketService.findRecordIdById(param.id)
-    const enable = records.filter(r => {
-      return r.status === RedPacketStatusEnum.UN_USED
-    }).length > 0
-    return { packetId: redPacket.id, expiredFlag, enable, createdAt: redPacket.createdAt, expireSecond: redPacket.expireSecond }
+    const touchFlag = await this.redPacketService.checkMineFlag(param.id, req.uid) > 0
+    const enable = await this.redPacketService.checkEnable(param.id) > 0
+    return { packetId: redPacket.id, expiredFlag, enable, createdAt: redPacket.createdAt, expireSecond: redPacket.expireSecond, touchFlag }
   }
 
   // 红包详情
@@ -171,11 +173,15 @@ export class RedPacketController {
    * @param req
    * @param param
    */
-  @Post('apply')
-  async apply (@Req() req: Request, @Body() param: BaseIdReq): Promise<void> {
+  @Post('touch')
+  async touch (@Req() req: Request, @Body() param: BaseIdReq): Promise<RedPacketTouchResult> {
     const record = await this.redPacketService.recordCreate(req.uid, param.id)
+    if (typeof (record) === 'number') {
+      return { result: record, packetId: param.id }
+    }
     await this.walletService.addAmount(req.uid, record.amount)
     const bill = await this.billService.createBill(req.uid, BillTypeEnum.RED_PACKET, record.amount, BillInOutEnum.INCOME, BillStatusEnum.SUCCESS, req.uid, req.uid, '', '')
     await this.redPacketService.recordUpdate(record, bill.id)
+    return { result: RedPacketResultEnum.TOUCHED, packetId: param.id }
   }
 }

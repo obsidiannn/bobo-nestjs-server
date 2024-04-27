@@ -1,4 +1,4 @@
-import { RedPacketSourceEnum, RedPacketTypeEnum } from '@/enums'
+import { RedPacketResultEnum, RedPacketSourceEnum, RedPacketTypeEnum } from '@/enums'
 import { IsArray, IsInt, IsNotEmpty, IsString, isInt } from 'class-validator'
 
 export class RedPacketCreateReq {
@@ -52,6 +52,7 @@ export class RedPacketRecordTempDto {
 export class RedPacketResp {
   packetId: string
   enable: boolean
+  touchFlag: boolean
   expiredFlag: boolean
   createdAt: Date
   expireSecond: number
@@ -85,4 +86,9 @@ export interface RedPacketDetail {
   expiredFlag: boolean
   remark: string
   records: RedPacketRecordItem[]
+}
+
+export interface RedPacketTouchResult {
+  result: RedPacketResultEnum
+  packetId: string
 }
