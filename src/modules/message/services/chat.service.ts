@@ -533,6 +533,23 @@ export class ChatService {
     return chat
   }
 
+  // 变更chat max sequence
+  async increaseSequence (chatId: string, sequence: number): Promise<void> {
+    await this.prisma.chat.update({
+      where: {
+        id: chatId
+      },
+      data: {
+        lastSequence: sequence,
+        updatedAt: new Date()
+      },
+      select: {
+        id: true,
+        lastSequence: true
+      }
+    })
+  }
+
   // 单聊会话索引生成
   userRefGenerate (userIds: string[]): string {
     userIds.sort()

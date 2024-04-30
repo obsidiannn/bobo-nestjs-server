@@ -50,11 +50,11 @@ export class MessageController {
       createdAt: new Date(),
       status: MessageStatusEnum.NORMAL
     }
-    console.log(messageInput)
-
     const sequence = await this.messageService.findMaxSequenceByChatId(param.chatId)
     messageInput.sequence = sequence
     const message = await this.messageService.create(messageInput)
+    // chat 增加 sequence
+    await this.chatService.increaseSequence(param.chatId, sequence)
     // sequence 这里应该是 消息最大序号 + 1
     const receiveIds = new Set<string>()
     // 如果指定recieveId 则
@@ -102,15 +102,16 @@ export class MessageController {
         chatId: param.chatId,
         sequence
       },
+      skip: 0,
       take: param.limit ?? 20,
       orderBy: {
-        sequence: up ? 'asc' : 'desc'
+        sequence: up ? 'desc' : 'asc'
       }
     })
     if (userMessages.length <= 0) {
       return { items: [] }
     }
-
+    const maxSequence = up ? userMessages[userMessages.length - 1].sequence : userMessages[0].sequence
     const data = userMessages.map(u => {
       const item: MessageListItem = {
         id: u.id,
@@ -121,7 +122,8 @@ export class MessageController {
       }
       return item
     })
-
+    // 更新sequence
+    await this.chatUserService.refreshSequence(req.uid, param.chatId, maxSequence)
     return { items: data }
   }
 
@@ -155,9 +157,7 @@ export class MessageController {
       })
 
       // 已读 + 更新最大read sequence
-      const max = userMessages[userMessages.length - 1]
       await this.userMessageService.readMany(userMessages.map(u => u.id))
-      await this.chatUserService.refreshSequence(currentUserId, param.chatId, max.sequence)
       const data = userMessages.map(u => {
         const msg: MessageDetail = messageHash.get(u.msgId)
         if (msg === null) {
