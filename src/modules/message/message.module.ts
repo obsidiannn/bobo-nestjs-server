@@ -8,9 +8,10 @@ import { ChatService } from './services/chat.service'
 import { AuthModule } from '../auth/auth.module'
 import { ChatUserService } from './services/chat-user.service'
 import { UserMessageService } from './services/user-message.service'
+import { SocketModule } from '../socket/socket.module'
 
 @Module({
-  imports: [UserModule, AuthModule],
+  imports: [UserModule, AuthModule, SocketModule],
   controllers: [
     MessageController,
     ChatController

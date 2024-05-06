@@ -1,6 +1,11 @@
 import { BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import { HttpException, HttpStatus } from '@nestjs/common'
 import { pinyin } from 'pinyin-pro'
+import * as Crypto from 'crypto'
+
+const generateId = (): string => {
+  return Buffer.from(Crypto.randomBytes(12)).toString('hex')
+}
 
 /**
  * 求数组差集
@@ -115,5 +120,6 @@ export default {
   randomIndex,
   hashValueDefault,
   notBlank,
-  getFirstLetterOfPinyin
+  getFirstLetterOfPinyin,
+  generateId
 }

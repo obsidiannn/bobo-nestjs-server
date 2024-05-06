@@ -22,6 +22,8 @@ import { UserMessageService } from '../services/user-message.service'
 import { ChatService } from '../services/chat.service'
 import { GroupMemberRoleEnum, MessageStatusEnum } from '@/enums'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
+import { SocketGateway } from '@/modules/socket/socket.gateway'
+import { SocketMessageEvent } from '@/modules/socket/socket.dto'
 
 @Controller('messages')
 @UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
@@ -30,7 +32,8 @@ export class MessageController {
     private readonly messageService: MessageService,
     private readonly chatUserService: ChatUserService,
     private readonly chatService: ChatService,
-    private readonly userMessageService: UserMessageService
+    private readonly userMessageService: UserMessageService,
+    private readonly socketGateway: SocketGateway
 
   ) { }
 
@@ -65,6 +68,7 @@ export class MessageController {
       param.receiveIds.forEach(u => { receiveIds.add(u) })
     }
     receiveIds.add(currentUserId)
+
     const userMsgs = Array.from(receiveIds).map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
         uid: u,
@@ -77,6 +81,15 @@ export class MessageController {
     })
     await this.userMessageService.createMany(userMsgs)
     await this.chatUserService.userChatHide(currentUserId, { ids: [param.chatId] }, false)
+
+    const socketData: SocketMessageEvent = {
+      chatId: message.chatId,
+      msgId: message.id,
+      sequence,
+      date: message.createdAt,
+      type: 1
+    }
+    this.socketGateway.sendBatchMessage(Array.from(receiveIds), socketData)
     return {
       sequence,
       id: param.id,
@@ -124,7 +137,7 @@ export class MessageController {
     })
     // 更新sequence
     await this.chatUserService.refreshSequence(req.uid, param.chatId, maxSequence)
-    return { items: data }
+    return { items: data.sort((a, b) => { return a.sequence - b.sequence }) }
   }
 
   // 消息详情列表

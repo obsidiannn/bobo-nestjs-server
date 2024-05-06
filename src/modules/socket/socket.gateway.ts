@@ -5,6 +5,7 @@ import { AuthService } from '../auth/services/auth.service'
 import { hashMessage } from 'ethers'
 import { UserInfoItem } from '../user/controllers/user.dto'
 import { ParsedUrlQuery } from 'querystring'
+import { ISocketEvent } from './socket.dto'
 const Topic: string = 'events'
 @WebSocketGateway({
   transports: ['websocket', 'polling', Topic],
@@ -44,7 +45,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (user !== null) {
         console.log('====================================')
         console.log('headers', client.handshake.headers)
-        console.log('连接成功： clientID: [' + client.id + '] userId: [' + user.id + ']')
+        console.log('[socket]连接成功： clientID: [' + client.id + '] userId: [' + user.id + ']')
         console.log('====================================')
         this.putClient(client, user.id)
       } else {
@@ -59,7 +60,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // 离线调用
   handleDisconnect (client: Socket): any {
     console.log('====================================')
-    console.log(client.id + '  离线')
+    console.log(client.id + ' [socket] 离线')
     console.log('====================================')
     this.clearClient(client)
     client.disconnect()
@@ -68,13 +69,24 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * 服务端主动发送消息给client
    */
-  sendMessage (uid: string, data: any): void {
+  sendMessage (uid: string, data: ISocketEvent): void {
+    console.log('[socket] send begin ', uid, data)
+    console.log(this.userClientHash)
+
     const clients = this.getClientByUid(uid)
     if (clients.length > 0) {
       clients.forEach(c => {
-        c.emit('events', data)
+        console.log('[socket] send ', data)
+
+        c.emit('message', data)
       })
     }
+  }
+
+  sendBatchMessage (uids: string[], data: ISocketEvent): void {
+    uids.forEach(u => {
+      this.sendMessage(u, data)
+    })
   }
 
   // 鉴权
@@ -118,8 +130,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private getClientByUid (uid: string): Socket[] {
-    const clientIds = this.userClientHash.get(uid) ?? null
-    if (clientIds !== null) {
+    const clientIds = this.userClientHash.get(uid)
+    if (clientIds !== undefined && clientIds !== null) {
       const result: Socket[] = []
       Array.from(clientIds.values()).forEach(clientId => {
         const client = this.connectedClients.get(clientId) ?? null
