@@ -318,6 +318,20 @@ export class ChatService {
     const groupChat: string[] = []
     const userChat: string[] = []
 
+    const firstSequences = await this.prisma.userMessage.groupBy({
+      where: {
+        chatId: { in: chatIds },
+        uid: currentUserId
+      },
+      by: ['chatId'],
+      _min: {
+        sequence: true
+      }
+    })
+    const firstSequenceHash = new Map<string, number>()
+    firstSequences.forEach(f => {
+      firstSequenceHash.set(f.chatId, f._min.sequence ?? 1)
+    })
     chats.forEach(c => {
       if (c.type === ChatTypeEnum.GROUP) {
         groupChat.push(c.groupId ?? '')
@@ -333,7 +347,7 @@ export class ChatService {
         avatar: '',
         sourceId: '',
         chatAlias: '',
-        firstSequence: 1,
+        firstSequence: firstSequenceHash.get(c.id) ?? 1,
         creatorId: c.creatorUId,
         lastReadSequence: (chatUserHash.get(c.id) ?? [0])[0],
         lastTime: (chatUserHash.get(c.id) ?? [0, 0])[1]
