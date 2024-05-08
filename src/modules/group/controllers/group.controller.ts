@@ -19,7 +19,6 @@ import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum, G
 import { GroupMemberService } from '../services/group-member.service'
 import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
-import { TransactionInterceptor } from '@/modules/common/interceptors/transaction.interceptor'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 

@@ -137,7 +137,8 @@ export class MessageController {
     })
     // 更新sequence
     await this.chatUserService.refreshSequence(req.uid, param.chatId, maxSequence)
-    return { items: data.sort((a, b) => { return a.sequence - b.sequence }) }
+    // return { items: data }
+    return { items: data.sort((a, b) => { return b.sequence - a.sequence }) }
   }
 
   // 消息详情列表

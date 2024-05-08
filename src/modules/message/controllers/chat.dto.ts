@@ -33,6 +33,7 @@ export class ChatDetailItem {
   isEnc: number
   lastReadSequence: number
   lastSequence: number
+  firstSequence: number
   lastTime: number | null
   createdAt: Date
 }
