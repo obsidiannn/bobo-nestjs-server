@@ -89,7 +89,7 @@ export class FriendController {
       const dto: FriendInviteApplyItem = {
         id: d.id,
         objUid: req.uid,
-        uid: d.objUid,
+        uid: d.uid,
         remark: d.remark,
         status: d.status,
         createdAt: d.createdAt

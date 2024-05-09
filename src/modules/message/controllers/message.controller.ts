@@ -37,6 +37,7 @@ export class MessageController {
 
   ) { }
 
+  // 注意 message 的sequence 一旦创建，不会进行删除
   // 发送消息
   @Post('send')
   async sendMessage (@Req() req: Request, @Body() param: MessageSendReq): Promise<MessageSendResp> {

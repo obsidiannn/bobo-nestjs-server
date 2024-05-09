@@ -23,6 +23,8 @@ import { UserMessageService } from './user-message.service'
 import { ChatUserService } from './chat-user.service'
 import commonUtil from '@/utils/common.util'
 import { RedPacketInfo } from '@/modules/wallet/controllers/red-packet.dto'
+import { SocketGateway } from '@/modules/socket/socket.gateway'
+import { SocketMessageEvent } from '@/modules/socket/socket.dto'
 
 @Injectable()
 export class MessageService {
@@ -31,7 +33,8 @@ export class MessageService {
     private readonly userService: UserService,
     private readonly chatService: ChatService,
     private readonly userMessageService: UserMessageService,
-    private readonly chatUserService: ChatUserService
+    private readonly chatUserService: ChatUserService,
+    private readonly socketGateway: SocketGateway
   ) {}
 
   /**
@@ -66,6 +69,7 @@ export class MessageService {
     const message = await this.create(messageInput)
     const uids = await this.chatUserService.findUidByChatId(chatId)
     // sequence 这里应该是 消息最大序号 + 1
+    await this.chatService.increaseSequence(chatId, sequence)
     const userMsgs = uids.map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
         uid: u,
@@ -84,6 +88,16 @@ export class MessageService {
       fromUid: currentUserId,
       time: message.createdAt
     }
+
+    const socketData: SocketMessageEvent = {
+      chatId,
+      msgId: message.id,
+      sequence,
+      date: message.createdAt,
+      type: 1
+    }
+    this.socketGateway.sendBatchMessage(Array.from(uids), socketData)
+
     return result
   }
 
@@ -127,6 +141,7 @@ export class MessageService {
     messageInput.sequence = sequence
     const message = await this.create(messageInput)
     // sequence 这里应该是 消息最大序号 + 1
+    await this.chatService.increaseSequence(chatId, sequence)
     const uIds = await this.chatUserService.findUidByChatId(chatId)
     const userMsgs = uIds.map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
@@ -149,6 +164,16 @@ export class MessageService {
       fromUid: message.fromUid,
       remark: extra.remark ?? ''
     }
+
+    const socketData: SocketMessageEvent = {
+      chatId: result.chatId,
+      msgId: result.msgId,
+      sequence: result.sequence,
+      date: result.createdAt,
+      type: 1
+    }
+    this.socketGateway.sendBatchMessage(Array.from(uIds), socketData)
+
     return result
   }
 

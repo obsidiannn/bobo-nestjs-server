@@ -294,6 +294,9 @@ export class ChatService {
 
   // 会话详情
   async chatDetail (currentUserId: string, chatIds: string[]): Promise<ChatDetailItem[]> {
+    if (chatIds === null || chatIds === undefined) {
+      return []
+    }
     const chatArray = await this.prisma.chatUser.findMany({
       where: {
         chatId: { in: chatIds },

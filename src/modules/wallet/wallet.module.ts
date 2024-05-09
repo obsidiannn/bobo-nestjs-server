@@ -10,8 +10,9 @@ import { PrePaidService } from './services/pre-paid.service'
 import { RedPacketService } from './services/red-packet.service'
 import { MessageModule } from '../message/message.module'
 import { RedPacketController } from './controllers/red-packet.controller'
+import { SocketModule } from '../socket/socket.module'
 @Module({
-  imports: [UserModule, AuthModule, MessageModule],
+  imports: [UserModule, AuthModule, MessageModule, SocketModule],
   controllers: [WalletController, BillController, RedPacketController],
   providers: [WalletService, BillService, BillDetailService, PrePaidService, RedPacketService]
 })
