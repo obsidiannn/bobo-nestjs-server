@@ -44,4 +44,19 @@ export class UserMessageService {
       }
     })
   }
+
+  /**
+   * 清除个人的 message，对其他人的message没有影响
+   * @param currentUserId
+   * @param chatIds
+   * @returns
+   */
+  async deleteUserMessageByChatIds (currentUserId: string, chatIds: string[]): Promise<Prisma.BatchPayload> {
+    return await this.prisma.userMessage.deleteMany({
+      where: {
+        chatId: { in: chatIds },
+        uid: currentUserId
+      }
+    })
+  }
 }

@@ -41,7 +41,8 @@ export enum GroupStatusEnum {
 
 export enum GroupMemberStatus {
   PENDING = 0,
-  NORMAL = 1
+  NORMAL = 1,
+  REJECTED = 2
 }
 
 export enum GroupMemberRoleEnum {

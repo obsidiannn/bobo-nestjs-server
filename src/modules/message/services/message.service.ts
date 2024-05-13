@@ -243,7 +243,7 @@ export class MessageService {
   }
 
   async deleteByChatIds (chatIds: string[]): Promise<any> {
-    await this.prisma.userMessage.deleteMany({
+    await this.prisma.messageDetail.deleteMany({
       where: {
         chatId: { in: chatIds }
       }

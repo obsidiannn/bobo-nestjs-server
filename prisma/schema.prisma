@@ -198,6 +198,7 @@ model GroupMembers {
   packageExpiredAt DateTime? @map("package_expired_at") // 群订阅过期时间
   createdAt        DateTime  @default(now()) @map("created_at") //创建时间
   updatedAt        DateTime  @updatedAt @map("updated_at") //更新时间
+  remark           String?  @map("remark") // 申请备注
 
   @@index([groupId], name: "gid")
   @@index([uid], name: "uid")
@@ -284,7 +285,7 @@ model UserMessage {
   sequence  Int      @map("sequence") // 消息序号
   chatId    String   @map("chat_id") // chat id
   createdAt DateTime @default(now()) @map("created_at") //创建时间
-
+  
   @@index([uid], name: "uid")
   @@index([msgId], name: "msg_id")
   @@map("user_messages")

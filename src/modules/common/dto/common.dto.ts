@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator'
+import { IsInt, IsOptional, IsString, isNumber } from 'class-validator'
 
 export class BaseResp<T> {
   code: number
@@ -8,15 +8,20 @@ export class BaseResp<T> {
 
 export class BasePageReq {
   // 限制 最多 100个
-  limit: number
+  @IsInt()
+  @IsOptional()
+    limit?: number
+
   // 当前页
-  page: number
+  @IsInt()
+  @IsOptional()
+    page?: number
 }
 
 export class BasePageResp<T> {
   constructor (param: BasePageReq, data: T[], total: number) {
-    this.page = param.page
-    this.limit = param.limit
+    this.page = param.page ?? 1
+    this.limit = param.limit ?? 10
     this.items = data
     this.total = total
   }

@@ -350,7 +350,7 @@ export class ChatService {
         avatar: '',
         sourceId: '',
         chatAlias: '',
-        firstSequence: firstSequenceHash.get(c.id) ?? 1,
+        firstSequence: firstSequenceHash.get(c.id) ?? c.lastSequence,
         creatorId: c.creatorUId,
         lastReadSequence: (chatUserHash.get(c.id) ?? [0])[0],
         lastTime: (chatUserHash.get(c.id) ?? [0, 0])[1]

@@ -224,6 +224,14 @@ export class MessageController {
     await this.messageService.deleteChatByIds(req.uid, param.chatIds)
   }
 
+  /**
+   * 清空我的消息
+   */
+  @Post('clear-mine-message')
+  async clearUserMessage (@Req() req: Request, @Body() param: MessageDeleteByIdReq): Promise<any> {
+    await this.userMessageService.deleteUserMessageByChatIds(req.uid, param.chatIds)
+  }
+
   // （单向）删除所有消息-根据会话IDs 解除自己与会话消息的关系
   @Post('delete-self-chat-ids')
   async deleteSelfChatByIds (@Req() req: Request, @Body()param: MessageDeleteByIdReq): Promise<any> {
@@ -287,12 +295,14 @@ export class MessageController {
         groupIds.push(c.groupId)
       }
     })
+
     if (groupIds.length > 0) {
       // 符合管理权限的群
       const groups = await this.chatUserService.findGroupRoleByGroupIds(groupIds, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
+      console.log('groupIds', groups)
 
       if (groups.length > 0) {
-        const messageGroupIds = new Set(groups.map(g => g.id))
+        const messageGroupIds = new Set(groups.map(g => g.groupId))
         const delChatIds = chats.filter(c => {
           return c.groupId !== null && messageGroupIds.has(c.groupId)
         }).map(c => c.id)

@@ -1,5 +1,6 @@
-import { IsNotEmpty, ArrayNotEmpty } from 'class-validator'
+import { IsNotEmpty, ArrayNotEmpty, IsString, IsOptional, IsBoolean } from 'class-validator'
 import { BaseIdReq, BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '../../common/dto/common.dto'
+import { GroupMemberStatus } from '@/enums'
 
 export interface GroupCreateReq {
   id: string
@@ -16,7 +17,18 @@ export interface GroupCreateReq {
 
 export class GroupMemberReq extends BasePageReq {
   @IsNotEmpty({ message: 'not empty' })
+  @IsString()
     id: string
+}
+
+export class GroupMemberListReq extends BaseIdReq {
+  @IsOptional()
+  @IsBoolean()
+    isAdmin?: boolean
+
+  @IsOptional()
+  @IsString({ each: true })
+    uids?: string[]
 }
 
 export class GroupMemberItem {
@@ -36,11 +48,21 @@ export class GroupMemberResp extends BasePageResp<GroupMemberItem> {
 }
 
 export class GroupRequireJoinReq extends BaseIdReq {
-  @IsNotEmpty({ message: 'not empty' })
+  @IsString()
+  @IsOptional()
+    remark?: string
+
+  @IsOptional()
     encKey: string
 
-  @IsNotEmpty({ message: 'not empty' })
+  @IsOptional()
     encPri: string
+}
+
+export interface GroupRequireJoinResp {
+  gid: string
+  status: GroupMemberStatus
+  err?: string
 }
 
 export class GroupApplyJoinReq {
@@ -139,11 +161,25 @@ export class GroupChangeDescReq {
 
 export class GroupTransferReq {
   @IsNotEmpty({ message: 'not empty' })
-  // groupId
+  @IsString()
     id: string
 
   @IsNotEmpty({ message: 'not empty' })
+  @IsString({ each: true })
     uid: string
+
+  encPri: string
+  encKey: string
+}
+
+export class GroupManagerUpdateReq {
+  @IsNotEmpty({ message: 'not empty' })
+  @IsString()
+    id: string
+
+  @IsNotEmpty({ message: 'not empty' })
+  @IsString({ each: true })
+    uids: string[]
 
   encPri: string
   encKey: string
@@ -157,6 +193,7 @@ export class GroupApplyItem {
   role: number
   status: number
   createdAt: number
+  remark: string
 }
 
 export class GroupNoticeResp {
@@ -199,6 +236,7 @@ export class GroupDetailItem {
   banType: number
   searchType: number
   status: number
+  role?: number
 };
 
 export class GroupDetailResp {

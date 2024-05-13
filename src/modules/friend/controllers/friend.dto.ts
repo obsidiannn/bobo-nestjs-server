@@ -1,4 +1,4 @@
-import { IsNotEmpty, ArrayMaxSize, IsString } from 'class-validator'
+import { IsNotEmpty, ArrayMaxSize, IsString, IsEmpty } from 'class-validator'
 import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '../../common/dto/common.dto'
 
 export class FriendRelationItem {
