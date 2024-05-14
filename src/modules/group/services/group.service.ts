@@ -154,4 +154,15 @@ export class GroupService {
       }
     })
   }
+
+  // 修改群简介
+  async changeTags (gid: string, tags: string[]): Promise<Group> {
+    return await this.prisma.group.update({
+      where: { id: gid },
+      data: {
+        tags,
+        updatedAt: new Date()
+      }
+    })
+  }
 }

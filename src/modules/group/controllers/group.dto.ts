@@ -237,9 +237,20 @@ export class GroupDetailItem {
   searchType: number
   status: number
   role?: number
+  tags?: string[]
 };
 
 export class GroupDetailResp {
   items: GroupDetailItem[]
   status: number
+}
+
+export class GroupTagsReq {
+  @IsString()
+  @IsNotEmpty({ message: 'not empty' })
+    gid: string
+
+  @IsString({ each: true })
+  @IsNotEmpty({ message: 'not empty' })
+    tags: string[]
 }

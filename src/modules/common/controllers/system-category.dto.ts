@@ -1,8 +1,9 @@
 import { SysCategoryTypeEnum } from '@/enums'
-import { IsNotEmpty } from 'class-validator'
+import { IsNotEmpty, IsNumber } from 'class-validator'
 
 export class SysCategoryReq {
   @IsNotEmpty({ message: 'not null' })
+  @IsNumber()
     type: SysCategoryTypeEnum
 }
 

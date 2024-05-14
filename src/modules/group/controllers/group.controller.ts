@@ -7,7 +7,8 @@ import {
   MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq, GroupInviteJoinItem, GroupInfoItem, GroupIdsReq,
   GroupMemberListReq,
   GroupRequireJoinResp,
-  GroupManagerUpdateReq
+  GroupManagerUpdateReq,
+  GroupTagsReq
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BaseIdsArrayReq, BasePageResp, BaseArrayResp, CommonEnum } from '@/modules/common/dto/common.dto'
 import { GroupService } from '../services/group.service'
@@ -609,10 +610,22 @@ export class GroupController {
       type: g.type,
       banType: g.banType,
       searchType: g.searchType,
-      status: g.status
+      status: g.status,
+      tags: g.tags
     }
     const member = await this.groupMemberService.groupMemberById(param.id, req.uid)
     item.role = member === null ? -1 : member.role
     return item
+  }
+
+  /**
+   * 群分类管理
+   */
+  @Post('change-tag')
+  async changeGroupTag (@Req() req: Request, @Body() param: GroupTagsReq): Promise<void> {
+    console.log(param)
+
+    await this.groupMemberService.checkGroupRole(param.gid, req.uid, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
+    await this.groupService.changeTags(param.gid, param.tags)
   }
 }
