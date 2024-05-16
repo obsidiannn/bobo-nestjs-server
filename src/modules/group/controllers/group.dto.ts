@@ -67,9 +67,11 @@ export interface GroupRequireJoinResp {
 
 export class GroupApplyJoinReq {
   @IsNotEmpty({ message: 'not empty' })
+  @IsString()
     id: string
 
   @ArrayNotEmpty({ message: 'not empty' })
+  @IsString({ each: true })
     uids: string[]
 }
 

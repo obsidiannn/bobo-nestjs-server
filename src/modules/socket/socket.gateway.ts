@@ -69,24 +69,31 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * 服务端主动发送消息给client
    */
-  sendMessage (uid: string, data: ISocketEvent): void {
+  sendMessage (uid: string, data: ISocketEvent): boolean {
     console.log('[socket] send begin ', uid, data)
     console.log(this.userClientHash)
-
     const clients = this.getClientByUid(uid)
     if (clients.length > 0) {
+      let count = 0
       clients.forEach(c => {
         console.log('[socket] send ', data)
-
         c.emit('message', data)
+        count++
       })
+      return count > 0
     }
+    return false
   }
 
-  sendBatchMessage (uids: string[], data: ISocketEvent): void {
+  sendBatchMessage (uids: string[], data: ISocketEvent): string[] {
+    const failedIds: string[] = []
     uids.forEach(u => {
-      this.sendMessage(u, data)
+      const result = this.sendMessage(u, data)
+      if (!result) {
+        failedIds.push(u)
+      }
     })
+    return failedIds
   }
 
   // 鉴权

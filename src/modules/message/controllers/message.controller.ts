@@ -42,6 +42,7 @@ export class MessageController {
   @Post('send')
   async sendMessage (@Req() req: Request, @Body() param: MessageSendReq): Promise<MessageSendResp> {
     const currentUserId = req.uid
+    const sequence = await this.messageService.findMaxSequenceByChatId(param.chatId)
     const messageInput: Prisma.MessageDetailCreateInput = {
       id: param.id,
       chatId: param.chatId,
@@ -52,13 +53,12 @@ export class MessageController {
       extra: JSON.stringify(param.extra),
       action: JSON.stringify(param.action),
       createdAt: new Date(),
+      sequence,
       status: MessageStatusEnum.NORMAL
     }
-    const sequence = await this.messageService.findMaxSequenceByChatId(param.chatId)
-    messageInput.sequence = sequence
     const message = await this.messageService.create(messageInput)
     // chat 增加 sequence
-    await this.chatService.increaseSequence(param.chatId, sequence)
+    const chatType = await this.chatService.increaseSequence(param.chatId, sequence)
     // sequence 这里应该是 消息最大序号 + 1
     const receiveIds = new Set<string>()
     // 如果指定recieveId 则
@@ -83,14 +83,15 @@ export class MessageController {
     await this.userMessageService.createMany(userMsgs)
     await this.chatUserService.userChatHide(currentUserId, { ids: [param.chatId] }, false)
 
-    const socketData: SocketMessageEvent = {
-      chatId: message.chatId,
-      msgId: message.id,
-      sequence,
-      date: message.createdAt,
-      type: 1
-    }
-    this.socketGateway.sendBatchMessage(Array.from(receiveIds), socketData)
+    await this.messageService.pushMessage(message, Array.from(receiveIds), chatType)
+    // const socketData: SocketMessageEvent = {
+    //   chatId: message.chatId,
+    //   msgId: message.id,
+    //   sequence,
+    //   date: message.createdAt,
+    //   type: 1
+    // }
+    // this.socketGateway.sendBatchMessage(Array.from(receiveIds), socketData)
     return {
       sequence,
       id: param.id,

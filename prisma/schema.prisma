@@ -37,7 +37,7 @@ model User {
   dbIdx     Int      @map("db_idx") // 消息指定存储表
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
-
+  msgToken  String?  @map("message_token") // 用于消息推送的设备token 
   @@index([unionId], name: "union_id")
   @@map("users")
 }
@@ -265,7 +265,7 @@ model MessageDetail {
   status     Int      @default(1) @map("status") // 状态 1-正常 0-全员删除 如果物理删除 0状态不需要
   type       Int      @map("type") // 1-普通消息 2-应用消息 等 （待定）
   isEnc      Int      @default(0) @map("is_enc") // 是否加密 1-是 0-否 默认0
-  sequence   Int?     @map("sequence") // 消息序号
+  sequence   Int     @map("sequence") // 消息序号
   receiveIds String[] @map("receive_ids") // 指定接收的用户Id
   extra      Json?     @map("extra") //内容外的额外信息
   action     Json?    @map("action") //消息的操作类型，有些操作可以通过消息做响应的通知操作 我的预留 不需要可删

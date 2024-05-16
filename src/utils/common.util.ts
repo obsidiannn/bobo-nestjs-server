@@ -35,7 +35,7 @@ export const notNull = (o: any): boolean => {
 }
 
 export const notBlank = (o: string): boolean => {
-  return o !== undefined && o !== null && o.length > 0
+  return o !== undefined && o !== null && o.length > 0 && o !== ''
 }
 
 export const nullThrow = (o: any): any => {

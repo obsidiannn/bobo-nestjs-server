@@ -112,6 +112,19 @@ export class UserService {
     }
   }
 
+  async findTokenByIds (ids: string[]): Promise<string[]> {
+    const list = await this.prismaService.user.findMany({
+      where: {
+        id: { in: ids },
+        msgToken: { not: null }
+      },
+      select: {
+        msgToken: true
+      }
+    })
+    return list.filter(i => i.msgToken !== undefined && i.msgToken !== null).map(l => l.msgToken ?? '')
+  }
+
   defaultUserItem: UserInfoItem = {
     id: 'default',
     name: '已注销',

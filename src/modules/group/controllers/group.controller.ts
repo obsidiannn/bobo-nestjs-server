@@ -465,7 +465,7 @@ export class GroupController {
           status: GroupMemberStatus.NORMAL
         }
       })
-      await this.chatService.addChatGroupMember(param.id, existIds)
+      await this.chatService.addChatGroupMember(param.id, param.uids)
     }
   }
 

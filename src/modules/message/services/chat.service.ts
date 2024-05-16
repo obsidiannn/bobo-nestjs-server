@@ -115,6 +115,8 @@ export class ChatService {
         }
       })
       const saveMemberIds = commonUtil.arrayDifference(memberIds, chatUsers.map(u => u.uid))
+      console.log('saveMembers', saveMemberIds)
+
       if (saveMemberIds.length > 0) {
         const saveMembers = saveMemberIds.map(uid => {
           const chatUserInput: Prisma.ChatUserCreateInput = {
@@ -279,9 +281,14 @@ export class ChatService {
       where: {
         uid: currentUserId
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: [
+        {
+          isTop: 'desc'
+        },
+        {
+          createdAt: 'desc'
+        }
+      ]
     })
     return chatList.map(c => {
       const item: ChatListItem = {
@@ -305,12 +312,15 @@ export class ChatService {
       select: {
         chatId: true,
         maxReadSeq: true,
-        lastOnlineTime: true
+        lastOnlineTime: true,
+        isTop: true,
+        id: true
       }
     })
-    const chatUserHash = new Map<string, number[]>()
+    const chatUserHash = new Map<string, any>()
     chatArray.forEach(c => {
-      chatUserHash.set(c.chatId, [c.maxReadSeq, c.lastOnlineTime.getTime()])
+      chatUserHash.set(c.chatId, c)
+      // chatUserHash.set(c.chatId, [c.maxReadSeq, c.lastOnlineTime.getTime(), c.isTop])
     })
     const chats = await this.prisma.chat.findMany({
       where: {
@@ -335,7 +345,9 @@ export class ChatService {
     firstSequences.forEach(f => {
       firstSequenceHash.set(f.chatId, f._min.sequence ?? 1)
     })
+    const chatMap = new Map<string, Chat>()
     chats.forEach(c => {
+      chatMap.set(c.id, c)
       if (c.type === ChatTypeEnum.GROUP) {
         groupChat.push(c.groupId ?? '')
       } else if (c.type === ChatTypeEnum.NORMAL) {
@@ -344,36 +356,46 @@ export class ChatService {
     })
     const groupHash = await this.chatGroupInfo(groupChat)
     const userHash = await this.chatUserInfo(userChat, currentUserId)
-    return chats.map(c => {
-      const item: ChatDetailItem = {
-        ...c,
-        avatar: '',
-        sourceId: '',
-        chatAlias: '',
-        firstSequence: firstSequenceHash.get(c.id) ?? c.lastSequence,
-        creatorId: c.creatorUId,
-        lastReadSequence: (chatUserHash.get(c.id) ?? [0])[0],
-        lastTime: (chatUserHash.get(c.id) ?? [0, 0])[1]
-      }
-      if (c.type === ChatTypeEnum.GROUP) {
-        const sourceId = c.groupId ?? ''
-        item.sourceId = sourceId
-        const group = groupHash.get(sourceId) ?? null
-        if (group !== null) {
-          item.avatar = group.avatar
-          item.chatAlias = group.alias
+
+    return chatIds.filter(id => chatMap.has(id))
+      .map(id => {
+        const c = chatMap.get(id)
+        if (c === null || c === undefined) {
+          throw new HttpException('error', HttpStatus.BAD_REQUEST)
         }
-      } else if (c.type === ChatTypeEnum.NORMAL) {
-        const sourceId = (c.userIds ?? []).find(id => id !== currentUserId) ?? ''
-        item.sourceId = sourceId
-        const user = userHash.get(sourceId) ?? null
-        if (user !== null) {
-          item.avatar = user.avatar
-          item.chatAlias = user.alias
+        // [c.maxReadSeq, c.lastOnlineTime.getTime(), c.isTop]
+        const chatUserItem = chatUserHash.get(c.id) ?? undefined
+        const item: ChatDetailItem = {
+          ...c,
+          chatUserId: chatUserItem !== undefined ? chatUserItem.id : '',
+          avatar: '',
+          sourceId: '',
+          chatAlias: '',
+          firstSequence: firstSequenceHash.get(c.id) ?? c.lastSequence,
+          creatorId: c.creatorUId,
+          lastReadSequence: chatUserItem !== undefined ? chatUserItem.maxReadSeq : 0,
+          lastTime: chatUserItem !== undefined ? chatUserItem.lastOnlineTime.getTime() : 0,
+          isTop: chatUserItem !== undefined ? chatUserItem.isTop : CommonEnum.OFF
         }
-      }
-      return item
-    })
+        if (c.type === ChatTypeEnum.GROUP) {
+          const sourceId = c.groupId ?? ''
+          item.sourceId = sourceId
+          const group = groupHash.get(sourceId) ?? null
+          if (group !== null) {
+            item.avatar = group.avatar
+            item.chatAlias = group.alias
+          }
+        } else if (c.type === ChatTypeEnum.NORMAL) {
+          const sourceId = (c.userIds ?? []).find(id => id !== currentUserId) ?? ''
+          item.sourceId = sourceId
+          const user = userHash.get(sourceId) ?? null
+          if (user !== null) {
+            item.avatar = user.avatar
+            item.chatAlias = user.alias
+          }
+        }
+        return item
+      })
   }
 
   async chatGroupInfo (groupIds: string[]): Promise<Map<string, ChatTargetDto>> {
@@ -552,8 +574,8 @@ export class ChatService {
   }
 
   // 变更chat max sequence
-  async increaseSequence (chatId: string, sequence: number): Promise<void> {
-    await this.prisma.chat.update({
+  async increaseSequence (chatId: string, sequence: number): Promise<number> {
+    const result = await this.prisma.chat.update({
       where: {
         id: chatId
       },
@@ -563,9 +585,11 @@ export class ChatService {
       },
       select: {
         id: true,
-        lastSequence: true
+        lastSequence: true,
+        type: true
       }
     })
+    return result.type
   }
 
   // 单聊会话索引生成

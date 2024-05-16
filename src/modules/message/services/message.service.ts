@@ -16,7 +16,7 @@ import { PrismaService } from '@/modules/common/services/prisma.service'
 import { UserService } from '@/modules/user/services/user.service'
 import { Prisma, MessageDetail } from '@prisma/client'
 import { isNumber } from 'class-validator'
-import { GroupMemberRoleEnum, MessageStatusEnum, MessageTypeEnum, RedPacketSourceEnum } from '@/enums'
+import { ChatTypeEnum, MessageStatusEnum, MessageTypeEnum, RedPacketSourceEnum } from '@/enums'
 import { DropSimpleChatResult } from '../controllers/chat.dto'
 import { ChatService } from './chat.service'
 import { UserMessageService } from './user-message.service'
@@ -25,7 +25,8 @@ import commonUtil from '@/utils/common.util'
 import { RedPacketInfo } from '@/modules/wallet/controllers/red-packet.dto'
 import { SocketGateway } from '@/modules/socket/socket.gateway'
 import { SocketMessageEvent } from '@/modules/socket/socket.dto'
-
+import { FirebaseService } from '@/modules/common/services/firebase.service'
+import { Message, MulticastMessage } from 'firebase-admin/messaging'
 @Injectable()
 export class MessageService {
   constructor (
@@ -34,7 +35,8 @@ export class MessageService {
     private readonly chatService: ChatService,
     private readonly userMessageService: UserMessageService,
     private readonly chatUserService: ChatUserService,
-    private readonly socketGateway: SocketGateway
+    private readonly socketGateway: SocketGateway,
+    private readonly firebaseService: FirebaseService
   ) {}
 
   /**
@@ -53,6 +55,8 @@ export class MessageService {
     chatId: string
   ): Promise<any> {
     // const chatId = await this.chatService.findChatIdByUserId(currentUserId, objUid)
+    const sequence = await this.findMaxSequenceByChatId(chatId)
+
     const messageInput: Prisma.MessageDetailCreateInput = {
       id,
       chatId,
@@ -62,10 +66,10 @@ export class MessageService {
       fromUid: currentUserId,
       extra: JSON.stringify(extra),
       action: JSON.stringify(action),
-      status: MessageStatusEnum.NORMAL
+      status: MessageStatusEnum.NORMAL,
+      sequence
     }
-    const sequence = await this.findMaxSequenceByChatId(chatId)
-    messageInput.sequence = sequence
+
     const message = await this.create(messageInput)
     const uids = await this.chatUserService.findUidByChatId(chatId)
     // sequence 这里应该是 消息最大序号 + 1
@@ -126,6 +130,8 @@ export class MessageService {
       chatId = await this.chatService.findChatIdByUserId(currentUserId, _objUid)
     }
 
+    const sequence = await this.findMaxSequenceByChatId(chatId)
+
     const messageInput: Prisma.MessageDetailCreateInput = {
       id,
       chatId,
@@ -135,10 +141,10 @@ export class MessageService {
       fromUid: currentUserId,
       extra: JSON.stringify(extra),
       action: JSON.stringify(action),
+      sequence,
       status: MessageStatusEnum.NORMAL
     }
-    const sequence = await this.findMaxSequenceByChatId(chatId)
-    messageInput.sequence = sequence
+
     const message = await this.create(messageInput)
     // sequence 这里应该是 消息最大序号 + 1
     await this.chatService.increaseSequence(chatId, sequence)
@@ -347,5 +353,57 @@ export class MessageService {
         chatId: { in: chatIds }
       }
     })
+  }
+
+  async pushMessage (message: MessageDetail, receiveIds: string[], chatType: ChatTypeEnum): Promise<void> {
+    const socketData: SocketMessageEvent = {
+      chatId: message.chatId,
+      msgId: message.id,
+      sequence: message.sequence,
+      date: message.createdAt,
+      type: 1
+    }
+    // 发送失败的，需要进行推送
+
+    const failedIds = this.socketGateway.sendBatchMessage(Array.from(receiveIds), socketData)
+    if (failedIds.length > 0) {
+      let title = '单聊'
+      if (chatType === ChatTypeEnum.GROUP) {
+        title = '群聊'
+      } else if (chatType === ChatTypeEnum.OFFICIAL) {
+        title = '通知'
+      }
+
+      const tokens = await this.userService.findTokenByIds(failedIds)
+      if (tokens !== null && tokens.length > 0) {
+        const firebaseMessage: MulticastMessage = {
+          notification: {
+            title,
+            body: '您收到了一条' + title + '消息'
+          },
+          android: {
+            // priority: 'high',
+            notification: {
+              imageUrl: 'https://foo.bar.pizza-monster.png'
+            }
+          },
+          webpush: {
+            headers: {
+              image: 'https://foo.bar.pizza-monster.png'
+            }
+          },
+          data: {
+            sourceType: 'chat',
+            subType: chatType.toString(),
+            sourceId: message.chatId,
+            sequence: message.sequence.toString()
+          },
+          tokens
+        }
+        const result = await this.firebaseService.sendBatchMessage(tokens, firebaseMessage)
+        console.log('[firebase] result:', result)
+      }
+    }
+    // this.firebaseService.sendBatchMessage
   }
 }

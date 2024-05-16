@@ -6,7 +6,7 @@ import { Prisma, User } from '@prisma/client'
 import { AuthEnumIsRegister, UserGenderEnum } from '@/enums'
 import { Request } from 'express'
 import { BaseInterceptor } from '../interceptors/base.interceptor'
-import { UpdateAvatarParams, UpdateGenderParams, UpdateNameParams, UpdateSignParams } from './auth.dto'
+import { UpdateAvatarParams, UpdateGenderParams, UpdateMessageTokenReq, UpdateNameParams, UpdateSignParams } from './auth.dto'
 import { AuthInterceptor } from '../interceptors/auth.interceptor'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 import { UserDetailDto, UserInfoItem } from '@/modules/user/controllers/user.dto'
@@ -102,7 +102,15 @@ export class AuthController {
     }
   }
 
-  // @Post('destroy')
-  // async destroy (req: Request, res: Response) {
-  // }
+  /**
+   * 注册推送的设备token
+   */
+  @Post('register-token')
+  async registerPushToken (@Req() req: Request, @Body() param: UpdateMessageTokenReq): Promise<void> {
+    if (commonUtil.notBlank(param.token)) {
+      await this.userService.update(req.uid, {
+        msgToken: param.token
+      })
+    }
+  }
 }
