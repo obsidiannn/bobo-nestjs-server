@@ -19,11 +19,15 @@ import { CommonEnum } from '@/modules/common/dto/common.dto'
 import { GroupMemberRoleEnum } from '@/enums'
 import commonUtil from '@/utils/common.util'
 import aesUtil from '@/utils/aes'
+import { SenderService } from '../services/sender.service'
+
 describe('MessageController', () => {
   let app: NestExpressApplication
   let systemPublicKey: string
   let prismaService: PrismaService
   let chatService: ChatService
+
+  let senderService: SenderService
 
   let customPk: string
   let customWallet: Wallet
@@ -43,6 +47,7 @@ describe('MessageController', () => {
     customPk = systemService.getTestUserId()
     prismaService = app.get<PrismaService>(PrismaService)
     chatService = app.get<ChatService>(ChatService)
+    senderService = app.get<SenderService>(SenderService)
     customWallet = buildWallet(customPk)
     customId = customWallet.address
   })
@@ -352,6 +357,16 @@ describe('MessageController', () => {
         .then(res => {
           console.log(res.body)
         })
+    })
+  })
+
+  describe('sender test', () => {
+    it('set bit', async () => {
+      const list = [2, 16, 27, 30, 45]
+      for (let index = 0; index < list.length; index++) {
+        const l = list[index]
+        await senderService.setBit(l, 1)
+      }
     })
   })
 })

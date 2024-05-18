@@ -17,6 +17,7 @@ export class UserDetailDto {
   gender: GenderEnum
   pubKey: string
   sign: string
+  userSequence: number | null
 }
 
 export class UserInfoDto extends UserInfoItem {

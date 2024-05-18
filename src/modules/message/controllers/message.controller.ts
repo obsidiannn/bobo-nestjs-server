@@ -83,7 +83,9 @@ export class MessageController {
     await this.userMessageService.createMany(userMsgs)
     await this.chatUserService.userChatHide(currentUserId, { ids: [param.chatId] }, false)
 
-    await this.messageService.pushMessage(message, Array.from(receiveIds), chatType)
+    this.messageService.pushMessage(message, Array.from(receiveIds), chatType).catch(e => {
+      console.error(e)
+    })
     // const socketData: SocketMessageEvent = {
     //   chatId: message.chatId,
     //   msgId: message.id,

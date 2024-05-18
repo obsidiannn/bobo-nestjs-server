@@ -9,6 +9,7 @@ import { AuthModule } from '../auth/auth.module'
 import { ChatUserService } from './services/chat-user.service'
 import { UserMessageService } from './services/user-message.service'
 import { SocketModule } from '../socket/socket.module'
+import { SenderService } from './services/sender.service'
 
 @Module({
   imports: [UserModule, AuthModule, SocketModule],
@@ -20,11 +21,13 @@ import { SocketModule } from '../socket/socket.module'
     MessageService,
     UserMessageService,
     ChatService,
-    ChatUserService
+    ChatUserService,
+    SenderService
   ],
   exports: [
     MessageService,
-    ChatService
+    ChatService,
+    SenderService
   ]
 })
 export class MessageModule {

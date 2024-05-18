@@ -50,6 +50,20 @@ export class UserService {
     })
   }
 
+  async findUserSequence (ids: string[]): Promise<number[]> {
+    const users = await this.prismaService.user.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      },
+      select: {
+        userSequence: true
+      }
+    })
+    return users.map(u => u.userSequence)
+  }
+
   /**
    * userHash detail
    * @param userIds

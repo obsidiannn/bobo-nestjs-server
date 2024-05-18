@@ -6,6 +6,7 @@ import { hashMessage } from 'ethers'
 import { UserInfoItem } from '../user/controllers/user.dto'
 import { ParsedUrlQuery } from 'querystring'
 import { ISocketEvent } from './socket.dto'
+import {} from 'redis'
 const Topic: string = 'events'
 @WebSocketGateway({
   transports: ['websocket', 'polling', Topic],

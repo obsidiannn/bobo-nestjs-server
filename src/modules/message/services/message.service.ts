@@ -27,6 +27,7 @@ import { SocketGateway } from '@/modules/socket/socket.gateway'
 import { SocketMessageEvent } from '@/modules/socket/socket.dto'
 import { FirebaseService } from '@/modules/common/services/firebase.service'
 import { Message, MulticastMessage } from 'firebase-admin/messaging'
+import { SenderService } from './sender.service'
 @Injectable()
 export class MessageService {
   constructor (
@@ -36,7 +37,8 @@ export class MessageService {
     private readonly userMessageService: UserMessageService,
     private readonly chatUserService: ChatUserService,
     private readonly socketGateway: SocketGateway,
-    private readonly firebaseService: FirebaseService
+    private readonly firebaseService: FirebaseService,
+    private readonly senderService: SenderService
   ) {}
 
   /**
@@ -364,46 +366,70 @@ export class MessageService {
       type: 1
     }
     // 发送失败的，需要进行推送
+    await this.senderService.publishMessageTopic(socketData)
 
-    const failedIds = this.socketGateway.sendBatchMessage(Array.from(receiveIds), socketData)
-    if (failedIds.length > 0) {
-      let title = '单聊'
-      if (chatType === ChatTypeEnum.GROUP) {
-        title = '群聊'
-      } else if (chatType === ChatTypeEnum.OFFICIAL) {
-        title = '通知'
-      }
-
-      const tokens = await this.userService.findTokenByIds(failedIds)
-      if (tokens !== null && tokens.length > 0) {
-        const firebaseMessage: MulticastMessage = {
-          notification: {
-            title,
-            body: '您收到了一条' + title + '消息'
-          },
-          android: {
-            // priority: 'high',
-            notification: {
-              imageUrl: 'https://foo.bar.pizza-monster.png'
-            }
-          },
-          webpush: {
-            headers: {
-              image: 'https://foo.bar.pizza-monster.png'
-            }
-          },
-          data: {
-            sourceType: 'chat',
-            subType: chatType.toString(),
-            sourceId: message.chatId,
-            sequence: message.sequence.toString()
-          },
-          tokens
+    // const failedIds = this.socketGateway.sendBatchMessage(Array.from(receiveIds), socketData)
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: receiveIds
         }
-        const result = await this.firebaseService.sendBatchMessage(tokens, firebaseMessage)
-        console.log('[firebase] result:', result)
+      },
+      select: {
+        id: true,
+        userSequence: true,
+        msgToken: true
       }
+    })
+
+    this.senderService.onlineCheck(users.map(u => u.userSequence)).then(offlineIds => {
+      if (offlineIds.length > 0) {
+        const offlineSet = new Set<number>(offlineIds)
+        const offlineTokens = users.filter(u => offlineSet.has(u.userSequence) && u.msgToken !== undefined && u.msgToken !== null).map(u => u.msgToken ?? '')
+        this.sendFirebase(offlineTokens, socketData, chatType).catch(err => {
+          console.error(err)
+        })
+      }
+    }).catch(e => {
+      console.error(e)
+    })
+  }
+
+  async sendFirebase (offlineTokens: string[], message: SocketMessageEvent, chatType: ChatTypeEnum): Promise<void> {
+    if (offlineTokens.length <= 0) {
+      return
     }
-    // this.firebaseService.sendBatchMessage
+    let title = '单聊'
+    if (chatType === ChatTypeEnum.GROUP) {
+      title = '群聊'
+    } else if (chatType === ChatTypeEnum.OFFICIAL) {
+      title = '通知'
+    }
+    const firebaseMessage: MulticastMessage = {
+      notification: {
+        title,
+        body: '您收到了一条' + title + '消息'
+      },
+      android: {
+        // priority: 'high',
+        notification: {
+          imageUrl: 'https://foo.bar.pizza-monster.png'
+        }
+      },
+      webpush: {
+        headers: {
+          image: 'https://foo.bar.pizza-monster.png'
+        }
+      },
+      data: {
+        sourceType: 'chat',
+        subType: chatType.toString(),
+        sourceId: message.chatId,
+        sequence: message.sequence.toString()
+      },
+      tokens: offlineTokens
+    }
+    const result = await this.firebaseService.sendBatchMessage(offlineTokens, firebaseMessage)
+    console.log('[firebase] result:', result)
   }
 }

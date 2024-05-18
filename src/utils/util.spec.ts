@@ -29,4 +29,11 @@ describe('工具类的测试', () => {
     console.log(commonUtil.getFirstLetterOfPinyin('陈世美'))
     console.log(commonUtil.getFirstLetterOfPinyin('tom'))
   })
+
+  describe('bitmap 用户seq 分片测试', () => {
+    it('id 分片', () => {
+      console.log(commonUtil.sliceIntoChunks([2, 16, 21, 27, 30, 45], 1024))
+      // console.log(commonUtil.sliceIntoChunks([2, 16, 27, 30, 45], 10))
+    })
+  })
 })
