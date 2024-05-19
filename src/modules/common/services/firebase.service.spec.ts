@@ -29,7 +29,7 @@ describe('firebase test', () => {
 
     const message: Message = {
       notification: {
-        title: '聊天消息' + randomInt(100).toString(),
+        title: '',
         body: '您收到了一条聊天消息'
       },
       android: {

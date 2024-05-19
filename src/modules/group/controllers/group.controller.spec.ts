@@ -29,7 +29,7 @@ describe('GroupController', () => {
   let customPk: string
   let customWallet: Wallet
   let customId: string
-  const _inviteUser: string[] = ['0x624b76f03915666e07bA0e4Aa47Aa6f72C2c4bF6']
+  const _inviteUser: string[] = ['0x882e04e22724DA6e2BfBf46E6bDDaB17824Ee977']
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -102,13 +102,13 @@ describe('GroupController', () => {
       const inviteUser = await userService.findById(_inviteUser[0])
       if (inviteUser === null) { throw new Error() }
 
-      const sharedPk = computeSharedSecret(buildWallet(groupMember.encPri), inviteUser.pubKey)
+      // const sharedPk = computeSharedSecret(buildWallet(groupMember.encPri), inviteUser.pubKey)
       const req: GroupInviteJoinReq = {
         id: groupMember.groupId,
         items: [
           {
             uid: inviteUser.id,
-            encKey: sharedPk,
+            encKey: '',
             encPri: ''
           }
         ]

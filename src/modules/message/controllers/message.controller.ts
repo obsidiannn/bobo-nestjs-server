@@ -22,6 +22,8 @@ import { UserMessageService } from '../services/user-message.service'
 import { ChatService } from '../services/chat.service'
 import { GroupMemberRoleEnum, MessageStatusEnum } from '@/enums'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
+import { SocketGateway } from '@/modules/socket/socket.gateway'
+import { SocketMessageEvent } from '@/modules/socket/socket.dto'
 
 @Controller('messages')
 @UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
@@ -30,14 +32,17 @@ export class MessageController {
     private readonly messageService: MessageService,
     private readonly chatUserService: ChatUserService,
     private readonly chatService: ChatService,
-    private readonly userMessageService: UserMessageService
+    private readonly userMessageService: UserMessageService,
+    private readonly socketGateway: SocketGateway
 
   ) { }
 
+  // 注意 message 的sequence 一旦创建，不会进行删除
   // 发送消息
   @Post('send')
   async sendMessage (@Req() req: Request, @Body() param: MessageSendReq): Promise<MessageSendResp> {
     const currentUserId = req.uid
+    const sequence = await this.messageService.findMaxSequenceByChatId(param.chatId)
     const messageInput: Prisma.MessageDetailCreateInput = {
       id: param.id,
       chatId: param.chatId,
@@ -48,13 +53,12 @@ export class MessageController {
       extra: JSON.stringify(param.extra),
       action: JSON.stringify(param.action),
       createdAt: new Date(),
+      sequence,
       status: MessageStatusEnum.NORMAL
     }
-    console.log(messageInput)
-
-    const sequence = await this.messageService.findMaxSequenceByChatId(param.chatId)
-    messageInput.sequence = sequence
     const message = await this.messageService.create(messageInput)
+    // chat 增加 sequence
+    const chatType = await this.chatService.increaseSequence(param.chatId, sequence)
     // sequence 这里应该是 消息最大序号 + 1
     const receiveIds = new Set<string>()
     // 如果指定recieveId 则
@@ -65,6 +69,7 @@ export class MessageController {
       param.receiveIds.forEach(u => { receiveIds.add(u) })
     }
     receiveIds.add(currentUserId)
+
     const userMsgs = Array.from(receiveIds).map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
         uid: u,
@@ -77,6 +82,18 @@ export class MessageController {
     })
     await this.userMessageService.createMany(userMsgs)
     await this.chatUserService.userChatHide(currentUserId, { ids: [param.chatId] }, false)
+
+    this.messageService.pushMessage(message, Array.from(receiveIds), chatType).catch(e => {
+      console.error(e)
+    })
+    // const socketData: SocketMessageEvent = {
+    //   chatId: message.chatId,
+    //   msgId: message.id,
+    //   sequence,
+    //   date: message.createdAt,
+    //   type: 1
+    // }
+    // this.socketGateway.sendBatchMessage(Array.from(receiveIds), socketData)
     return {
       sequence,
       id: param.id,
@@ -102,15 +119,16 @@ export class MessageController {
         chatId: param.chatId,
         sequence
       },
+      skip: 0,
       take: param.limit ?? 20,
       orderBy: {
-        sequence: up ? 'asc' : 'desc'
+        sequence: up ? 'desc' : 'asc'
       }
     })
     if (userMessages.length <= 0) {
       return { items: [] }
     }
-
+    const maxSequence = up ? userMessages[userMessages.length - 1].sequence : userMessages[0].sequence
     const data = userMessages.map(u => {
       const item: MessageListItem = {
         id: u.id,
@@ -121,8 +139,10 @@ export class MessageController {
       }
       return item
     })
-
-    return { items: data }
+    // 更新sequence
+    await this.chatUserService.refreshSequence(req.uid, param.chatId, maxSequence)
+    // return { items: data }
+    return { items: data.sort((a, b) => { return b.sequence - a.sequence }) }
   }
 
   // 消息详情列表
@@ -155,9 +175,7 @@ export class MessageController {
       })
 
       // 已读 + 更新最大read sequence
-      const max = userMessages[userMessages.length - 1]
       await this.userMessageService.readMany(userMessages.map(u => u.id))
-      await this.chatUserService.refreshSequence(currentUserId, param.chatId, max.sequence)
       const data = userMessages.map(u => {
         const msg: MessageDetail = messageHash.get(u.msgId)
         if (msg === null) {
@@ -207,6 +225,14 @@ export class MessageController {
   @Post('delete-chat-ids')
   async deleteChatByIds (@Req() req: Request, @Body() param: MessageDeleteByIdReq): Promise<any> {
     await this.messageService.deleteChatByIds(req.uid, param.chatIds)
+  }
+
+  /**
+   * 清空我的消息
+   */
+  @Post('clear-mine-message')
+  async clearUserMessage (@Req() req: Request, @Body() param: MessageDeleteByIdReq): Promise<any> {
+    await this.userMessageService.deleteUserMessageByChatIds(req.uid, param.chatIds)
   }
 
   // （单向）删除所有消息-根据会话IDs 解除自己与会话消息的关系
@@ -272,12 +298,14 @@ export class MessageController {
         groupIds.push(c.groupId)
       }
     })
+
     if (groupIds.length > 0) {
       // 符合管理权限的群
       const groups = await this.chatUserService.findGroupRoleByGroupIds(groupIds, currentUserId, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
+      console.log('groupIds', groups)
 
       if (groups.length > 0) {
-        const messageGroupIds = new Set(groups.map(g => g.id))
+        const messageGroupIds = new Set(groups.map(g => g.groupId))
         const delChatIds = chats.filter(c => {
           return c.groupId !== null && messageGroupIds.has(c.groupId)
         }).map(c => c.id)

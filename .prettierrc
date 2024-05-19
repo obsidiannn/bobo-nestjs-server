@@ -1,4 +1,12 @@
+// {
+//   "singleQuote": true,
+//   "trailingComma": "all",
+//   "semi": false,
+// }
+
 {
-  "singleQuote": true,
-  "trailingComma": "all"
+  "semi": false,
+  "trailingComma": "none",
+  "singleQuote": false,
+  "bracketSpacing": false
 }

@@ -50,6 +50,20 @@ export class UserService {
     })
   }
 
+  async findUserSequence (ids: string[]): Promise<number[]> {
+    const users = await this.prismaService.user.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      },
+      select: {
+        userSequence: true
+      }
+    })
+    return users.map(u => u.userSequence)
+  }
+
   /**
    * userHash detail
    * @param userIds
@@ -110,6 +124,19 @@ export class UserService {
       nameIndex: result?.nameIdx ?? '',
       pubKey: ''
     }
+  }
+
+  async findTokenByIds (ids: string[]): Promise<string[]> {
+    const list = await this.prismaService.user.findMany({
+      where: {
+        id: { in: ids },
+        msgToken: { not: null }
+      },
+      select: {
+        msgToken: true
+      }
+    })
+    return list.filter(i => i.msgToken !== undefined && i.msgToken !== null).map(l => l.msgToken ?? '')
   }
 
   defaultUserItem: UserInfoItem = {

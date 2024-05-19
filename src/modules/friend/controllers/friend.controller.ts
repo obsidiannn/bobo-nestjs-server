@@ -89,7 +89,7 @@ export class FriendController {
       const dto: FriendInviteApplyItem = {
         id: d.id,
         objUid: req.uid,
-        uid: d.objUid,
+        uid: d.uid,
         remark: d.remark,
         status: d.status,
         createdAt: d.createdAt
@@ -147,6 +147,8 @@ export class FriendController {
   // 好友列表
   @Post('list')
   async getFriendList (@Req() req: Request, @Body() param: FriendListPageReq): Promise<BasePageResp<FriendInfoItem>> {
+    console.log('=====', param)
+
     if (param.uids != null && param.uids.length > 0) {
       param.limit = param.uids.length
       param.page = 1

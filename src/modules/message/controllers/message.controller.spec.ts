@@ -17,12 +17,17 @@ import { SystemService } from '@/modules/common/services/system.service'
 import { ChatService } from '../services/chat.service'
 import { CommonEnum } from '@/modules/common/dto/common.dto'
 import { GroupMemberRoleEnum } from '@/enums'
+import commonUtil from '@/utils/common.util'
+import aesUtil from '@/utils/aes'
+import { SenderService } from '../services/sender.service'
 
 describe('MessageController', () => {
   let app: NestExpressApplication
   let systemPublicKey: string
   let prismaService: PrismaService
   let chatService: ChatService
+
+  let senderService: SenderService
 
   let customPk: string
   let customWallet: Wallet
@@ -42,6 +47,7 @@ describe('MessageController', () => {
     customPk = systemService.getTestUserId()
     prismaService = app.get<PrismaService>(PrismaService)
     chatService = app.get<ChatService>(ChatService)
+    senderService = app.get<SenderService>(SenderService)
     customWallet = buildWallet(customPk)
     customId = customWallet.address
   })
@@ -78,6 +84,7 @@ describe('MessageController', () => {
       }
 
       const req: MessageSendReq = {
+        id: commonUtil.generateId(),
         chatId: chatUser.chatId,
         content: '测试消息' + randomUUID(),
         type: 1,
@@ -108,15 +115,24 @@ describe('MessageController', () => {
         }
       })
       if (chat === null) { throw new Error() }
+
+      const group = await prismaService.group.findFirst({ where: { id: groupMember.groupId } })
+      const sharedSecret = customWallet.signingKey.computeSharedSecret(group?.pubKey ?? '')
+      const _data = {
+        t: 'text',
+        d: '群消息' + randomInt(100).toString()
+      }
       const req: MessageSendReq = {
+        id: commonUtil.generateId(),
         chatId: chat.id,
-        content: '群消息' + randomInt(100).toString(),
+        content: aesUtil.EnContent(JSON.stringify(_data), sharedSecret),
         type: 1,
         isEnc: chat.isEnc,
         extra: {}
       }
       const params = testUtil.buildAuthParams(customPk, systemPublicKey, req)
-      return await request(app.getHttpServer())
+      // app.getHttpServer().address
+      return await request('http://localhost:4000')
         .post('/messages/send')
         .send({
           data: params.encData
@@ -341,6 +357,16 @@ describe('MessageController', () => {
         .then(res => {
           console.log(res.body)
         })
+    })
+  })
+
+  describe('sender test', () => {
+    it('set bit', async () => {
+      const list = [2, 16, 27, 30, 45]
+      for (let index = 0; index < list.length; index++) {
+        const l = list[index]
+        await senderService.setBit(l, 1)
+      }
     })
   })
 })

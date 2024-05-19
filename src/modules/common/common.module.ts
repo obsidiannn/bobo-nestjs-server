@@ -10,6 +10,8 @@ import { FirebaseService } from './services/firebase.service'
 import { HttpExceptionFilter } from './filter/global.exception.filter'
 import { APP_FILTER } from '@nestjs/core'
 import { ResponseInterceptor } from './interceptors/response.interceptor'
+import { CacheModule } from '@nestjs/cache-manager'
+import { RedisClientOptions } from 'redis'
 @Module({})
 export class CommonModule {
   static register (): DynamicModule {
@@ -24,21 +26,31 @@ export class CommonModule {
       global: true,
       imports: [
         ConfigModule.forRoot({
-          cache: false
+          // cache: true
+        }),
+        CacheModule.registerAsync<RedisClientOptions>({
+          imports: [ConfigModule],
+          isGlobal: true,
+          inject: [ConfigService],
+          useFactory: async (configService: ConfigService) => ({
+            store: redisStore,
+
+            // socket: {
+            //   host: configService.get<string>('REDIS_HOST'),
+            //   port: configService.get<number>('REDIS_PORT'),
+            //   passphrase: 'redis',
+            //   db: 2,
+            //   reconnectStrategy: 5000
+            // },
+            database: 2,
+            password: 'redis',
+            host: configService.get<string>('REDIS_HOST'),
+            port: configService.get<number>('REDIS_PORT'),
+            db: 2,
+            ttl: 5
+
+          })
         })
-        // CacheModule.registerAsync<RedisClientOptions>({
-        //   imports: [ConfigModule],
-        //   useFactory: (configService: ConfigService) => ({
-        //     store: redisStore,
-        //     socket: {
-        //       host: configService.get<string>('REDIS_HOST'),
-        //       port: configService.get<number>('REDIS_PORT'),
-        //       passphrase: 'redis'
-        //     },
-        //     ttl: 5
-        //   }),
-        //   inject: [ConfigService]
-        // })
       ],
       controllers: [
         SystemController,

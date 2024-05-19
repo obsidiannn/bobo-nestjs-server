@@ -19,10 +19,8 @@ describe('aes test', () => {
   it('rsa', () => {
     const result = aes.encryptAndSign('helloWorld')
     const pkArray = result.priKey.split('\n')
-    const pkStr = pkArray.filter(row=>{return row.indexOf('--') < 0;}).join().replaceAll(',','')
+    const pkStr = pkArray.filter(row => { return !row.includes('--') }).join().replaceAll(',', '')
     console.log(pkStr)
     console.log(result)
-
   })
-  
 })

@@ -41,7 +41,8 @@ export enum GroupStatusEnum {
 
 export enum GroupMemberStatus {
   PENDING = 0,
-  NORMAL = 1
+  NORMAL = 1,
+  REJECTED = 2
 }
 
 export enum GroupMemberRoleEnum {
@@ -135,6 +136,13 @@ export enum RedPacketStatusEnum {
   USED = 2,
   EXPIRED = 3,
   EXPIRED_REFUND = 4
+}
+// 已失效 已过期 已领取 已抢光
+export enum RedPacketResultEnum {
+  DISABLE = 1,
+  EXPIRED = 2,
+  TOUCHED = 3,
+  USEDUP = 4
 }
 
 export enum MediaTypeEnum {

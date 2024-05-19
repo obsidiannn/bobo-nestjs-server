@@ -16,14 +16,18 @@ import { PrismaService } from '@/modules/common/services/prisma.service'
 import { UserService } from '@/modules/user/services/user.service'
 import { Prisma, MessageDetail } from '@prisma/client'
 import { isNumber } from 'class-validator'
-import { GroupMemberRoleEnum, MessageStatusEnum, MessageTypeEnum, RedPacketSourceEnum } from '@/enums'
+import { ChatTypeEnum, MessageStatusEnum, MessageTypeEnum, RedPacketSourceEnum } from '@/enums'
 import { DropSimpleChatResult } from '../controllers/chat.dto'
 import { ChatService } from './chat.service'
 import { UserMessageService } from './user-message.service'
 import { ChatUserService } from './chat-user.service'
 import commonUtil from '@/utils/common.util'
 import { RedPacketInfo } from '@/modules/wallet/controllers/red-packet.dto'
-
+import { SocketGateway } from '@/modules/socket/socket.gateway'
+import { SocketMessageEvent } from '@/modules/socket/socket.dto'
+import { FirebaseService } from '@/modules/common/services/firebase.service'
+import { Message, MulticastMessage } from 'firebase-admin/messaging'
+import { SenderService } from './sender.service'
 @Injectable()
 export class MessageService {
   constructor (
@@ -31,7 +35,10 @@ export class MessageService {
     private readonly userService: UserService,
     private readonly chatService: ChatService,
     private readonly userMessageService: UserMessageService,
-    private readonly chatUserService: ChatUserService
+    private readonly chatUserService: ChatUserService,
+    private readonly socketGateway: SocketGateway,
+    private readonly firebaseService: FirebaseService,
+    private readonly senderService: SenderService
   ) {}
 
   /**
@@ -50,6 +57,8 @@ export class MessageService {
     chatId: string
   ): Promise<any> {
     // const chatId = await this.chatService.findChatIdByUserId(currentUserId, objUid)
+    const sequence = await this.findMaxSequenceByChatId(chatId)
+
     const messageInput: Prisma.MessageDetailCreateInput = {
       id,
       chatId,
@@ -59,13 +68,14 @@ export class MessageService {
       fromUid: currentUserId,
       extra: JSON.stringify(extra),
       action: JSON.stringify(action),
-      status: MessageStatusEnum.NORMAL
+      status: MessageStatusEnum.NORMAL,
+      sequence
     }
-    const sequence = await this.findMaxSequenceByChatId(chatId)
-    messageInput.sequence = sequence
+
     const message = await this.create(messageInput)
     const uids = await this.chatUserService.findUidByChatId(chatId)
     // sequence 这里应该是 消息最大序号 + 1
+    await this.chatService.increaseSequence(chatId, sequence)
     const userMsgs = uids.map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
         uid: u,
@@ -84,6 +94,16 @@ export class MessageService {
       fromUid: currentUserId,
       time: message.createdAt
     }
+
+    const socketData: SocketMessageEvent = {
+      chatId,
+      msgId: message.id,
+      sequence,
+      date: message.createdAt,
+      type: 1
+    }
+    this.socketGateway.sendBatchMessage(Array.from(uids), socketData)
+
     return result
   }
 
@@ -112,6 +132,8 @@ export class MessageService {
       chatId = await this.chatService.findChatIdByUserId(currentUserId, _objUid)
     }
 
+    const sequence = await this.findMaxSequenceByChatId(chatId)
+
     const messageInput: Prisma.MessageDetailCreateInput = {
       id,
       chatId,
@@ -121,12 +143,13 @@ export class MessageService {
       fromUid: currentUserId,
       extra: JSON.stringify(extra),
       action: JSON.stringify(action),
+      sequence,
       status: MessageStatusEnum.NORMAL
     }
-    const sequence = await this.findMaxSequenceByChatId(chatId)
-    messageInput.sequence = sequence
+
     const message = await this.create(messageInput)
     // sequence 这里应该是 消息最大序号 + 1
+    await this.chatService.increaseSequence(chatId, sequence)
     const uIds = await this.chatUserService.findUidByChatId(chatId)
     const userMsgs = uIds.map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
@@ -149,6 +172,16 @@ export class MessageService {
       fromUid: message.fromUid,
       remark: extra.remark ?? ''
     }
+
+    const socketData: SocketMessageEvent = {
+      chatId: result.chatId,
+      msgId: result.msgId,
+      sequence: result.sequence,
+      date: result.createdAt,
+      type: 1
+    }
+    this.socketGateway.sendBatchMessage(Array.from(uIds), socketData)
+
     return result
   }
 
@@ -218,7 +251,7 @@ export class MessageService {
   }
 
   async deleteByChatIds (chatIds: string[]): Promise<any> {
-    await this.prisma.userMessage.deleteMany({
+    await this.prisma.messageDetail.deleteMany({
       where: {
         chatId: { in: chatIds }
       }
@@ -322,5 +355,81 @@ export class MessageService {
         chatId: { in: chatIds }
       }
     })
+  }
+
+  async pushMessage (message: MessageDetail, receiveIds: string[], chatType: ChatTypeEnum): Promise<void> {
+    const socketData: SocketMessageEvent = {
+      chatId: message.chatId,
+      msgId: message.id,
+      sequence: message.sequence,
+      date: message.createdAt,
+      type: 1
+    }
+    // 发送失败的，需要进行推送
+    await this.senderService.publishMessageTopic(socketData)
+
+    // const failedIds = this.socketGateway.sendBatchMessage(Array.from(receiveIds), socketData)
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: receiveIds
+        }
+      },
+      select: {
+        id: true,
+        userSequence: true,
+        msgToken: true
+      }
+    })
+
+    this.senderService.onlineCheck(users.map(u => u.userSequence)).then(offlineIds => {
+      if (offlineIds.length > 0) {
+        const offlineSet = new Set<number>(offlineIds)
+        const offlineTokens = users.filter(u => offlineSet.has(u.userSequence) && u.msgToken !== undefined && u.msgToken !== null).map(u => u.msgToken ?? '')
+        this.sendFirebase(offlineTokens, socketData, chatType).catch(err => {
+          console.error(err)
+        })
+      }
+    }).catch(e => {
+      console.error(e)
+    })
+  }
+
+  async sendFirebase (offlineTokens: string[], message: SocketMessageEvent, chatType: ChatTypeEnum): Promise<void> {
+    if (offlineTokens.length <= 0) {
+      return
+    }
+    let title = '单聊'
+    if (chatType === ChatTypeEnum.GROUP) {
+      title = '群聊'
+    } else if (chatType === ChatTypeEnum.OFFICIAL) {
+      title = '通知'
+    }
+    const firebaseMessage: MulticastMessage = {
+      notification: {
+        title,
+        body: '您收到了一条' + title + '消息'
+      },
+      android: {
+        // priority: 'high',
+        notification: {
+          imageUrl: 'https://foo.bar.pizza-monster.png'
+        }
+      },
+      webpush: {
+        headers: {
+          image: 'https://foo.bar.pizza-monster.png'
+        }
+      },
+      data: {
+        sourceType: 'chat',
+        subType: chatType.toString(),
+        sourceId: message.chatId,
+        sequence: message.sequence.toString()
+      },
+      tokens: offlineTokens
+    }
+    const result = await this.firebaseService.sendBatchMessage(offlineTokens, firebaseMessage)
+    console.log('[firebase] result:', result)
   }
 }

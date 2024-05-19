@@ -1,5 +1,5 @@
 import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '@/modules/common/dto/common.dto'
-import { IsNotEmpty, ArrayNotEmpty, Matches } from 'class-validator'
+import { IsNotEmpty, ArrayNotEmpty, Matches, IsNumber, IsString } from 'class-validator'
 
 export class MessageSendReq {
   @IsNotEmpty({ message: 'not empty' })
@@ -41,7 +41,8 @@ export class MessageListReq {
   @IsNotEmpty({ message: 'not empty' })
     direction: string
 
-  limit?: number
+  @IsNumber()
+    limit?: number
 }
 
 export class MessageDetailListReq {
@@ -92,7 +93,8 @@ export class MessageDetailItem {
 }
 
 export class MessageDeleteByIdReq {
-  chatIds: string[]
+  @IsString({ each: true })
+    chatIds: string[]
 }
 
 export class MessageDeleteByMsgIdReq {

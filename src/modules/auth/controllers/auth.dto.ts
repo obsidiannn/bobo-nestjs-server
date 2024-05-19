@@ -1,5 +1,5 @@
 import { UserGenderEnum } from '@/enums'
-import { IsEnum, IsNotEmpty, IsString, Matches } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator'
 
 export class UpdateNameParams {
   @IsString({ message: '类型不一致' })
@@ -23,4 +23,10 @@ export class UpdateAvatarParams {
   @IsNotEmpty({ message: 'valid error' })
   @Matches(/(webp)$/, { message: '格式不正确' })
     avatar: string
+}
+
+export class UpdateMessageTokenReq {
+  @IsString()
+  @IsOptional()
+    token: string
 }

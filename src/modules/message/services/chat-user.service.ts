@@ -93,4 +93,36 @@ export class ChatUserService {
       }
     })
   }
+
+  /**
+   * 置顶会话
+   * @param chatId
+   * @param currentUserId
+   * @param isTop true 置顶，false 非置顶
+   */
+  async raiseTop (chatUserId: string, currentUserId: string, isTop: boolean): Promise<number> {
+    const chatUser = await this.prisma.chatUser.findFirst({
+      where: {
+        id: chatUserId
+      }
+    })
+    console.log(chatUser)
+
+    if (chatUser === null) {
+      return CommonEnum.OFF
+    }
+
+    const result = await this.prisma.chatUser.update({
+      where: {
+        id: chatUser.id
+      },
+      data: {
+        isTop: isTop ? CommonEnum.ON : CommonEnum.OFF
+      },
+      select: {
+        isTop: true
+      }
+    })
+    return result.isTop
+  }
 }

@@ -68,7 +68,7 @@ export class FriendApplyService {
     })
     return new BasePageResp(param, data, await this.prisma.friendApply.count({
       where: {
-        uid: currentUserId
+        objUid: currentUserId
       }
     }))
   }

@@ -11,6 +11,15 @@ const En = (val: string, key: string): string => {
   const encryptedData = cipher.update(val, 'utf8', 'hex')
   return encryptedData + cipher.final('hex')
 }
+
+const EnContent = (val: string, key: string): string => {
+  const iv = getIV(key)
+  const cipher = Crypto.createCipheriv('aes-128-cbc', iv, iv)
+  cipher.setAutoPadding(true)
+  const encryptedData = cipher.update(val, 'utf8', 'hex')
+  return encryptedData + cipher.final('hex')
+}
+
 const De = (val: string, key: string): string => {
   const iv = getIV(key)
   const decipher = Crypto.createDecipheriv('aes-128-cbc', iv, iv)
@@ -69,5 +78,6 @@ export default {
   De,
   EnBuffer,
   DeBuffer,
-  encryptAndSign
+  encryptAndSign,
+  EnContent
 }

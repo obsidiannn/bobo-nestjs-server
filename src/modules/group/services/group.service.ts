@@ -7,7 +7,8 @@ import {
   GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq,
   GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq,
   GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq,
-  MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq
+  MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq,
+  GroupMemberListReq
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BasePageResp, CommonEnum, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'
 import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum } from '@/enums'
@@ -63,13 +64,19 @@ export class GroupService {
    * @param param
    * @returns
    */
-  async getGroupMembersById (gid: string): Promise<GroupMembers[]> {
+  async getGroupMembersById (gid: string, roleEnum: GroupMemberRoleEnum, uids: string[]): Promise<GroupMembers[]> {
+    const where: Prisma.GroupMembersWhereInput = {
+      groupId: gid,
+      role: { lte: roleEnum },
+      status: GroupMemberStatus.NORMAL
+    }
+    if (uids.length > 0) {
+      where.uid = { in: uids }
+    }
     const data = await this.prisma.groupMembers.findMany({
-      where: {
-        groupId: gid
-      },
+      where,
       orderBy: {
-        createdAt: 'asc' // 按照创建时间降序排序，你可以根据需要修改排序字段和顺序
+        createdAt: 'asc'
       }
     })
     return data
@@ -143,6 +150,17 @@ export class GroupService {
       data: {
         desc: param.desc,
         descMd5: param.descMd5,
+        updatedAt: new Date()
+      }
+    })
+  }
+
+  // 修改群简介
+  async changeTags (gid: string, tags: string[]): Promise<Group> {
+    return await this.prisma.group.update({
+      where: { id: gid },
+      data: {
+        tags,
         updatedAt: new Date()
       }
     })

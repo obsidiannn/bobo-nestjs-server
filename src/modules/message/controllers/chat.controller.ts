@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Req, UseInterceptors } from '@nestjs/common'
-import { ChatDetailItem, ChatListItem } from '../controllers/chat.dto'
-import { BaseArrayResp, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'
+import { ChatDetailItem, ChatListItem, ChatUserTopUpdateDto } from '../controllers/chat.dto'
+import { BaseArrayResp, BaseIdReq, BaseIdsArrayReq } from '@/modules/common/dto/common.dto'
 import { ChatService } from '../services/chat.service'
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
@@ -36,5 +36,13 @@ export class ChatController {
     // 消息要单向删除
     const chatIds = await this.chatUserService.userChatHide(req.uid, param, true)
     await this.messageService.clearMemberMessageByChatIds([req.uid], chatIds)
+  }
+
+  /**
+   * 置顶
+   */
+  @Post('raise-top')
+  async raiseChat (@Req() req: Request, @Body() param: ChatUserTopUpdateDto): Promise<{ isTop: number }> {
+    return { isTop: await this.chatUserService.raiseTop(param.chatUserId, req.uid, param.top) }
   }
 }

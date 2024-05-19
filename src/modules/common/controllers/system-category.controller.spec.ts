@@ -43,6 +43,25 @@ describe('SystemCategoryController', () => {
     await prisma.sysCategory.createMany({ data: list })
   })
 
+  it('初始化群 分类', async () => {
+    const list: Prisma.SysCategoryCreateInput[] = []
+    const cateName = ['科技', '军事', '信息', '政治',
+      '游戏', '文学', '音乐', '美术',
+      '闲聊', '交友', '动漫', '美剧',
+      '宠物', '养生', '体育', '健身',
+      '娱乐圈'
+    ]
+    for (let index = 0; index < cateName.length; index++) {
+      const e: Prisma.SysCategoryCreateInput = {
+        name: cateName[index],
+        type: SysCategoryTypeEnum.GROUP,
+        sort: index
+      }
+      list.push(e)
+    }
+    await prisma.sysCategory.createMany({ data: list })
+  })
+
   it('app tag列表', async () => {
     const req = {
       type: SysCategoryTypeEnum.APP

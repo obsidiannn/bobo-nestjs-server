@@ -4,7 +4,11 @@ import {
   GroupApplyJoinReq, GroupInviteJoinReq, GroupKickOutReq, GroupMemberItem,
   GroupChangeNameReq, GroupChangeAvatarReq, GroupChangeAliasReq, GroupNoticeResp,
   GroupChangeDescReq, GroupChangeNoticeReq, GroupTransferReq, GroupApplyItem,
-  MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq, GroupInviteJoinItem, GroupInfoItem, GroupIdsReq
+  MineGroupInfoItem, GroupDetailItem, GroupRequireJoinReq, GroupInviteJoinItem, GroupInfoItem, GroupIdsReq,
+  GroupMemberListReq,
+  GroupRequireJoinResp,
+  GroupManagerUpdateReq,
+  GroupTagsReq
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BaseIdsArrayReq, BasePageResp, BaseArrayResp, CommonEnum } from '@/modules/common/dto/common.dto'
 import { GroupService } from '../services/group.service'
@@ -19,7 +23,6 @@ import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum, G
 import { GroupMemberService } from '../services/group-member.service'
 import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
-import { TransactionInterceptor } from '@/modules/common/interceptors/transaction.interceptor'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 
@@ -92,8 +95,15 @@ export class GroupController {
   }
 
   @Post('members-list')
-  async getMemberList (@Req() req: Request, @Body() param: BaseIdReq): Promise<BaseArrayResp<GroupMemberItem>> {
-    const result = await this.groupService.getGroupMembersById(param.id)
+  async getMemberList (@Req() req: Request, @Body() param: GroupMemberListReq): Promise<BaseArrayResp<GroupMemberItem>> {
+    let requireRole = GroupMemberRoleEnum.MEMBER
+    if (param.isAdmin ?? false) {
+      const selfMember = await this.groupMemberService.groupRole(param.id, req.uid)
+      if (selfMember.role < GroupMemberRoleEnum.MEMBER) {
+        requireRole = GroupMemberRoleEnum.MANAGER
+      }
+    }
+    const result = await this.groupService.getGroupMembersById(param.id, requireRole, (param.uids ?? []))
     const data = result.map(i => {
       const dto: GroupMemberItem = { ...i, gid: i.groupId, aliasIdx: i.aliasIdx }
       return dto
@@ -348,44 +358,30 @@ export class GroupController {
 
   // 添加管理员 todo
   @Post('add-admin')
-  async addGroupManager (@Req() req: Request, @Body() param: GroupTransferReq): Promise<void> {
+  async addGroupManager (@Req() req: Request, @Body() param: GroupManagerUpdateReq): Promise<void> {
+    console.log('addadmin', param)
+
     const currentUserId = req.uid
     const group = await this.groupService.findOne(param.id)
     await this.groupMemberService.checkGroupRole(param.id, currentUserId, [GroupMemberRoleEnum.OWNER])
-    const members = await this.groupMemberService.findByGroupIdAndUidIn(param.id, [param.uid])
-    if (members.length <= 0) {
-      const newManager = await this.userService.findById(param.uid)
-      if (newManager === null) {
-        throw new HttpException('找不到此用户', HttpStatus.INTERNAL_SERVER_ERROR)
-      }
-      // // 组装 shareSecret
-      if (newManager != null) {
-        const input: Prisma.GroupMembersCreateInput = {
-          groupId: param.id,
-          uid: newManager.id,
-          encPri: param.encPri,
-          encKey: param.encKey,
-          inviteUid: currentUserId,
-          role: GroupMemberRoleEnum.MANAGER,
-          joinType: 1,
-          myAlias: newManager.name,
-          status: CommonEnum.ON,
-          banType: CommonEnum.ON
-        }
+    const members = await this.groupMemberService.findByGroupIdAndUidIn(param.id, param.uids)
 
-        await this.groupMemberService.create(input)
-        await this.chatService.addGroupChat(currentUserId, {
-          groupId: param.id,
-          type: ChatTypeEnum.GROUP,
-          status: ChatStatusEnum.ENABLE,
-          isEnc: group.isEnc
-        })
-      }
-    } else {
-      await this.groupMemberService.update(members[0].id,
+    if (members.length > 0) {
+      await this.groupMemberService.updateMany(
         {
-          role: GroupMemberRoleEnum.MANAGER
-        })
+          where: {
+            groupId: group.id,
+            uid: {
+              in: members.map(m => m.uid)
+            },
+            role: GroupMemberRoleEnum.MEMBER,
+            status: GroupMemberStatus.NORMAL
+          },
+          data: {
+            role: GroupMemberRoleEnum.MANAGER
+          }
+        }
+      )
     }
   }
 
@@ -400,7 +396,9 @@ export class GroupController {
     await this.groupMemberService.updateMany({
       where: {
         groupId: param.id,
-        uid: { in: param.uids }
+        uid: { in: param.uids },
+        role: GroupMemberRoleEnum.MANAGER,
+        status: GroupMemberStatus.NORMAL
       },
       data: {
         role: GroupMemberRoleEnum.MEMBER
@@ -410,14 +408,16 @@ export class GroupController {
 
   // 申请加入群聊
   @Post('require-join')
-  async requireJoin (@Req() req: Request, @Body() param: GroupRequireJoinReq): Promise<void> {
+  async requireJoin (@Req() req: Request, @Body() param: GroupRequireJoinReq): Promise<GroupRequireJoinResp> {
     const currentUserId = req.uid
     const groupMember = await this.groupMemberService.groupMemberById(param.id, currentUserId)
     if (groupMember !== null) {
-      if (groupMember.status > 0) {
-        throw new HttpException('已经加入群组', HttpStatus.BAD_REQUEST)
-      } else {
-        throw new HttpException('请等待管理审核', HttpStatus.BAD_REQUEST)
+      if (groupMember.status === GroupMemberStatus.NORMAL) {
+        // throw new HttpException('已经加入群组', HttpStatus.BAD_REQUEST)
+        return { gid: param.id, status: groupMember?.status, err: '已经加入群组' }
+      } else if (groupMember.status === GroupMemberStatus.PENDING) {
+        // throw new HttpException('请等待管理审核', HttpStatus.BAD_REQUEST)
+        return { gid: param.id, status: groupMember?.status, err: '请等待管理审核' }
       }
     }
     const currentUser = await this.userService.findById(currentUserId)
@@ -431,12 +431,14 @@ export class GroupController {
       encKey: param.encKey,
       inviteUid: currentUserId,
       role: GroupMemberRoleEnum.MEMBER,
-      joinType: 1,
+      joinType: 2,
       myAlias: currentUser.name,
-      status: CommonEnum.OFF,
-      banType: CommonEnum.ON
+      status: GroupMemberStatus.PENDING,
+      banType: CommonEnum.ON,
+      remark: param.remark
     }
     await this.groupMemberService.create(member)
+    return { gid: param.id, status: GroupMemberStatus.PENDING }
   }
 
   // 同意加入群聊
@@ -457,17 +459,17 @@ export class GroupController {
       await this.groupMemberService.updateMany({
         where: {
           groupId: { equals: param.id },
-          uid: { in: existIds }
+          id: { in: existIds }
         },
         data: {
           status: GroupMemberStatus.NORMAL
         }
       })
-      await this.chatService.addChatGroupMember(param.id, existIds)
+      await this.chatService.addChatGroupMember(param.id, param.uids)
     }
   }
 
-  // TODO: 拒绝加入群聊
+  // 拒绝加入群聊
   @Post('reject-join')
   async rejectMemberJoin (@Req() req: Request, @Body() param: GroupApplyJoinReq): Promise<void> {
     const currentUserId = req.uid
@@ -485,10 +487,10 @@ export class GroupController {
       await this.groupMemberService.updateMany({
         where: {
           groupId: { equals: param.id },
-          uid: { in: existIds }
+          id: { in: existIds }
         },
         data: {
-          status: GroupMemberStatus.NORMAL
+          status: GroupMemberStatus.REJECTED
         }
       })
     }
@@ -500,6 +502,7 @@ export class GroupController {
     const currentUserId = req.uid
     const managedGroups = await this.groupMemberService.findMany({
       where: {
+        groupId: { in: param.ids },
         uid: currentUserId,
         role: { in: [GroupMemberRoleEnum.OWNER, GroupMemberRoleEnum.MANAGER] }
       }
@@ -508,7 +511,8 @@ export class GroupController {
       const groupIds = managedGroups.map(g => g.groupId)
       const pendingMembers = await this.groupMemberService.findMany({
         where: {
-          status: GroupMemberStatus.PENDING,
+          // status: GroupMemberStatus.PENDING,
+          joinType: { in: [2] },
           groupId: { in: groupIds }
         }
       })
@@ -520,7 +524,8 @@ export class GroupController {
           encKey: m.encKey,
           role: m.role,
           status: m.status,
-          createdAt: m.createdAt === null ? 0 : m.createdAt.getDate()
+          createdAt: m.createdAt === null ? 0 : m.createdAt.getDate(),
+          remark: m.remark ?? ''
         }
         return item
       })
@@ -579,5 +584,48 @@ export class GroupController {
       return item
     })
     return { items: data }
+  }
+
+  // 批量获取群详情
+  @Post('get-info')
+  async groupDetailById (@Req() req: Request, @Body() param: BaseIdReq): Promise<GroupDetailItem> {
+    const g = await this.groupService.findOne(param.id)
+    const item: GroupDetailItem = {
+      id: g.id,
+      gid: g.id,
+      name: g.name,
+      avatar: g.avatar,
+      createdAt: g.createdAt === null ? 0 : g.createdAt.getDate(),
+      memberLimit: g.memberLimit,
+      total: g.total,
+      pubKey: g.pubKey,
+      ownerId: g.ownerId,
+      creatorId: g.creatorId,
+      notice: g.notice === null ? '' : g.notice,
+      noticeMd5: g.noticeMd5 === null ? '' : g.noticeMd5,
+      desc: g.desc === null ? '' : g.desc,
+      descMd5: g.descMd5 === null ? '' : g.descMd5,
+      cover: g.cover,
+      isEnc: g.isEnc,
+      type: g.type,
+      banType: g.banType,
+      searchType: g.searchType,
+      status: g.status,
+      tags: g.tags
+    }
+    const member = await this.groupMemberService.groupMemberById(param.id, req.uid)
+    item.role = member === null ? -1 : member.role
+    return item
+  }
+
+  /**
+   * 群分类管理
+   */
+  @Post('change-tag')
+  async changeGroupTag (@Req() req: Request, @Body() param: GroupTagsReq): Promise<void> {
+    console.log(param)
+
+    await this.groupMemberService.checkGroupRole(param.gid, req.uid, [GroupMemberRoleEnum.MANAGER, GroupMemberRoleEnum.OWNER])
+    await this.groupService.changeTags(param.gid, param.tags)
   }
 }

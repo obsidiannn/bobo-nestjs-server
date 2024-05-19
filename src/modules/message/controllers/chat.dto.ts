@@ -1,5 +1,6 @@
 import { ChatStatusEnum, ChatTypeEnum } from '@/enums'
 import { CommonEnum } from '@/modules/common/dto/common.dto'
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator'
 
 export class AddChatDto {
   groupId: string | null
@@ -24,6 +25,7 @@ export class ChatItem {
 }
 export class ChatDetailItem {
   id: string
+  chatUserId: string
   creatorId: string
   avatar: string
   sourceId: string
@@ -33,8 +35,10 @@ export class ChatDetailItem {
   isEnc: number
   lastReadSequence: number
   lastSequence: number
+  firstSequence: number
   lastTime: number | null
   createdAt: Date
+  isTop: number
 }
 
 // chat: 删掉的chat id，chatUser: 删掉的chatUser的chatId
@@ -46,4 +50,14 @@ export class DropSimpleChatResult {
 export class ChatTargetDto {
   avatar: string
   alias: string
+}
+
+export class ChatUserTopUpdateDto {
+  @IsNotEmpty()
+  @IsString()
+    chatUserId: string
+
+  @IsBoolean()
+  @IsNotEmpty()
+    top: boolean
 }
