@@ -1,7 +1,7 @@
 import { FriendStatusEnum } from '@/enums'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Injectable } from '@nestjs/common'
-import { Blacklist, Prisma } from '@prisma/client'
+import { Blacklist } from '@prisma/client'
 
 @Injectable()
 export class BlockService {

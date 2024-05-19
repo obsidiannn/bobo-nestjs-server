@@ -23,11 +23,8 @@ import {
 } from './auth.dto'
 import { AuthInterceptor } from '../interceptors/auth.interceptor'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
-import {
-  UserDetailDto,
-  UserInfoItem
-} from '@/modules/user/controllers/user.dto'
 import commonUtil from '@/utils/common.util'
+import { UserDetailDto } from '@/modules/user/controllers/user.dto'
 @Controller('auth')
 @UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class AuthController {
