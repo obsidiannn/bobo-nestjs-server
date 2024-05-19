@@ -45,12 +45,13 @@ export class SenderService {
       if (chunkData !== null) {
         // const bitsArray = [...chunkData].map((char) => char.charCodeAt(0))
         //   .map((byte) => byte.toString(2).padStart(8, '0'))
-        // const byteOffset = Math.floor(chunkData / 8) // 字节索引
+        // console.log(bitsArray)
+
         const buffer = Buffer.from(chunkData) // 转换为 Buffer
         // 计算字节偏移量
         // 计算特定位的偏移量
         chunk.valArr.forEach(seq => {
-          const bitIndex = seq - 1
+          const bitIndex = seq
           const byteOffset = Math.floor(bitIndex / 8)
           const bitOffset = bitIndex % 8
 
@@ -67,7 +68,7 @@ export class SenderService {
         console.log('[不存在]', key)
       }
     }
-    return []
+    return offlineIdxs
   }
 
   generateChunkKey (min: number, max: number): string {

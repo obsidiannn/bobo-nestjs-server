@@ -384,6 +384,8 @@ export class MessageService {
 
     this.senderService.onlineCheck(users.map(u => u.userSequence)).then(offlineIds => {
       if (offlineIds.length > 0) {
+        console.log('offlineIds', offlineIds)
+
         const offlineSet = new Set<number>(offlineIds)
         const offlineTokens = users.filter(u => offlineSet.has(u.userSequence) && u.msgToken !== undefined && u.msgToken !== null).map(u => u.msgToken ?? '')
         this.sendFirebase(offlineTokens, socketData, chatType).catch(err => {
