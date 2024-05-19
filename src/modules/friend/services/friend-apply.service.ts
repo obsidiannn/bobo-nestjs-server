@@ -3,7 +3,6 @@ import { PrismaService } from '../../common/services/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { BasePageReq, BasePageResp, CommonEnum } from '@/modules/common/dto/common.dto'
 import commonUtil from '@/utils/common.util'
-import { FriendInviteApplyItem, FriendInviteRejectReq } from '../controllers/friend.dto'
 import { FriendApplyStatusEnum } from '@/enums'
 
 @Injectable()
@@ -19,17 +18,32 @@ export class FriendApplyService {
   async getFriendInviteApplyPage (currentUserId: string, param: BasePageReq): Promise<BasePageResp<FriendApply>> {
     const data = await this.prisma.friendApply.findMany({
       where: {
-        uid: currentUserId
+        OR: [
+          {
+            uid: currentUserId
+          },
+          {
+            objUid: currentUserId
+          }
+        ]
       },
       orderBy: {
         createdAt: 'desc'
       },
-      skip: commonUtil.pageSkip(param), // 计算需要跳过的数据量
-      take: param.limit // 指定每页取多少条数据
+      skip: commonUtil.pageSkip(param),
+      take: param.limit
     })
+
     return new BasePageResp(param, data, await this.prisma.friendApply.count({
       where: {
-        uid: currentUserId
+        OR: [
+          {
+            uid: currentUserId
+          },
+          {
+            objUid: currentUserId
+          }
+        ]
       }
     }))
   }
