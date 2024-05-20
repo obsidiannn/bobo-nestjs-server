@@ -1,4 +1,5 @@
 import { GenderEnum } from '@/enums'
+import { IsBoolean, IsOptional, IsString } from 'class-validator'
 
 export class UserInfoItem {
   id: string
@@ -22,4 +23,13 @@ export class UserDetailDto {
 
 export class UserInfoDto extends UserInfoItem {
   sign: string
+}
+
+export class UserInfoQueryReq {
+  @IsString({ each: true })
+    uids: string[]
+
+  @IsBoolean()
+  @IsOptional()
+    official?: boolean
 }

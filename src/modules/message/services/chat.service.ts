@@ -330,6 +330,7 @@ export class ChatService {
 
     const groupChat: string[] = []
     const userChat: string[] = []
+    const officialChat: string[] = []
 
     const firstSequences = await this.prisma.userMessage.groupBy({
       where: {
@@ -352,11 +353,13 @@ export class ChatService {
         groupChat.push(c.groupId ?? '')
       } else if (c.type === ChatTypeEnum.NORMAL) {
         userChat.push((c.userIds ?? []).find(id => id !== currentUserId) ?? '')
+      } else if (c.type === ChatTypeEnum.OFFICIAL) {
+        officialChat.push((c.userIds ?? []).find(id => id !== currentUserId) ?? '')
       }
     })
     const groupHash = await this.chatGroupInfo(groupChat)
     const userHash = await this.chatUserInfo(userChat, currentUserId)
-
+    const officialUserHash = await this.officialUserInfo(officialChat)
     return chatIds.filter(id => chatMap.has(id))
       .map(id => {
         const c = chatMap.get(id)
@@ -393,6 +396,14 @@ export class ChatService {
             item.avatar = user.avatar
             item.chatAlias = user.alias
           }
+        } else if (c.type === ChatTypeEnum.OFFICIAL) {
+          const sourceId = (c.userIds ?? []).find(id => id !== currentUserId) ?? ''
+          item.sourceId = sourceId
+          const user = officialUserHash.get(sourceId) ?? null
+          if (user !== null) {
+            item.avatar = user.avatar
+            item.chatAlias = user.alias
+          }
         }
         return item
       })
@@ -415,6 +426,27 @@ export class ChatService {
       }
       result.set(d.id, item)
     })
+    return result
+  }
+
+  async officialUserInfo (userIds: string[]): Promise<Map<string, ChatTargetDto>> {
+    const result = new Map<string, ChatTargetDto>()
+    const data = await this.prisma.officialUser.findMany({
+      where: {
+        id: { in: userIds },
+        status: CommonEnum.ON
+      },
+      select: {
+        id: true,
+        avatar: true,
+        name: true
+      }
+    })
+    if (data.length > 0) {
+      data.forEach(d => {
+        result.set(d.id, { alias: d.name, avatar: d.avatar })
+      })
+    }
     return result
   }
 

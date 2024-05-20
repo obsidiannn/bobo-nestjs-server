@@ -12,10 +12,11 @@ import {
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { FriendApplyService } from '../services/friend-apply.service'
 import { FriendApply, Prisma } from '@prisma/client'
-import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum, FriendStatusEnum, GenderEnum } from '@/enums'
+import { FriendApplyStatusEnum, ChatStatusEnum, ChatTypeEnum, FriendStatusEnum, GenderEnum, OfficialMessageTypeEnum } from '@/enums'
 import { ChatService } from '@/modules/message/services/chat.service'
 import { MessageService } from '@/modules/message/services/message.service'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
+import { OfficialMessageService } from '@/modules/message/services/official-message.service'
 // import { AuthInterceptor } from '@/modules/auth/interceptors/auth.interceptor'
 
 @Controller('friends')
@@ -26,7 +27,8 @@ export class FriendController {
     private readonly friendService: FriendService,
     private readonly friendApplyService: FriendApplyService,
     private readonly chatService: ChatService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly officialMessageService: OfficialMessageService
 
   ) { }
 
@@ -49,6 +51,7 @@ export class FriendController {
     if (await this.friendService.isDenied(currentUserId, param.uid)) {
       return
     }
+    await this.friendApplyService.deleteMany([req.uid], [param.uid])
 
     const input: Prisma.FriendApplyCreateInput = {
       uid: currentUserId,
@@ -59,8 +62,15 @@ export class FriendController {
       createdAt: new Date(),
       expiredAt: new Date()
     }
-    const result: FriendApply = await this.friendApplyService.create(input)
-    console.log(result.id)
+    await this.friendApplyService.create(input)
+    const content = {
+      t: 'friend_require',
+      d: '发起了好友申请'
+    }
+    // 发送消息
+    await this.officialMessageService.sendOfficialMessage(req.uid, OfficialMessageTypeEnum.FRIEND_APPLY, param.uid, {
+      remark: param.remark
+    }, JSON.stringify(content))
   }
 
   // 我的申请列表

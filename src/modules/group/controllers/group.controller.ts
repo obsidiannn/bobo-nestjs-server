@@ -19,12 +19,13 @@ import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { UserService } from '@/modules/user/services/user.service'
 import { ChatService } from '@/modules/message/services/chat.service'
-import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum, GroupStatusEnum } from '@/enums'
+import { GroupMemberRoleEnum, GroupMemberStatus, ChatStatusEnum, ChatTypeEnum, GroupStatusEnum, OfficialMessageTypeEnum } from '@/enums'
 import { GroupMemberService } from '../services/group-member.service'
 import commonUtil from '@/utils/common.util'
 import { MessageService } from '@/modules/message/services/message.service'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
+import { OfficialMessageService } from '@/modules/message/services/official-message.service'
 
 @Controller('groups')
 @UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
@@ -35,7 +36,8 @@ export class GroupController {
     private readonly userService: UserService,
     private readonly chatService: ChatService,
     private readonly messageService: MessageService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly officialMessageService: OfficialMessageService
   ) { }
 
   // 创建群聊
@@ -438,6 +440,15 @@ export class GroupController {
       remark: param.remark
     }
     await this.groupMemberService.create(member)
+
+    const content = {
+      t: 'group_require',
+      d: '发起了入群申请'
+    }
+    // 发送消息
+    await this.officialMessageService.sendOfficialMessage(req.uid, OfficialMessageTypeEnum.GROUP_APPLY, param.id, {
+      remark: param.remark
+    }, JSON.stringify(content))
     return { gid: param.id, status: GroupMemberStatus.PENDING }
   }
 

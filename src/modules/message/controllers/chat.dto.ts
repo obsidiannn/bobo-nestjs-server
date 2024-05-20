@@ -23,6 +23,7 @@ export class ChatListItem {
 export class ChatItem {
 
 }
+
 export class ChatDetailItem {
   id: string
   chatUserId: string

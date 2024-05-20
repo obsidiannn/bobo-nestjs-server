@@ -3,6 +3,17 @@ export enum AuthEnumIsRegister {
   YES = 1
 }
 
+export enum OfficialUserTypeEnum {
+  SYSTEM_CHAT = 1
+}
+
+export enum OfficialMessageTypeEnum {
+  // 好友申请
+  FRIEND_APPLY = 1,
+  // 群组申请
+  GROUP_APPLY = 2
+}
+
 export enum CommonSecondEnum {
   MIN = 60,
   HOUR = 3600,
@@ -107,10 +118,16 @@ export enum BusinessTypeEnum {
 }
 // 消息类型
 export enum MessageTypeEnum {
+  // 普通
   NORMAL = 1,
+  //
   APP = 2,
+  // 转账
   REMIT = 3,
-  RED_PACKET = 4
+  //  红包
+  RED_PACKET = 4,
+  // 官方消息
+  OFFICIAL_MESSAGE = 5
 }
 export enum MessageStatusEnum {
   DELETED = 0,

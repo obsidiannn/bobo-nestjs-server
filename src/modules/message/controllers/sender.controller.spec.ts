@@ -24,16 +24,6 @@ describe('sender service test', () => {
   })
 
   describe('sender test', () => {
-    it('set bit', async () => {
-      const list = [2, 16, 27, 30, 45]
-      for (let index = 0; index < list.length; index++) {
-        const l = list[index]
-        await senderService.setBit(l, 1)
-        expect(1).toEqual(1)
-      }
-      return true
-    })
-
     it('online check', async () => {
       const list = [2, 16, 27, 30, 45]
       expect(await senderService.onlineCheck(list))

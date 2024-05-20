@@ -15,7 +15,6 @@ import { UserService } from '@/modules/user/services/user.service'
 import { CryptInterceptor } from '@/modules/common/interceptors/crypt.interceptor'
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
-import { SocketMessageEvent } from '@/modules/socket/socket.dto'
 
 @UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 @Controller('red-packet')

@@ -12,6 +12,7 @@ import { APP_FILTER } from '@nestjs/core'
 import { ResponseInterceptor } from './interceptors/response.interceptor'
 import { CacheModule } from '@nestjs/cache-manager'
 import { RedisClientOptions } from 'redis'
+import { redisStore } from 'cache-manager-redis-yet'
 @Module({})
 export class CommonModule {
   static register (): DynamicModule {

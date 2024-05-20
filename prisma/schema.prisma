@@ -11,16 +11,18 @@ datasource db {
 }
 
 //  系统用户
-model OfficalUser {
+model OfficialUser {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @map("name")
+  nameIdx   String   @map("name_idx")
   avatar    String   @map("avatar")
   desc      String   @map("desc") //应用描述
   status    Int      @default(1) @map("status") //应用状态 1-正常 2-禁用
+  type      Int      @map("type") // 用户类型： 系统消息
   createdAt DateTime @default(now()) @map("created_at") //创建时间
   updatedAt DateTime @updatedAt @map("updated_at") //更新时间
 
-  @@map("offical_users")
+  @@map("official_users")
 }
 
 // 用户表

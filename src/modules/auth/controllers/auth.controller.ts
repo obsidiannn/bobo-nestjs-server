@@ -25,10 +25,15 @@ import { AuthInterceptor } from '../interceptors/auth.interceptor'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 import commonUtil from '@/utils/common.util'
 import { UserDetailDto } from '@/modules/user/controllers/user.dto'
+import { AuthService } from '../services/auth.service'
 @Controller('auth')
 @UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)
 export class AuthController {
-  constructor (private readonly userService: UserService) {}
+  constructor (private readonly userService: UserService,
+
+    private readonly authService: AuthService
+  ) {}
+
   @Post('is-register')
   async isRegister (
     @Req() req: Request
@@ -59,6 +64,7 @@ export class AuthController {
       userSequence: -1
     }
     const user = await this.userService.create(data)
+    await this.authService.initOfficialChat(user)
     return { user }
   }
 
@@ -144,6 +150,8 @@ export class AuthController {
       @Body() param: UpdateMessageTokenReq
   ): Promise<void> {
     if (commonUtil.notBlank(param.token)) {
+      console.log('uidiii', req.uid)
+
       await this.userService.update(req.uid, {
         msgToken: param.token
       })

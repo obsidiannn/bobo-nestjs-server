@@ -2,6 +2,7 @@ import { BasePageReq, BasePageResp } from '@/modules/common/dto/common.dto'
 import { HttpException, HttpStatus } from '@nestjs/common'
 import { pinyin } from 'pinyin-pro'
 import * as Crypto from 'crypto'
+import { strMd5 } from './buffer.util'
 
 const generateId = (): string => {
   return Buffer.from(Crypto.randomBytes(12)).toString('hex')
@@ -168,6 +169,12 @@ function sliceIntoChunks (array: number[], size: number): ChunkSliceResult [] {
   return result
 }
 
+const generateRef = (userIds: string[]): string => {
+  userIds.sort()
+  const userRef = userIds.join(',')
+  return strMd5(userRef)
+}
+
 export default {
   arrayDifference,
   pageSkip,
@@ -181,5 +188,6 @@ export default {
   notBlank,
   getFirstLetterOfPinyin,
   generateId,
-  sliceIntoChunks
+  sliceIntoChunks,
+  generateRef
 }

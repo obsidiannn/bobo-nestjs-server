@@ -36,7 +36,6 @@ export class MessageService {
     private readonly chatService: ChatService,
     private readonly userMessageService: UserMessageService,
     private readonly chatUserService: ChatUserService,
-    private readonly socketGateway: SocketGateway,
     private readonly firebaseService: FirebaseService,
     private readonly senderService: SenderService
   ) {}
@@ -75,7 +74,7 @@ export class MessageService {
     const message = await this.create(messageInput)
     const uids = await this.chatUserService.findUidByChatId(chatId)
     // sequence 这里应该是 消息最大序号 + 1
-    await this.chatService.increaseSequence(chatId, sequence)
+    const chatType = await this.chatService.increaseSequence(chatId, sequence)
     const userMsgs = uids.map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
         uid: u,
@@ -94,15 +93,10 @@ export class MessageService {
       fromUid: currentUserId,
       time: message.createdAt
     }
-
-    const socketData: SocketMessageEvent = {
-      chatId,
-      msgId: message.id,
-      sequence,
-      date: message.createdAt,
-      type: 1
-    }
-    this.socketGateway.sendBatchMessage(Array.from(uids), socketData)
+    // 发送消息
+    this.pushMessage(message, uids, chatType).catch(e => {
+      console.error(e)
+    })
 
     return result
   }
@@ -149,7 +143,7 @@ export class MessageService {
 
     const message = await this.create(messageInput)
     // sequence 这里应该是 消息最大序号 + 1
-    await this.chatService.increaseSequence(chatId, sequence)
+    const chatType = await this.chatService.increaseSequence(chatId, sequence)
     const uIds = await this.chatUserService.findUidByChatId(chatId)
     const userMsgs = uIds.map(u => {
       const userMsg: Prisma.UserMessageCreateInput = {
@@ -173,15 +167,9 @@ export class MessageService {
       remark: extra.remark ?? ''
     }
 
-    const socketData: SocketMessageEvent = {
-      chatId: result.chatId,
-      msgId: result.msgId,
-      sequence: result.sequence,
-      date: result.createdAt,
-      type: 1
-    }
-    this.socketGateway.sendBatchMessage(Array.from(uIds), socketData)
-
+    this.pushMessage(message, uIds, chatType).catch(e => {
+      console.error(e)
+    })
     return result
   }
 
@@ -208,6 +196,29 @@ export class MessageService {
       }
     })
     return sequence
+  }
+
+  /**
+   * message max sequence  group by chatID
+   * @param chatIds
+   * @returns
+   */
+  async findMaxSequenceByChatIds (chatIds: string[]): Promise<Map<string, number>> {
+    const result: Map<string, number> = new Map()
+    await this.prisma.messageDetail.groupBy({
+      where: {
+        chatId: { in: chatIds }
+      },
+      by: ['chatId'],
+      _max: {
+        sequence: true
+      }
+    }).then(res => {
+      res.forEach(item => {
+        result.set(item.chatId, (item._max.sequence ?? 0) + 1)
+      })
+    })
+    return result
   }
 
   async findManyByMsgId (msgIds: string[]): Promise<MessageDetail[]> {
@@ -381,7 +392,6 @@ export class MessageService {
         msgToken: true
       }
     })
-
     this.senderService.onlineCheck(users.map(u => u.userSequence)).then(offlineIds => {
       if (offlineIds.length > 0) {
         console.log('offlineIds', offlineIds)

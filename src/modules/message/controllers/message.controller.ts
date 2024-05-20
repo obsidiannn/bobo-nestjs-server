@@ -23,7 +23,6 @@ import { ChatService } from '../services/chat.service'
 import { GroupMemberRoleEnum, MessageStatusEnum } from '@/enums'
 import { ResponseInterceptor } from '@/modules/common/interceptors/response.interceptor'
 import { SocketGateway } from '@/modules/socket/socket.gateway'
-import { SocketMessageEvent } from '@/modules/socket/socket.dto'
 
 @Controller('messages')
 @UseInterceptors(CryptInterceptor, ResponseInterceptor, BaseInterceptor)

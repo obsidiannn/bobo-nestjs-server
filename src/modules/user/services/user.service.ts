@@ -1,9 +1,9 @@
 
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Injectable } from '@nestjs/common'
-import { Prisma, User } from '@prisma/client'
+import { OfficialUser, Prisma, User } from '@prisma/client'
 import { UserInfoItem } from '../controllers/user.dto'
-import { CurrencyTypeEnum, GenderEnum, WalletTypeEnum } from '@/enums'
+import { CurrencyTypeEnum, GenderEnum, OfficialUserTypeEnum, WalletTypeEnum } from '@/enums'
 import commonUtil from '@/utils/common.util'
 
 @Injectable()
@@ -27,7 +27,9 @@ export class UserService {
       type: WalletTypeEnum.NORMAL,
       currency: CurrencyTypeEnum.USD
     }
+    // 增加钱包数据
     await this.prismaService.wallet.create({ data: wallet })
+
     return user
   }
 
@@ -48,6 +50,17 @@ export class UserService {
         }
       }
     })
+  }
+
+  async findOfficialUserByIds (ids: string[]): Promise<OfficialUser[]> {
+    const data = await this.prismaService.officialUser.findMany({
+      where: {
+        type: OfficialUserTypeEnum.SYSTEM_CHAT,
+        status: 1,
+        id: { in: ids }
+      }
+    })
+    return data
   }
 
   async findUserSequence (ids: string[]): Promise<number[]> {
