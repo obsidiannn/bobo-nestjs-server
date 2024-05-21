@@ -10,6 +10,7 @@ import { ChatUserService } from './services/chat-user.service'
 import { UserMessageService } from './services/user-message.service'
 import { SocketModule } from '../socket/socket.module'
 import { SenderService } from './services/sender.service'
+import { OfficialMessageService } from './services/official-message.service'
 
 @Module({
   imports: [UserModule, AuthModule, SocketModule],
@@ -22,12 +23,14 @@ import { SenderService } from './services/sender.service'
     UserMessageService,
     ChatService,
     ChatUserService,
-    SenderService
+    SenderService,
+    OfficialMessageService
   ],
   exports: [
     MessageService,
     ChatService,
-    SenderService
+    SenderService,
+    OfficialMessageService
   ]
 })
 export class MessageModule {

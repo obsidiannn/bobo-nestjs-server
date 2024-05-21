@@ -25,8 +25,7 @@ export class AuthService {
       where: {
         type: OfficialUserTypeEnum.SYSTEM_CHAT,
         status: 1
-      },
-      take: 1
+      }
     })
     if (officialUsers.length <= 0) {
       throw new HttpException('system official data error', HttpStatus.INTERNAL_SERVER_ERROR)
