@@ -187,6 +187,16 @@ export class GroupManagerUpdateReq {
   encKey: string
 }
 
+export class GroupApplyListReq {
+  @IsNotEmpty()
+  @IsString({ each: true })
+    ids: string[]
+
+  @IsString({ each: true })
+  @IsOptional()
+    uids?: string[]
+}
+
 export class GroupApplyItem {
   id: string
   gid: string

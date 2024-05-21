@@ -8,7 +8,8 @@ import {
   GroupMemberListReq,
   GroupRequireJoinResp,
   GroupManagerUpdateReq,
-  GroupTagsReq
+  GroupTagsReq,
+  GroupApplyListReq
 } from '@/modules/group/controllers/group.dto'
 import { BaseIdReq, BaseIdsArrayReq, BasePageResp, BaseArrayResp, CommonEnum } from '@/modules/common/dto/common.dto'
 import { GroupService } from '../services/group.service'
@@ -426,20 +427,29 @@ export class GroupController {
     if (currentUser === null) {
       throw new HttpException('error', HttpStatus.BAD_REQUEST)
     }
-    const member: Prisma.GroupMembersCreateInput = {
-      groupId: param.id,
-      uid: currentUserId,
-      encPri: param.encPri,
-      encKey: param.encKey,
-      inviteUid: currentUserId,
-      role: GroupMemberRoleEnum.MEMBER,
-      joinType: 2,
-      myAlias: currentUser.name,
-      status: GroupMemberStatus.PENDING,
-      banType: CommonEnum.ON,
-      remark: param.remark
+
+    if (groupMember === null) {
+      const member: Prisma.GroupMembersCreateInput = {
+        groupId: param.id,
+        uid: currentUserId,
+        encPri: param.encPri,
+        encKey: param.encKey,
+        inviteUid: currentUserId,
+        role: GroupMemberRoleEnum.MEMBER,
+        joinType: 2,
+        myAlias: currentUser.name,
+        status: GroupMemberStatus.PENDING,
+        banType: CommonEnum.ON,
+        remark: param.remark
+      }
+      await this.groupMemberService.create(member)
+    } else {
+      await this.groupMemberService.update(groupMember.id, {
+        status: GroupMemberStatus.PENDING,
+        banType: CommonEnum.ON,
+        remark: param.remark
+      })
     }
-    await this.groupMemberService.create(member)
 
     const content = {
       t: 'group_require',
@@ -447,7 +457,8 @@ export class GroupController {
     }
     // 发送消息
     await this.officialMessageService.sendOfficialMessage(req.uid, OfficialMessageTypeEnum.GROUP_APPLY, param.id, {
-      remark: param.remark
+      remark: param.remark,
+      id: param.id
     }, JSON.stringify(content))
     return { gid: param.id, status: GroupMemberStatus.PENDING }
   }
@@ -509,7 +520,7 @@ export class GroupController {
 
   // 待审核申请列表 只有群主和管理员有权限
   @Post('apply-list')
-  async applyList (@Req() req: Request, @Body() param: BaseIdsArrayReq): Promise<GroupApplyItem[]> {
+  async applyList (@Req() req: Request, @Body() param: GroupApplyListReq): Promise<GroupApplyItem[]> {
     const currentUserId = req.uid
     const managedGroups = await this.groupMemberService.findMany({
       where: {
@@ -520,12 +531,15 @@ export class GroupController {
     })
     if (managedGroups.length > 0) {
       const groupIds = managedGroups.map(g => g.groupId)
+      const where: Prisma.GroupMembersWhereInput = {
+        joinType: { in: [2] },
+        groupId: { in: groupIds }
+      }
+      if (param.uids !== null && param.uids !== undefined && param.uids.length > 0) {
+        where.uid = { in: param.uids }
+      }
       const pendingMembers = await this.groupMemberService.findMany({
-        where: {
-          // status: GroupMemberStatus.PENDING,
-          joinType: { in: [2] },
-          groupId: { in: groupIds }
-        }
+        where
       })
       return pendingMembers.map(m => {
         const item: GroupApplyItem = {

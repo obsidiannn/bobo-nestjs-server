@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config'
 import { PrismaService } from '@/modules/common/services/prisma.service'
 import { Prisma } from '@prisma/client'
 import commonUtil from '@/utils/common.util'
+import { generatePrivateKey } from '@/utils/web3'
 describe('auth module AuthController', () => {
   let app: NestExpressApplication
   let systemPublicKey: string
@@ -52,6 +53,16 @@ describe('auth module AuthController', () => {
           .set(registerParams.headers)
           .expect(200)
       }
+    })
+    it('随机注册', async () => {
+      const registerParams = testUtil.buildAuthParams(generatePrivateKey(), systemPublicKey, {})
+      return await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          data: registerParams.encData
+        })
+        .set(registerParams.headers)
+        .expect(200)
     })
   })
   describe('login', () => {

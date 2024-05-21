@@ -1,4 +1,4 @@
-import { IsNotEmpty, ArrayMaxSize, IsString, IsEmpty } from 'class-validator'
+import { IsNotEmpty, ArrayMaxSize, IsString, IsEmpty, IsOptional } from 'class-validator'
 import { BasePageReq, BasePageResp, CommonEnum, GroupTypeEnum } from '../../common/dto/common.dto'
 export class FriendRelationItem {
   uid: string
@@ -11,6 +11,12 @@ export interface FriendInviteApplyReq {
   uid: string
   remark: string
 };
+
+export class FriendApplyListReq extends BasePageReq {
+  @IsString()
+  @IsOptional()
+    reqUserId?: string
+}
 
 export class FriendInviteApplyItem {
   id: string

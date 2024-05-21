@@ -7,7 +7,8 @@ import { Request } from 'express'
 import { BasePageReq, BaseIdsArrayReq, BaseUIdArrayReq, BaseArrayResp, BasePageResp, CommonEnum } from '../../common/dto/common.dto'
 import {
   FriendRelationItem, FriendInviteApplyReq, FriendInviteApplyItem
-  , FriendInviteAgreeReq, FriendInviteRejectReq, FriendInfoItem, FriendChangeAliasReq, FriendListPageReq
+  , FriendInviteAgreeReq, FriendInviteRejectReq, FriendInfoItem, FriendChangeAliasReq, FriendListPageReq,
+  FriendApplyListReq
 } from './friend.dto'
 import { BaseInterceptor } from '@/modules/auth/interceptors/base.interceptor'
 import { FriendApplyService } from '../services/friend-apply.service'
@@ -93,7 +94,9 @@ export class FriendController {
 
   // 我的审批列表
   @Post('invite-apply-list')
-  async getApplyList (@Req() req: Request, @Body() param: BasePageReq): Promise<BasePageResp<FriendInviteApplyItem>> {
+  async getApplyList (@Req() req: Request, @Body() param: FriendApplyListReq): Promise<BasePageResp<FriendInviteApplyItem>> {
+    console.log(param)
+
     const data = await this.friendApplyService.getFriendApplyPage(req.uid, param)
     const dtos: FriendInviteApplyItem[] = data.items.map(d => {
       const dto: FriendInviteApplyItem = {

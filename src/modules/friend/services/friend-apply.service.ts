@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common'
 import { BasePageReq, BasePageResp, CommonEnum } from '@/modules/common/dto/common.dto'
 import commonUtil from '@/utils/common.util'
 import { FriendApplyStatusEnum } from '@/enums'
+import { FriendApplyListReq } from '../controllers/friend.dto'
 
 @Injectable()
 export class FriendApplyService {
@@ -49,11 +50,15 @@ export class FriendApplyService {
   }
 
   // 我的审批列表
-  async getFriendApplyPage (currentUserId: string, param: BasePageReq): Promise<BasePageResp<FriendApply>> {
+  async getFriendApplyPage (currentUserId: string, param: FriendApplyListReq): Promise<BasePageResp<FriendApply>> {
+    const where: Prisma.FriendApplyWhereInput = {
+      objUid: currentUserId
+    }
+    if (commonUtil.notBlank(param.reqUserId ?? '')) {
+      where.uid = param.reqUserId
+    }
     const data = await this.prisma.friendApply.findMany({
-      where: {
-        objUid: currentUserId
-      },
+      where,
       // 优先展示未读
       orderBy: [
         {
